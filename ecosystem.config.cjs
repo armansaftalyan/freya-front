@@ -5,7 +5,7 @@ module.exports = {
       script: 'node',
       args: '.output/server/index.mjs',
       instances: 'max',
-      exec_mode: 'fork',
+      exec_mode: 'cluster',
       autorestart: true,
       watch: false,
       max_memory_restart: '512M',
