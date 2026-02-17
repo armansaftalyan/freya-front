@@ -56,7 +56,6 @@ jobs:
             npm run build
 
             # Перезапуск Nuxt 3 (standalone output)
-            pm2 delete beauty-salon-web
             pm2 startOrReload ecosystem.config.cjs --update-env
             pm2 save
           EOF
