@@ -3,6 +3,9 @@ import { format } from 'date-fns'
 import { storeToRefs } from 'pinia'
 import type { Appointment } from '~/types/appointment'
 import type { Slot } from '~/types/slot'
+import Card from "~/components/base/Card.vue";
+import SkeletonBlock from "~/components/shared/SkeletonBlock.vue";
+import SlotPicker from "~/components/booking/SlotPicker.vue";
 
 useSeoMeta({
   title: 'Booking',
@@ -55,6 +58,7 @@ watch(
     if (!state.value.date) return
     await bookingStore.fetchSlots()
   },
+  { immediate: true },
 )
 
 const dateModel = computed({

@@ -109,16 +109,27 @@ export const useBookingStore = defineStore('bookingStore', () => {
 
     slotsLoading.value = true
     try {
-      const response = await api.get<ApiItemResponse<Slot[]> | ApiListResponse<Slot>>('/slots', {
+      const response = await api.get<ApiItemResponse<Slot[]> | ApiListResponse<Slot> | any>('/slots', {
         branch_id: state.value.branch.id,
         service_id: state.value.service.id,
         master_id: state.value.master.id,
         date: state.value.date,
       })
 
-      slots.value = Array.isArray((response as ApiItemResponse<Slot[]>).data)
-        ? (response as ApiItemResponse<Slot[]>).data
-        : (response as ApiListResponse<Slot>).data
+      const rawSlots = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.data)
+          ? response.data
+          : Array.isArray(response?.data?.data)
+            ? response.data.data
+            : []
+
+      slots.value = rawSlots
+        .map((item: any) => ({
+          start_at: String(item?.start_at ?? item?.startAt ?? ''),
+          end_at: String(item?.end_at ?? item?.endAt ?? ''),
+        }))
+        .filter((item: Slot) => Boolean(item.start_at))
     }
     finally {
       slotsLoading.value = false
