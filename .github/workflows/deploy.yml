@@ -1,0 +1,187 @@
+name: 🚀 Deploy to Freya via rsync
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-freya-front
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔐 Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_GITHUB }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H 159.89.27.153 >> ~/.ssh/known_hosts
+
+      - name: 🧪 Test SSH
+        run: |
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no root@159.89.27.153 "echo OK"
+
+      - name: 🔄 Sync files to server
+        run: |
+          rsync -avz --delete \
+            --exclude='.env' \
+            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no" \
+            ./ root@159.89.27.153:/var/www/freya-front
+
+      - name: 🚀 Build & run (pnpm + pm2)
+        run: |
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=no root@159.89.27.153 << 'EOF'
+            set -euxo pipefail
+
+            cd /var/www/freya-front
+
+            # Диагностика (в логи)
+            which node || true
+            which npm || true
+            which pnpm || true
+            which pm2 || true
+            node -v || true
+            npm -v || true
+            pnpm -v || true
+            pm2 -v || true
+
+            # Установка зависимостей строго по lockfile
+            pnpm install --frozen-lockfile
+
+            # Сборка
+            pnpm run build
+
+            # Перезапуск Nuxt 3 (standalone output)
+            pm2 delete exe-front
+            pm2 startOrReload ecosystem.config.cjs --update-env
+            pm2 save
+          EOF
+
+#name: 🚀 Deploy to DigitalOcean via rsync and docker
+#
+#on:
+#  push:
+#    branches: [main]
+#
+#jobs:
+#  deploy:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: 📥 Checkout repository
+#        uses: actions/checkout@v3
+#
+#      - name: 🔐 Setup SSH key
+#        run: |
+#          mkdir -p ~/.ssh
+#          echo "${{ secrets.SSH_GITHUB }}" > ~/.ssh/deploy_key
+#          chmod 600 ~/.ssh/deploy_key
+#          ssh-keyscan -H 159.89.27.153 >> ~/.ssh/known_hosts
+#
+#      - name: 🔄 Sync files to server
+#        run: |
+#          rsync -avz --delete \
+#            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+#            ./ root@159.89.27.153:/root/exe.ru_front/
+#
+#      - name: 🐳 Rebuild and run Docker
+#        run: |
+#          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no root@159.89.27.153 << 'EOF'
+#            cd /root/exe.ru_front
+#            docker compose down --rmi all
+#            docker compose build
+#            docker compose up -d
+#            docker network connect exeru exeru-front
+#            cd ../exe.ru_version_2.0
+#            make down
+#            make up
+#          EOF
+
+
+#name: 🚀 Deploy Nuxt 3 via SSH (npm)
+#
+#on:
+#  push:
+#    branches:
+#      - main
+#
+#jobs:
+#  deploy:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: 📥 Checkout репозитория
+#        uses: actions/checkout@v3
+#
+#      - name: 🔐 Setup SSH connection
+#        run: |
+#          mkdir -p ~/.ssh
+#          echo "${{ secrets.SSH_GITHUB }}" > ~/.ssh/id_rsa
+#          chmod 600 ~/.ssh/id_rsa
+#          ssh-keyscan 104.236.13.163 >> ~/.ssh/known_hosts
+#
+#      - name: 🚀 Deploy via SSH
+#        run: |
+#          ssh -i ~/.ssh/id_rsa master_rcgfbfdudx@104.236.13.163 << 'EOF'
+#          cd /home/master/applications/hrxkrghyha/public_html
+#
+#
+#
+#          echo "🔄 Pulling latest code..."
+#          GIT_SSH_COMMAND="ssh -i ~/.ssh/id_ed25519_arman" git pull origin main
+#
+#           echo "🧹 Removing old node_modules and output..."
+#          rm -rf node_modules output dist public
+#
+#          echo "📦 Installing dependencies..."
+#          npm i
+#
+#          echo "🏗 Building project..."
+#          npm run build
+#
+#          npm run generate
+#
+#          #            echo "🚀 Starting Nuxt..."
+#          #            env PORT=80 nohup npm run start > nuxt.log 2>&1 &
+#          #            echo "✅ Deployed and started!"
+#          EOF
+
+#name: 🚀 Deploy Nuxt 3 (Static) via SSH
+#
+#on:
+#  push:
+#    branches:
+#      - main
+#
+#jobs:
+#  deploy:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: 📥 Checkout репозитория
+#        uses: actions/checkout@v3
+#
+#      - name: 🔐 Setup SSH connection
+#        run: |
+#          mkdir -p ~/.ssh
+#          echo "${{ secrets.SSH_GITHUB }}" > ~/.ssh/id_rsa
+#          chmod 600 ~/.ssh/id_rsa
+#          ssh-keyscan 104.236.13.163 >> ~/.ssh/known_hosts
+#
+#      - name: 📦 Установка зависимостей
+#        run: |
+#          npm install
+#
+#      - name: 🏗 Генерация статического сайта (Nuxt generate)
+#        run: |
+#          npm run generate
+#
+#      - name: 🚀 Деплой dist/ на сервер (в public_html)
+#        run: |
+#          rsync -avz --delete -e "ssh -i ~/.ssh/id_rsa" dist/ master_rcgfbfdudx@104.236.13.163:/home/master/applications/hrxkrghyha/public_html/

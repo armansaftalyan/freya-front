@@ -76,7 +76,15 @@ NUXT_PUBLIC_SITE_URL=https://your-frontend-domain
 ```bash
 npm i
 npm run build
-pm2 start "npm run preview" --name beauty-salon-web
+npm run pm2:start
 ```
 
-For production behind reverse proxy, point domain to Nuxt preview/start process.
+PM2 helpers:
+```bash
+npm run pm2:restart
+npm run pm2:logs
+npm run pm2:stop
+```
+
+PM2 config is stored in `ecosystem.config.cjs` and runs Nuxt from `.output/server/index.mjs`.
+For production behind reverse proxy, point domain to app host/port (`NITRO_HOST`/`NITRO_PORT`).
