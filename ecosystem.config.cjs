@@ -1,18 +1,13 @@
 module.exports = {
   apps: [
     {
-      name: 'beauty-salon-web',
-      script: '.output/server/index.mjs',
-      instances: 'max',
+      name: 'exe-front',
+      script: '.output/server/index.mjs', // для Nuxt 3
       exec_mode: 'cluster',
-      autorestart: true,
-      watch: false,
-      max_memory_restart: '512M',
+      instances: 'max', // сколько процессов
       env: {
         NODE_ENV: 'production',
-        HOST: '127.0.0.1',
-        PORT: 3000,
       },
     },
   ],
-}
+};
