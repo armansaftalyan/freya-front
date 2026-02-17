@@ -13,7 +13,7 @@ export const useApi = () => {
   })
   const { locale, t } = useLocale()
   const toast = useToast()
-  const baseURL = import.meta.client ? '/proxy-api' : config.public.apiBase
+  const baseURL = config.public.apiBase
 
   const request = async <T>(path: string, options: ApiRequestOptions = {}): Promise<T> => {
     try {
