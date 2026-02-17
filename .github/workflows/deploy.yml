@@ -50,7 +50,7 @@ jobs:
             pm2 -v || true
 
             # Установка зависимостей строго по lockfile
-            npm ci
+            npm install --omit=dev
 
             # Сборка
             npm run build
