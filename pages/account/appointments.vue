@@ -4,13 +4,14 @@ import { storeToRefs } from 'pinia'
 
 definePageMeta({ middleware: 'auth' })
 
+const { t } = useLocale()
+
 useSeoMeta({
-  title: 'My Appointments',
-  description: 'История и управление вашими записями.',
+  title: () => t('nav.myAppointments'),
+  description: () => t('account.appointmentsSeoDescription'),
 })
 
 const auth = useAuthStore()
-const { t } = useLocale()
 const appointmentsStore = useAppointmentsStore()
 const { appointments, loading } = storeToRefs(appointmentsStore)
 
@@ -24,7 +25,7 @@ await useAsyncData('my-appointments', async () => {
     <div class="container-shell space-y-8">
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 class="text-5xl">{{ t('nav.myAppointments') }}</h1>
+          <h1 class="text-3xl sm:text-5xl">{{ t('nav.myAppointments') }}</h1>
           <p class="mt-2 text-sm text-[var(--muted)]">{{ auth.user?.name }} · {{ auth.user?.email }}</p>
         </div>
         <div class="flex gap-2">
@@ -57,7 +58,7 @@ await useAsyncData('my-appointments', async () => {
                 variant="secondary"
                 @click="appointmentsStore.cancel(item.id)"
               >
-                Cancel
+                {{ t('account.cancel') }}
               </BaseButton>
             </div>
           </div>

@@ -1,11 +1,12 @@
 <script setup lang="ts">
+const { t } = useLocale()
+
 useSeoMeta({
-  title: 'Register',
-  description: 'Регистрация клиента для онлайн-записи.',
+  title: () => t('auth.registerTitle'),
+  description: () => t('account.registerSeoDescription'),
 })
 
 const auth = useAuthStore()
-const { t } = useLocale()
 const form = reactive({ name: '', email: '', phone: '', password: '' })
 const toast = useToast()
 
@@ -60,7 +61,7 @@ const submit = async () => {
   <section class="section-gap">
     <div class="container-shell">
       <Card class="mx-auto max-w-xl">
-        <h1 class="text-4xl">{{ t('auth.registerTitle') }}</h1>
+        <h1 class="text-3xl sm:text-4xl">{{ t('auth.registerTitle') }}</h1>
         <p class="mt-2 text-sm text-[var(--muted)]">{{ t('auth.createText') }}</p>
         <form class="mt-6 space-y-4" @submit.prevent="submit">
           <BaseInput v-model="form.name" :label="t('auth.name')" required />

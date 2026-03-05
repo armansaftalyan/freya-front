@@ -1,11 +1,12 @@
 <script setup lang="ts">
+const { t } = useLocale()
+
 useSeoMeta({
-  title: 'Login',
-  description: 'Вход в личный кабинет клиента.',
+  title: () => t('auth.loginTitle'),
+  description: () => t('account.loginSeoDescription'),
 })
 
 const auth = useAuthStore()
-const { t } = useLocale()
 const form = reactive({ email: '', password: '' })
 const toast = useToast()
 
@@ -46,7 +47,7 @@ const submit = async () => {
   <section class="section-gap">
     <div class="container-shell">
       <Card class="mx-auto max-w-xl">
-        <h1 class="text-4xl">{{ t('auth.loginTitle') }}</h1>
+        <h1 class="text-3xl sm:text-4xl">{{ t('auth.loginTitle') }}</h1>
         <p class="mt-2 text-sm text-[var(--muted)]">{{ t('auth.continueText') }}</p>
         <form class="mt-6 space-y-4" @submit.prevent="submit">
           <BaseInput v-model="form.email" type="email" :label="t('auth.email')" required />

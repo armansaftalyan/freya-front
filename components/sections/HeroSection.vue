@@ -1,20 +1,24 @@
+<script setup lang="ts">
+const { t } = useLocale()
+</script>
+
 <template>
   <section class="section-gap">
     <div class="container-shell grid gap-8 lg:grid-cols-2 lg:items-center">
       <div class="space-y-6 fade-in">
         <p class="inline-flex rounded-full bg-sand-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-sand-700">
-          Premium Beauty Experience
+          {{ t('homePage.hero.badge') }}
         </p>
-        <h1 class="text-5xl leading-tight sm:text-6xl">Beauty that feels effortless.</h1>
+        <h1 class="text-5xl leading-tight sm:text-6xl">{{ t('homePage.hero.title') }}</h1>
         <p class="max-w-xl text-base text-[var(--muted)] sm:text-lg">
-          Персональные beauty-ритуалы, сильная команда мастеров и онлайн-запись в два клика.
+          {{ t('homePage.hero.subtitle') }}
         </p>
         <div class="flex flex-wrap gap-3">
           <NuxtLink to="/booking">
-            <BaseButton size="lg">Записаться</BaseButton>
+            <BaseButton size="lg">{{ t('nav.bookNow') }}</BaseButton>
           </NuxtLink>
           <NuxtLink to="/services">
-            <BaseButton size="lg" variant="secondary">Услуги</BaseButton>
+            <BaseButton size="lg" variant="secondary">{{ t('nav.services') }}</BaseButton>
           </NuxtLink>
         </div>
       </div>

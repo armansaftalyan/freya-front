@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 
+const { t } = useLocale()
+
 useSeoMeta({
-  title: 'Masters',
-  description: 'Команда мастеров салона и фильтр по услугам.',
-  ogTitle: 'Aurum Masters',
-  ogDescription: 'Выберите мастера по услуге и запишитесь онлайн.',
+  title: () => `Freya - ${t('nav.masters')}`,
+  description: () => t('mastersPage.seoDescription'),
+  ogTitle: () => `Freya - ${t('nav.masters')}`,
+  ogDescription: () => t('mastersPage.seoOgDescription'),
 })
 
 const route = useRoute()
@@ -39,17 +41,17 @@ watch(serviceId, async (value) => {
     <div class="container-shell space-y-8">
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p class="text-xs uppercase tracking-[0.2em] text-sand-600">Team</p>
-          <h1 class="text-5xl">Мастера</h1>
+          <p class="text-xs uppercase tracking-[0.2em] text-sand-600">{{ t('mastersPage.team') }}</p>
+          <h1 class="text-3xl sm:text-5xl">{{ t('nav.masters') }}</h1>
         </div>
-        <NuxtLink to="/booking"><BaseButton size="lg">Записаться</BaseButton></NuxtLink>
+        <NuxtLink to="/booking"><BaseButton size="lg">{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
       </div>
 
       <BaseSelect
         v-model="selectedService"
-        label="Фильтр по услуге"
+        :label="t('mastersPage.filterByService')"
         :options="services.map((item) => ({ label: item.name, value: item.id }))"
-        placeholder="Все услуги"
+        :placeholder="t('mastersPage.allServices')"
       />
 
       <div v-if="loading" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -65,9 +67,9 @@ watch(serviceId, async (value) => {
             loading="lazy"
           >
           <p class="mt-4 text-2xl">{{ master.name }}</p>
-          <p class="mt-2 min-h-10 text-sm text-[var(--muted)]">{{ master.bio || 'Specialist in modern beauty techniques and personalized care.' }}</p>
-          <p class="mt-3 text-xs uppercase tracking-[0.14em] text-sand-600">Book now with this master</p>
-          <NuxtLink to="/booking" class="mt-4 inline-block"><BaseButton>Записаться</BaseButton></NuxtLink>
+          <p class="mt-2 min-h-10 text-sm text-[var(--muted)]">{{ master.bio || t('mastersPage.fallbackBio') }}</p>
+          <p class="mt-3 text-xs uppercase tracking-[0.14em] text-sand-600">{{ t('mastersPage.bookWithMaster') }}</p>
+          <NuxtLink to="/booking" class="mt-4 inline-block"><BaseButton>{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
         </Card>
       </div>
     </div>

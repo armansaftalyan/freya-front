@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 
+const { t } = useLocale()
 const mastersStore = useMastersStore()
 const { masters } = storeToRefs(mastersStore)
 
@@ -13,8 +14,8 @@ await useAsyncData('home-masters', async () => {
   <section class="section-gap">
     <div class="container-shell">
       <div class="mb-8 flex items-end justify-between gap-3">
-        <h2 class="text-4xl">Мастера</h2>
-        <NuxtLink to="/masters"><BaseButton variant="ghost">Вся команда</BaseButton></NuxtLink>
+        <h2 class="text-3xl sm:text-4xl">{{ t('homePage.masters.title') }}</h2>
+        <NuxtLink to="/masters"><BaseButton variant="ghost">{{ t('homePage.masters.all') }}</BaseButton></NuxtLink>
       </div>
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card v-for="master in masters.slice(0, 6)" :key="master.id" class="fade-in">
@@ -27,10 +28,10 @@ await useAsyncData('home-masters', async () => {
             >
             <div>
               <p class="text-lg font-semibold">{{ master.name }}</p>
-              <p class="text-sm text-[var(--muted)] line-clamp-2">{{ master.bio || 'Топ-мастер салона.' }}</p>
+              <p class="text-sm text-[var(--muted)] line-clamp-2">{{ master.bio || t('homePage.masters.fallbackBio') }}</p>
             </div>
           </div>
-          <NuxtLink to="/booking" class="mt-4 inline-block"><BaseButton size="sm">Book now</BaseButton></NuxtLink>
+          <NuxtLink to="/booking" class="mt-4 inline-block"><BaseButton size="sm">{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
         </Card>
       </div>
     </div>

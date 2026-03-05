@@ -1,9 +1,11 @@
 <script setup lang="ts">
+const { t } = useLocale()
+
 useSeoMeta({
-  title: 'Premium Beauty Salon',
-  description: 'Онлайн-запись в премиальный салон: услуги, мастера, свободные слоты.',
-  ogTitle: 'Aurum Beauty Salon',
-  ogDescription: 'Book now: services, masters, and instant online appointments.',
+  title: 'Freya Beauty Salon',
+  description: () => t('homePage.seoDescription'),
+  ogTitle: 'Freya Beauty Salon',
+  ogDescription: () => t('homePage.ogDescription'),
   ogType: 'website',
 })
 </script>

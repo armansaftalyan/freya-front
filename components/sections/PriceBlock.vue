@@ -1,17 +1,19 @@
 <script setup lang="ts">
-const plans = [
-  { title: 'Express', desc: 'Быстрые услуги в 30-45 минут', price: '$40+' },
-  { title: 'Signature', desc: 'Персональные комплексные сессии', price: '$90+' },
-  { title: 'Luxury', desc: 'Полный beauty-день и spa-уход', price: '$160+' },
-]
+const { t } = useLocale()
+
+const plans = computed(() => [
+  { title: 'Express', desc: t('homePage.price.expressDesc'), price: '$40+' },
+  { title: 'Signature', desc: t('homePage.price.signatureDesc'), price: '$90+' },
+  { title: 'Luxury', desc: t('homePage.price.luxuryDesc'), price: '$160+' },
+])
 </script>
 
 <template>
   <section class="section-gap">
     <div class="container-shell">
       <div class="mb-8 flex items-end justify-between gap-3">
-        <h2 class="text-4xl">Price blocks</h2>
-        <NuxtLink to="/booking"><BaseButton>Book now</BaseButton></NuxtLink>
+        <h2 class="text-3xl sm:text-4xl">{{ t('homePage.price.title') }}</h2>
+        <NuxtLink to="/booking"><BaseButton>{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
       </div>
       <div class="grid gap-4 md:grid-cols-3">
         <Card v-for="plan in plans" :key="plan.title" class="fade-in">
