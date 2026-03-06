@@ -24,26 +24,26 @@ watch(
 </script>
 
 <template>
-  <div>
+  <div class="flex min-h-screen flex-col">
     <SharedToastStack />
     <header class="sticky top-0 z-40 border-b border-sand-100 bg-[var(--bg)]/85 backdrop-blur">
-      <div class="container-shell flex h-16 items-center justify-between gap-4">
-        <NuxtLink to="/" class="inline-flex items-center">
+      <div class="container-shell flex min-h-16 items-center justify-between gap-3 py-2">
+        <NuxtLink to="/" class="inline-flex shrink-0 items-center">
           <img src="/logo.svg" alt="Freya Beauty Salon" class="h-10 w-10 rounded-full object-cover sm:h-11 sm:w-11">
         </NuxtLink>
 
-        <nav class="hidden items-center gap-5 md:flex">
+        <nav class="hidden min-w-0 items-center gap-5 xl:flex">
           <NuxtLink
             v-for="link in links"
             :key="link.to"
             :to="link.to"
-            class="text-sm text-sand-900 transition hover:text-sand-600"
+            class="whitespace-nowrap text-sm text-sand-900 transition hover:text-sand-600"
           >
             {{ t(link.key) }}
           </NuxtLink>
         </nav>
 
-        <div class="hidden items-center gap-2 md:flex">
+        <div class="hidden shrink-0 items-center gap-2 xl:flex">
           <SharedLanguageSwitcher />
           <NuxtLink :to="auth.isAuth ? '/account/appointments' : '/account/login'">
             <BaseButton variant="secondary" size="sm">{{ auth.isAuth ? t('nav.myAppointments') : t('nav.login') }}</BaseButton>
@@ -51,12 +51,13 @@ watch(
           <NuxtLink to="/booking"><BaseButton size="sm">{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
         </div>
 
-        <div class="flex items-center gap-2 md:hidden">
+        <div class="flex shrink-0 items-center gap-2 xl:hidden">
           <NuxtLink to="/booking"><BaseButton size="sm">{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
           <button
+            type="button"
             class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-sand-200 bg-white text-sand-900"
             :aria-label="isMobileMenuOpen ? 'Close menu' : 'Open menu'"
-            @click="isMobileMenuOpen = !isMobileMenuOpen"
+            @click.stop="isMobileMenuOpen = !isMobileMenuOpen"
           >
             <svg v-if="!isMobileMenuOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm1 4a1 1 0 100 2h12a1 1 0 100-2H4z" clip-rule="evenodd" />
@@ -71,7 +72,7 @@ watch(
       <Transition name="fade">
         <div
           v-if="isMobileMenuOpen"
-          class="border-t border-sand-200 bg-[var(--bg)] md:hidden"
+          class="absolute left-0 right-0 top-full z-50 border-b border-t border-sand-200 bg-[var(--bg)] shadow-soft xl:hidden"
         >
           <div class="container-shell space-y-4 py-4">
             <nav class="grid gap-2">
@@ -85,7 +86,7 @@ watch(
               </NuxtLink>
             </nav>
 
-            <div class="flex items-center justify-between gap-3">
+            <div class="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
               <SharedLanguageSwitcher />
               <NuxtLink :to="auth.isAuth ? '/account/appointments' : '/account/login'" class="flex-1">
                 <BaseButton variant="secondary" size="sm" block>
@@ -98,7 +99,7 @@ watch(
       </Transition>
     </header>
 
-    <main>
+    <main class="flex-1">
       <slot />
     </main>
 

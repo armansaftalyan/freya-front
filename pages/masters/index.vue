@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import Card from "~/components/base/Card.vue";
+import SkeletonBlock from "~/components/shared/SkeletonBlock.vue";
 
 const { t } = useLocale()
 
@@ -28,6 +30,8 @@ const selectedService = computed({
 await useAsyncData('masters-page', async () => {
   await servicesStore.fetchServices()
   await mastersStore.fetchMasters(serviceId.value || undefined)
+
+  return true
 })
 
 watch(serviceId, async (value) => {

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Card from "~/components/base/Card.vue";
+
 const { t } = useLocale()
 
 const plans = computed(() => [

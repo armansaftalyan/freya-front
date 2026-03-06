@@ -1,7 +1,14 @@
-import type { FetchOptions } from 'ofetch'
 import { useApiError } from '~/composables/useApiError'
 
-type ApiRequestOptions = FetchOptions<'json'> & {
+type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE'
+
+type ApiRequestOptions = {
+  headers?: Record<string, string>
+  query?: Record<string, any>
+  body?: Record<string, any>
+  credentials?: 'omit' | 'same-origin' | 'include'
+  mode?: 'cors' | 'no-cors' | 'same-origin'
+  method?: HttpMethod
   skipErrorToast?: boolean
 }
 
@@ -16,21 +23,25 @@ export const useApi = () => {
   const baseURL = config.public.apiBase
 
   const request = async <T>(path: string, options: ApiRequestOptions = {}): Promise<T> => {
+    const { skipErrorToast = false, ...fetchOptions } = options
+
     try {
-      return await $fetch<T>(path, {
+      const response = await $fetch<T>(path, {
         baseURL,
-        ...options,
+        ...fetchOptions,
         headers: {
-          ...(options.headers || {}),
+          ...(fetchOptions.headers || {}),
           'Accept-Language': locale.value || 'hy',
           ...(token.value ? { Authorization: `Bearer ${token.value}` } : {}),
         },
-      })
+      } as any)
+
+      return response as T
     }
     catch (error: any) {
       const parsed = useApiError(error)
 
-      if (!options.skipErrorToast) {
+      if (!skipErrorToast) {
         toast.push({
           type: 'error',  
           title: t('common.requestFailed'),

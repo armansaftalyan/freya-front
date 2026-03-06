@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import Card from "~/components/base/Card.vue";
+import SkeletonBlock from "~/components/shared/SkeletonBlock.vue";
 
 const { t } = useLocale()
 
@@ -16,6 +18,8 @@ const activeCategory = ref<number | null>(null)
 
 await useAsyncData('services-page', async () => {
   await servicesStore.init()
+
+  return true
 })
 
 const filtered = computed(() => {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import Card from "~/components/base/Card.vue";
 
 const { t } = useLocale()
 const mastersStore = useMastersStore()
@@ -7,6 +8,8 @@ const { masters } = storeToRefs(mastersStore)
 
 await useAsyncData('home-masters', async () => {
   await mastersStore.fetchMasters()
+
+  return true
 })
 </script>
 

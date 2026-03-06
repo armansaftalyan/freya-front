@@ -14,6 +14,9 @@ interface BookingState {
   date: string
   slot: Slot | null
   comment: string
+  guestName: string
+  guestPhone: string
+  source: 'site' | 'phone' | 'instagram' | 'yandex_maps'
 }
 
 const initialState = (): BookingState => ({
@@ -24,6 +27,9 @@ const initialState = (): BookingState => ({
   date: '',
   slot: null,
   comment: '',
+  guestName: '',
+  guestPhone: '',
+  source: 'site',
 })
 
 export const useBookingStore = defineStore('bookingStore', () => {
@@ -33,11 +39,10 @@ export const useBookingStore = defineStore('bookingStore', () => {
   const slotsLoading = ref(false)
 
   const step = computed(() => {
-    if (!state.value.branch) return 1
-    if (!state.value.service) return 2
-    if (!state.value.master) return 3
-    if (!state.value.slot) return 4
-    return 5
+    if (!state.value.service) return 1
+    if (!state.value.master) return 2
+    if (!state.value.slot) return 3
+    return 4
   })
 
   const canSubmit = computed(() => Boolean(state.value.branch && state.value.service && state.value.master && state.value.slot))
@@ -72,6 +77,11 @@ export const useBookingStore = defineStore('bookingStore', () => {
 
   const setSlot = (slot: Slot) => {
     state.value.slot = slot
+  }
+
+  const setSource = (source: string) => {
+    const allowedSources = new Set(['site', 'phone', 'instagram', 'yandex_maps'])
+    state.value.source = allowedSources.has(source) ? (source as BookingState['source']) : 'site'
   }
 
   const saveProgress = () => {
@@ -148,8 +158,10 @@ export const useBookingStore = defineStore('bookingStore', () => {
         service_id: state.value.service?.id,
         master_id: state.value.master?.id,
         start_at: state.value.slot.start_at,
-        source: 'site',
+        source: state.value.source,
         comment: state.value.comment || undefined,
+        guest_name: state.value.guestName.trim() || undefined,
+        guest_phone: state.value.guestPhone.trim() || undefined,
       },
       { skipErrorToast: true },
     )
@@ -175,6 +187,7 @@ export const useBookingStore = defineStore('bookingStore', () => {
     setMaster,
     setDate,
     setSlot,
+    setSource,
     fetchSlots,
     createAppointment,
     restoreProgress,

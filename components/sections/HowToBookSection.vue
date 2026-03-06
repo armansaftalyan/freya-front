@@ -17,6 +17,8 @@
 </template>
 
 <script setup lang="ts">
+import Card from "~/components/base/Card.vue";
+
 const { t } = useLocale()
 
 const steps = computed(() => [

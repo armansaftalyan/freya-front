@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
+import Card from "~/components/base/Card.vue";
 
 const { t } = useLocale()
 const servicesStore = useServicesStore()
@@ -7,6 +8,8 @@ const { categories, services } = storeToRefs(servicesStore)
 
 await useAsyncData('home-services', async () => {
   await servicesStore.init()
+
+  return true
 })
 
 const grouped = computed(() =>

@@ -2,11 +2,11 @@
 defineProps<{ current: number }>()
 
 const { t } = useLocale()
-const labels = computed(() => [t('booking.branch'), t('booking.service'), t('booking.master'), t('booking.dateSlot'), t('booking.confirm')])
+const labels = computed(() => [t('booking.service'), t('booking.master'), t('booking.dateSlot'), t('booking.confirm')])
 </script>
 
 <template>
-  <div class="grid grid-cols-2 gap-2 rounded-2xl bg-white p-3 shadow-soft sm:grid-cols-5">
+  <div class="grid grid-cols-2 gap-2 rounded-2xl bg-white p-3 shadow-soft sm:grid-cols-4">
     <div
       v-for="(label, idx) in labels"
       :key="label"

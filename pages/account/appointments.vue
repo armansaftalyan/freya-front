@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { format } from 'date-fns'
 import { storeToRefs } from 'pinia'
+import Card from "~/components/base/Card.vue";
+import SkeletonBlock from "~/components/shared/SkeletonBlock.vue";
+import BadgeStatus from "~/components/base/BadgeStatus.vue";
 
 definePageMeta({ middleware: 'auth' })
 
@@ -17,6 +20,8 @@ const { appointments, loading } = storeToRefs(appointmentsStore)
 
 await useAsyncData('my-appointments', async () => {
   await appointmentsStore.fetchMine()
+
+  return true
 })
 </script>
 

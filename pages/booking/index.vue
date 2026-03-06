@@ -7,6 +7,8 @@ import Card from "~/components/base/Card.vue";
 import SkeletonBlock from "~/components/shared/SkeletonBlock.vue";
 import SlotPicker from "~/components/booking/SlotPicker.vue";
 
+const { t } = useLocale()
+
 useSeoMeta({
   title: () => `Freya - ${t('nav.booking')}`,
   description: () => t('booking.seoDescription'),
@@ -15,7 +17,6 @@ useSeoMeta({
 })
 
 const auth = useAuthStore()
-const { t } = useLocale()
 const route = useRoute()
 const branchesStore = useBranchesStore()
 const servicesStore = useServicesStore()
@@ -30,16 +31,35 @@ const toast = useToast()
 
 const creating = ref(false)
 const success = ref<Appointment | null>(null)
+const isEmbedded = computed(() => route.query.embed === '1')
+
+const resolveSourceFromQuery = () => {
+  const direct = typeof route.query.source === 'string' ? route.query.source : ''
+  if (direct) return direct
+
+  const utm = typeof route.query.utm_source === 'string' ? route.query.utm_source.toLowerCase() : ''
+  if (utm === 'yandex' || utm === 'yandex_maps' || utm === 'yandex_business') {
+    return 'yandex_maps'
+  }
+
+  return ''
+}
 
 await useAsyncData('booking-bootstrap', async () => {
   bookingStore.restoreProgress()
-  if (typeof route.query.source === 'string') {
-    bookingStore.setSource(route.query.source)
+  const sourceFromQuery = resolveSourceFromQuery()
+  if (sourceFromQuery) {
+    bookingStore.setSource(sourceFromQuery)
   }
   await Promise.all([branchesStore.fetchBranches(), servicesStore.init()])
+  if (!state.value.branch && branches.value.length > 0) {
+    bookingStore.setBranch(branches.value[0])
+  }
   if (state.value.service?.id) {
     await mastersStore.fetchMasters(state.value.service.id)
   }
+
+  return true
 })
 
 const servicesByCategory = computed(() => {
@@ -88,7 +108,7 @@ const onPickSlot = (slot: Slot) => {
 }
 
 const validateBooking = () => {
-  if (!state.value.branch) return t('booking.errors.branch')
+  if (!state.value.branch) return t('common.unexpectedError')
   if (!state.value.category) return t('booking.errors.category')
   if (!state.value.service) return t('booking.errors.service')
   if (!state.value.master) return t('booking.errors.master')
@@ -132,13 +152,13 @@ const submit = async () => {
 
 <template>
   <section class="section-gap">
-    <div class="container-shell space-y-6">
+    <div class="container-shell mx-auto max-w-6xl space-y-6">
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p class="text-xs uppercase tracking-[0.2em] text-sand-600">{{ t('booking.wizard') }}</p>
-          <h1 class="text-3xl sm:text-5xl">{{ t('booking.title') }}</h1>
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl">{{ t('booking.title') }}</h1>
         </div>
-        <NuxtLink to="/account/appointments"><BaseButton variant="secondary">{{ t('nav.myAppointments') }}</BaseButton></NuxtLink>
+        <NuxtLink v-if="!isEmbedded" to="/account/appointments"><BaseButton variant="secondary">{{ t('nav.myAppointments') }}</BaseButton></NuxtLink>
       </div>
 
       <div v-if="success" class="rounded-3xl border border-emerald-200 bg-white p-6 shadow-soft">
@@ -150,27 +170,11 @@ const submit = async () => {
       </div>
 
       <template v-else>
-        <BookingBreadcrumbs :current="step" />
+        <BookingBreadcrumbs v-if="!isEmbedded" :current="step" />
 
-        <div class="grid gap-4 lg:grid-cols-2">
+        <div class="grid gap-5 xl:grid-cols-2">
           <Card>
-            <h2 class="text-2xl">1. {{ t('booking.branch') }}</h2>
-            <div class="mt-4 grid gap-2">
-              <button
-                v-for="branch in branches"
-                :key="branch.id"
-                class="rounded-2xl border px-4 py-3 text-left transition"
-                :class="state.branch?.id === branch.id ? 'border-sand-900 bg-sand-50' : 'border-sand-200 bg-white hover:border-sand-600'"
-                @click="bookingStore.setBranch(branch)"
-              >
-                <p class="font-semibold">{{ branch.name }}</p>
-                <p class="text-sm text-[var(--muted)]">{{ branch.address || t('booking.addressTbd') }}</p>
-              </button>
-            </div>
-          </Card>
-
-          <Card>
-            <h2 class="text-2xl">2. {{ t('booking.categoryService') }}</h2>
+            <h2 class="text-2xl sm:text-3xl">1. {{ t('booking.categoryService') }}</h2>
             <div class="mt-4 space-y-4">
               <BaseSelect
                 :model-value="state.category?.id || ''"
@@ -191,12 +195,12 @@ const submit = async () => {
           </Card>
 
           <Card>
-            <h2 class="text-2xl">3. {{ t('booking.master') }}</h2>
+            <h2 class="text-2xl sm:text-3xl">2. {{ t('booking.master') }}</h2>
             <div class="mt-4 grid gap-2">
               <button
                 v-for="master in masters"
                 :key="master.id"
-                class="rounded-2xl border px-4 py-3 text-left transition"
+                class="w-full rounded-2xl border px-4 py-3 text-left transition"
                 :disabled="!state.service"
                 :class="state.master?.id === master.id ? 'border-sand-900 bg-sand-50' : 'border-sand-200 bg-white hover:border-sand-600'"
                 @click="bookingStore.setMaster(master)"
@@ -207,27 +211,28 @@ const submit = async () => {
             </div>
           </Card>
 
-          <Card>
-            <h2 class="text-2xl">4. {{ t('booking.dateSlot') }}</h2>
+          <Card class="xl:col-span-2">
+            <h2 class="text-2xl sm:text-3xl">3. {{ t('booking.dateSlot') }}</h2>
             <div class="mt-4 space-y-4">
               <BaseInput v-model="dateModel" type="date" :label="t('booking.date')" />
               <div v-if="slotsLoading" class="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <SkeletonBlock v-for="idx in 8" :key="idx" class="h-10" />
               </div>
-              <SlotPicker v-else :slots="slots" :selected="state.slot" @pick="onPickSlot" />
+              <div class="rounded-2xl border border-sand-200 p-3">
+                <SlotPicker v-if="slots.length" :slots="slots" :selected="state.slot" @pick="onPickSlot" />
+                <p v-else class="text-sm text-[var(--muted)]">{{ t('booking.noSlots') }}</p>
+              </div>
             </div>
           </Card>
         </div>
 
         <Card>
-          <h2 class="text-2xl">5. {{ t('booking.confirm') }}</h2>
-          <div class="mt-4 grid gap-4 md:grid-cols-2">
-            <div class="space-y-2 text-sm">
-              <p><span class="text-[var(--muted)]">{{ t('booking.summary.branch') }}:</span> {{ state.branch?.name || '-' }}</p>
-              <p><span class="text-[var(--muted)]">{{ t('booking.summary.service') }}:</span> {{ state.service?.name || '-' }}</p>
-              <p><span class="text-[var(--muted)]">{{ t('booking.summary.master') }}:</span> {{ state.master?.name || '-' }}</p>
-              <p><span class="text-[var(--muted)]">{{ t('booking.summary.slot') }}:</span> {{ state.slot?.start_at ? format(new Date(state.slot.start_at), 'yyyy-MM-dd HH:mm') : '-' }}</p>
-              <p><span class="text-[var(--muted)]">{{ t('booking.summary.source') }}:</span> {{ state.source }}</p>
+          <h2 class="text-2xl sm:text-3xl">4. {{ t('booking.confirm') }}</h2>
+          <div class="mt-4 grid gap-6 lg:grid-cols-2">
+            <div class="space-y-3 rounded-2xl border border-sand-200 bg-sand-50/50 p-4 text-sm">
+              <p><span class="text-[var(--muted)]">{{ t('booking.summary.service') }}:</span> <span class="font-semibold">{{ state.service?.name || '-' }}</span></p>
+              <p><span class="text-[var(--muted)]">{{ t('booking.summary.master') }}:</span> <span class="font-semibold">{{ state.master?.name || '-' }}</span></p>
+              <p><span class="text-[var(--muted)]">{{ t('booking.summary.slot') }}:</span> <span class="font-semibold">{{ state.slot?.start_at ? format(new Date(state.slot.start_at), 'yyyy-MM-dd HH:mm') : '-' }}</span></p>
             </div>
             <div class="space-y-3">
               <p v-if="!auth.isAuth" class="text-sm text-[var(--muted)]">{{ t('booking.guestHint') }}</p>
@@ -236,7 +241,7 @@ const submit = async () => {
               <BaseInput v-model="state.comment" :label="t('booking.commentLabel')" :placeholder="t('booking.commentPlaceholder')" />
             </div>
           </div>
-          <div class="mt-5 flex flex-wrap gap-3">
+          <div class="mt-6 flex flex-wrap gap-3">
             <BaseButton :disabled="!canSubmit || creating" @click="submit">{{ creating ? t('booking.creating') : t('booking.create') }}</BaseButton>
             <BaseButton variant="secondary" @click="bookingStore.reset">{{ t('booking.reset') }}</BaseButton>
           </div>

@@ -8,13 +8,15 @@ const fieldErrorKeyMap: Record<string, string> = {
   password: 'common.passwordRequired',
   name: 'common.nameRequired',
   phone: 'common.phoneShort',
-  branch_id: 'booking.errors.branch',
+  branch_id: 'common.unexpectedError',
   category_id: 'booking.errors.category',
   service_id: 'booking.errors.service',
   master_id: 'booking.errors.master',
   start_at: 'booking.errors.slot',
   date: 'booking.errors.date',
   comment: 'booking.errors.comment',
+  guest_name: 'booking.errors.guestName',
+  guest_phone: 'booking.errors.guestPhone',
 }
 
 const statusKeyMap: Record<number, string> = {
