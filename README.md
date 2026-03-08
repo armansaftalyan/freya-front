@@ -51,12 +51,11 @@ NUXT_PUBLIC_SITE_URL=https://your-frontend-domain
 - `/contacts`
 
 ## API mapping
-- `GET /branches` -> branches store, booking step 1
 - `GET /categories` -> services store
-- `GET /services?category_id=` -> services store, booking step 2
-- `GET /masters?service_id=` -> masters store, booking step 3
-- `GET /slots?branch_id=&service_id=&master_id=&date=` -> booking step 4
-- `POST /appointments` -> booking confirmation
+- `GET /services?category_id=` -> services store, booking step 1
+- `GET /masters?service_id=` or `GET /masters?service_ids[]=` -> masters store, booking step 2
+- `GET /slots?service_ids[]=&master_id=&date=` -> booking step 3
+- `POST /appointments` -> booking confirmation (guest or auth user)
 - `GET /appointments/my` -> account appointments
 - `PATCH /appointments/{id}/cancel` -> cancel action
 - `POST /auth/login` / `POST /auth/register` / `POST /auth/logout` / `GET /auth/me`

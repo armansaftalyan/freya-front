@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { format } from 'date-fns'
 import { storeToRefs } from 'pinia'
 import Card from "~/components/base/Card.vue";
 import SkeletonBlock from "~/components/shared/SkeletonBlock.vue";
@@ -8,6 +7,7 @@ import BadgeStatus from "~/components/base/BadgeStatus.vue";
 definePageMeta({ middleware: 'auth' })
 
 const { t } = useLocale()
+const { formatYerevanDateTime } = useDateTime()
 
 useSeoMeta({
   title: () => t('nav.myAppointments'),
@@ -52,8 +52,8 @@ await useAsyncData('my-appointments', async () => {
           <div class="flex flex-wrap items-start justify-between gap-4">
             <div class="space-y-2 text-sm">
               <p class="text-lg font-semibold">#{{ item.id }} · {{ item.service?.name }}</p>
-              <p class="text-[var(--muted)]">{{ item.master?.name }} · {{ item.branch?.name }}</p>
-              <p class="text-[var(--muted)]">{{ format(new Date(item.start_at), 'yyyy-MM-dd HH:mm') }}</p>
+              <p class="text-[var(--muted)]">{{ item.master?.name }}</p>
+              <p class="text-[var(--muted)]">{{ formatYerevanDateTime(item.start_at) }}</p>
             </div>
             <div class="flex items-center gap-2">
               <BadgeStatus :status="item.status" />

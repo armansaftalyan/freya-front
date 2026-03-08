@@ -24,13 +24,26 @@ export const useApi = () => {
 
   const request = async <T>(path: string, options: ApiRequestOptions = {}): Promise<T> => {
     const { skipErrorToast = false, ...fetchOptions } = options
+    const normalizedQuery = fetchOptions.query
+      ? Object.entries(fetchOptions.query).reduce<Record<string, any>>((acc, [key, value]) => {
+        if (Array.isArray(value)) {
+          acc[`${key}[]`] = value
+        }
+        else if (value !== undefined) {
+          acc[key] = value
+        }
+        return acc
+      }, {})
+      : undefined
 
     try {
       const response = await $fetch<T>(path, {
         baseURL,
         ...fetchOptions,
+        query: normalizedQuery,
         headers: {
           ...(fetchOptions.headers || {}),
+          Accept: 'application/json',
           'Accept-Language': locale.value || 'hy',
           ...(token.value ? { Authorization: `Bearer ${token.value}` } : {}),
         },

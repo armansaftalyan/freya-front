@@ -11,8 +11,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ['"Cormorant Garamond"', 'serif'],
-        sans: ['"Manrope"', 'sans-serif'],
+        display: ['"Noto Serif Armenian"', '"Palatino Linotype"', '"Book Antiqua"', 'Georgia', 'serif'],
+        sans: ['"Noto Sans Armenian"', '"Arian AMU"', '"Segoe UI"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Helvetica Neue"', 'Arial', 'sans-serif'],
       },
       colors: {
         sand: {

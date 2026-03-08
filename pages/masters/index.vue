@@ -43,10 +43,10 @@ watch(serviceId, async (value) => {
 <template>
   <section class="section-gap">
     <div class="container-shell space-y-8">
-      <div class="flex flex-wrap items-end justify-between gap-4">
+      <div class="flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-4">
         <div>
           <p class="text-xs uppercase tracking-[0.2em] text-sand-600">{{ t('mastersPage.team') }}</p>
-          <h1 class="text-3xl sm:text-5xl">{{ t('nav.masters') }}</h1>
+          <h1 class="text-3xl leading-tight sm:text-5xl">{{ t('nav.masters') }}</h1>
         </div>
         <NuxtLink to="/booking"><BaseButton size="lg">{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
       </div>
@@ -73,7 +73,10 @@ watch(serviceId, async (value) => {
           <p class="mt-4 text-2xl">{{ master.name }}</p>
           <p class="mt-2 min-h-10 text-sm text-[var(--muted)]">{{ master.bio || t('mastersPage.fallbackBio') }}</p>
           <p class="mt-3 text-xs uppercase tracking-[0.14em] text-sand-600">{{ t('mastersPage.bookWithMaster') }}</p>
-          <NuxtLink to="/booking" class="mt-4 inline-block"><BaseButton>{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <NuxtLink :to="`/masters/${master.slug || master.id}`"><BaseButton variant="secondary">{{ t('mastersPage.viewProfile') }}</BaseButton></NuxtLink>
+            <NuxtLink to="/booking" class="inline-block"><BaseButton>{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
+          </div>
         </Card>
       </div>
     </div>

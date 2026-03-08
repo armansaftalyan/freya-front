@@ -12,6 +12,13 @@ const auth = useAuthStore()
 const form = reactive({ name: '', email: '', phone: '', password: '' })
 const toast = useToast()
 
+const normalizePhone = (value: string) => {
+  const digits = (value || '').replace(/\D+/g, '')
+  return digits ? `+${digits}` : ''
+}
+
+const isPhoneValid = (value: string) => /^\+[1-9]\d{7,14}$/.test(value)
+
 const validate = () => {
   if (!form.name.trim()) {
     return t('common.nameRequired')
@@ -27,8 +34,11 @@ const validate = () => {
     return t('common.emailInvalid')
   }
 
-  if (form.phone && form.phone.length < 6) {
-    return t('common.phoneShort')
+  if (form.phone.trim()) {
+    const normalized = normalizePhone(form.phone)
+    if (!isPhoneValid(normalized)) {
+      return t('common.phoneInvalid')
+    }
   }
 
   if (!form.password.trim()) {
@@ -49,7 +59,11 @@ const submit = async () => {
   }
 
   try {
-    await auth.register(form)
+    const normalizedPhone = normalizePhone(form.phone)
+    await auth.register({
+      ...form,
+      phone: normalizedPhone || undefined,
+    })
     await navigateTo('/account/appointments')
   }
   catch (error: any) {
@@ -68,7 +82,7 @@ const submit = async () => {
         <form class="mt-6 space-y-4" @submit.prevent="submit">
           <BaseInput v-model="form.name" :label="t('auth.name')" required />
           <BaseInput v-model="form.email" type="email" :label="t('auth.email')" required />
-          <BaseInput v-model="form.phone" :label="t('auth.phone')" />
+          <BaseInput v-model="form.phone" type="tel" :label="t('auth.phone')" />
           <BaseInput v-model="form.password" type="password" :label="t('auth.password')" required />
           <BaseButton type="submit" :disabled="auth.loading" block>
             {{ auth.loading ? `${t('auth.createAccount')}...` : t('auth.createAccount') }}

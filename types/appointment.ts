@@ -1,4 +1,3 @@
-import type { Branch } from './branch'
 import type { Master } from './master'
 import type { Service } from './service'
 import type { User } from './user'
@@ -13,8 +12,15 @@ export interface Appointment {
   start_at: string
   end_at: string
   service: Service
+  services?: Array<{
+    id: number
+    category_id: number
+    name: string
+    duration_minutes: number
+    price: number
+    sort_order: number
+  }>
   master: Master
-  branch: Branch
   client?: User
   created_at: string
 }

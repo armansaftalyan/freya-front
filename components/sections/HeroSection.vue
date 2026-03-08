@@ -9,7 +9,7 @@ const { t } = useLocale()
         <p class="inline-flex rounded-full bg-sand-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-sand-700">
           {{ t('homePage.hero.badge') }}
         </p>
-        <h1 class="text-5xl leading-tight sm:text-6xl">{{ t('homePage.hero.title') }}</h1>
+        <h1 class="text-4xl leading-[1.1] sm:text-6xl">{{ t('homePage.hero.title') }}</h1>
         <p class="max-w-xl text-base text-[var(--muted)] sm:text-lg">
           {{ t('homePage.hero.subtitle') }}
         </p>

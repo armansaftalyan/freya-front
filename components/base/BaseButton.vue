@@ -21,7 +21,7 @@ withDefaults(
   <button
     :type="type"
     :disabled="disabled"
-    class="inline-flex items-center justify-center rounded-full font-semibold transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
+    class="inline-flex items-center justify-center rounded-full text-center font-semibold leading-tight transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50"
     :class="[
       {
         'w-full': block,

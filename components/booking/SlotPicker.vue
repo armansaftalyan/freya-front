@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { format } from 'date-fns'
-import { ru } from 'date-fns/locale'
 import type { Slot } from '~/types/slot'
 const { t } = useLocale()
+const { formatYerevanTime } = useDateTime()
 
 const props = defineProps<{
   slots: Slot[]
@@ -11,15 +10,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ (e: 'pick', value: Slot): void }>()
 
-const formatTime = (raw: string) => {
-  const date = new Date(raw)
-  if (!Number.isNaN(date.getTime())) {
-    return format(date, 'HH:mm', { locale: ru })
-  }
-
-  const timeMatch = String(raw).match(/(\d{2}:\d{2})/)
-  return timeMatch?.[1] || raw
-}
+const formatTime = (raw: string) => formatYerevanTime(raw)
 </script>
 
 <template>

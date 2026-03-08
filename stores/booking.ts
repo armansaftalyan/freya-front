@@ -1,16 +1,14 @@
 import type { ApiItemResponse, ApiListResponse } from '~/types/api'
 import type { Appointment } from '~/types/appointment'
-import type { Branch } from '~/types/branch'
 import type { Category } from '~/types/category'
 import type { Master } from '~/types/master'
 import type { Service } from '~/types/service'
 import type { Slot } from '~/types/slot'
 
 interface BookingState {
-  branch: Branch | null
   category: Category | null
-  service: Service | null
-  master: Master | null
+  services: Service[]
+  categoryMasters: Record<number, Master | null>
   date: string
   slot: Slot | null
   comment: string
@@ -20,10 +18,9 @@ interface BookingState {
 }
 
 const initialState = (): BookingState => ({
-  branch: null,
   category: null,
-  service: null,
-  master: null,
+  services: [],
+  categoryMasters: {},
   date: '',
   slot: null,
   comment: '',
@@ -38,35 +35,46 @@ export const useBookingStore = defineStore('bookingStore', () => {
   const slots = ref<Slot[]>([])
   const slotsLoading = ref(false)
 
+  const hasSelectedServices = computed(() => state.value.services.length > 0)
   const step = computed(() => {
-    if (!state.value.service) return 1
-    if (!state.value.master) return 2
+    if (!hasSelectedServices.value) return 1
     if (!state.value.slot) return 3
     return 4
   })
 
-  const canSubmit = computed(() => Boolean(state.value.branch && state.value.service && state.value.master && state.value.slot))
-
-  const setBranch = (branch: Branch) => {
-    state.value.branch = branch
-    state.value.slot = null
-  }
+  const canSubmit = computed(() => Boolean(state.value.slot))
 
   const setCategory = (category: Category) => {
     state.value.category = category
-    state.value.service = null
-    state.value.master = null
-    state.value.slot = null
   }
 
   const setService = (service: Service) => {
-    state.value.service = service
-    state.value.master = null
+    state.value.services = [service]
     state.value.slot = null
   }
 
-  const setMaster = (master: Master) => {
-    state.value.master = master
+  const toggleService = (service: Service) => {
+    const exists = state.value.services.some((item) => item.id === service.id)
+    if (exists) {
+      state.value.services = state.value.services.filter((item) => item.id !== service.id)
+    }
+    else {
+      state.value.services = [...state.value.services, service]
+    }
+
+    const activeCategoryIds = new Set(state.value.services.map((item) => item.category_id))
+    state.value.categoryMasters = Object.fromEntries(
+      Object.entries(state.value.categoryMasters).filter(([categoryId]) => activeCategoryIds.has(Number(categoryId))),
+    )
+
+    state.value.slot = null
+  }
+
+  const setCategoryMaster = (categoryId: number, master: Master | null) => {
+    state.value.categoryMasters = {
+      ...state.value.categoryMasters,
+      [categoryId]: master,
+    }
     state.value.slot = null
   }
 
@@ -96,7 +104,14 @@ export const useBookingStore = defineStore('bookingStore', () => {
     if (!raw) return
 
     try {
-      state.value = { ...initialState(), ...JSON.parse(raw) }
+      const parsed = JSON.parse(raw)
+      state.value = { ...initialState(), ...parsed }
+      if (!Array.isArray(state.value.services)) {
+        state.value.services = parsed?.service ? [parsed.service as Service] : []
+      }
+      if (!state.value.categoryMasters || typeof state.value.categoryMasters !== 'object') {
+        state.value.categoryMasters = {}
+      }
     }
     catch {
       state.value = initialState()
@@ -112,17 +127,20 @@ export const useBookingStore = defineStore('bookingStore', () => {
   }
 
   const fetchSlots = async () => {
-    if (!state.value.branch || !state.value.service || !state.value.master || !state.value.date) {
+    if (!state.value.services.length || !state.value.date) {
       slots.value = []
       return
     }
 
     slotsLoading.value = true
     try {
-      const response = await api.get<ApiItemResponse<Slot[]> | ApiListResponse<Slot> | any>('/slots', {
-        branch_id: state.value.branch.id,
-        service_id: state.value.service.id,
-        master_id: state.value.master.id,
+      const items = state.value.services.map((service) => ({
+        service_id: service.id,
+        master_id: state.value.categoryMasters[service.category_id]?.id ?? undefined,
+      }))
+
+      const response = await api.post<ApiItemResponse<Slot[]> | ApiListResponse<Slot> | any>('/slots/combo', {
+        items,
         date: state.value.date,
       })
 
@@ -151,12 +169,15 @@ export const useBookingStore = defineStore('bookingStore', () => {
       throw new Error('Booking is incomplete')
     }
 
+    const items = state.value.services.map((service) => ({
+      service_id: service.id,
+      master_id: state.value.categoryMasters[service.category_id]?.id ?? undefined,
+    }))
+
     const response = await api.post<ApiItemResponse<Appointment>>(
       '/appointments',
       {
-        branch_id: state.value.branch?.id,
-        service_id: state.value.service?.id,
-        master_id: state.value.master?.id,
+        items,
         start_at: state.value.slot.start_at,
         source: state.value.source,
         comment: state.value.comment || undefined,
@@ -181,10 +202,10 @@ export const useBookingStore = defineStore('bookingStore', () => {
     slotsLoading,
     step,
     canSubmit,
-    setBranch,
     setCategory,
     setService,
-    setMaster,
+    toggleService,
+    setCategoryMaster,
     setDate,
     setSlot,
     setSource,

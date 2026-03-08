@@ -3,7 +3,7 @@ import SharedLanguageSwitcher from '~/components/shared/LanguageSwitcher.vue'
 import SharedToastStack from "~/components/shared/ToastStack.vue";
 
 const auth = useAuthStore()
-const { t } = useLocale()
+const { t, locale } = useLocale()
 const route = useRoute()
 const isMobileMenuOpen = ref(false)
 
@@ -21,10 +21,16 @@ watch(
     isMobileMenuOpen.value = false
   },
 )
+
+useHead(() => ({
+  htmlAttrs: {
+    lang: locale.value,
+  },
+}))
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col">
+  <div class="flex min-h-screen flex-col" :class="{ 'locale-hy': locale === 'hy' }">
     <SharedToastStack />
     <header class="sticky top-0 z-40 border-b border-sand-100 bg-[var(--bg)]/85 backdrop-blur">
       <div class="container-shell flex min-h-16 items-center justify-between gap-3 py-2">
@@ -103,7 +109,7 @@ watch(
       <slot />
     </main>
 
-    <footer class="mt-12 border-t border-sand-200 py-10">
+    <footer class="py-8 border-t border-sand-200">
       <div class="container-shell flex flex-col gap-3 text-sm text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
         <p>© {{ new Date().getFullYear() }} Freya Beauty Salon</p>
         <div class="flex gap-4">

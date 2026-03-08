@@ -7,10 +7,10 @@ const fieldErrorKeyMap: Record<string, string> = {
   email: 'common.emailInvalid',
   password: 'common.passwordRequired',
   name: 'common.nameRequired',
-  phone: 'common.phoneShort',
-  branch_id: 'common.unexpectedError',
+  phone: 'common.phoneInvalid',
   category_id: 'booking.errors.category',
   service_id: 'booking.errors.service',
+  service_ids: 'booking.errors.service',
   master_id: 'booking.errors.master',
   start_at: 'booking.errors.slot',
   date: 'booking.errors.date',
@@ -50,12 +50,7 @@ export const useApiError = (error: any): ParsedApiError => {
       const translated = fieldErrorKeyMap[normalizedField] ? t(fieldErrorKeyMap[normalizedField]) : ''
       const fallback = Array.isArray(value) ? String(value[0] || '') : String(value)
 
-      if (Array.isArray(value)) {
-        fieldErrors[field] = translated || fallback
-      }
-      else {
-        fieldErrors[field] = translated || fallback
-      }
+      fieldErrors[field] = fallback || translated
     }
   }
 
