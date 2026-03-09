@@ -6,6 +6,7 @@ export const useAuthStore = defineStore('authStore', () => {
   const token = useCookie<string | null>('auth_token', { sameSite: 'lax', secure: false })
   const user = ref<User | null>(null)
   const loading = ref(false)
+  let fetchMePromise: Promise<void> | null = null
 
   const isAuth = computed(() => Boolean(token.value && user.value))
 
@@ -52,15 +53,28 @@ export const useAuthStore = defineStore('authStore', () => {
     }
   }
 
-  const fetchMe = async () => {
+  const fetchMe = async (force = false) => {
     if (!token.value) return
+    if (!force && user.value) return
+    if (fetchMePromise) {
+      await fetchMePromise
+      return
+    }
+
+    fetchMePromise = (async () => {
+      try {
+        const response = await api.get<ApiItemResponse<User>>('/auth/me')
+        user.value = response.data
+      }
+      catch {
+        clearAuth()
+      }
+    })()
 
     try {
-      const response = await api.get<ApiItemResponse<User>>('/auth/me')
-      user.value = response.data
-    }
-    catch {
-      clearAuth()
+      await fetchMePromise
+    } finally {
+      fetchMePromise = null
     }
   }
 

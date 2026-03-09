@@ -52,6 +52,10 @@ const comment = ref('')
 const guestName = ref('')
 const guestPhone = ref('')
 const source = ref<'site' | 'phone' | 'instagram' | 'yandex_maps'>('site')
+const mastersDebounceTimers = new Map<number, ReturnType<typeof setTimeout>>()
+const slotsDebounceTimers = new Map<number, ReturnType<typeof setTimeout>>()
+const mastersAbortControllers = new Map<number, AbortController>()
+const slotsAbortControllers = new Map<number, AbortController>()
 
 const minBookingDate = computed(() => todayYerevanDate())
 
@@ -78,6 +82,10 @@ const parsePositiveInt = (value: unknown): number | null => {
   if (typeof value !== 'string') return null
   const parsed = Number(value)
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null
+}
+
+const isAbortError = (error: any): boolean => {
+  return error?.name === 'AbortError' || error?.message?.toLowerCase?.().includes('aborted')
 }
 
 const categoryById = computed<Map<number, Category>>(() => new Map(categories.value.map(category => [category.id, category])))
@@ -199,7 +207,26 @@ const setLineCategory = async (line: BookingLine, categoryId: number) => {
   }
 }
 
-const fetchMastersForLine = async (line: BookingLine) => {
+const clearLineNetworkState = (lineId: number) => {
+  const mastersTimer = mastersDebounceTimers.get(lineId)
+  if (mastersTimer) {
+    clearTimeout(mastersTimer)
+    mastersDebounceTimers.delete(lineId)
+  }
+
+  const slotsTimer = slotsDebounceTimers.get(lineId)
+  if (slotsTimer) {
+    clearTimeout(slotsTimer)
+    slotsDebounceTimers.delete(lineId)
+  }
+
+  mastersAbortControllers.get(lineId)?.abort()
+  slotsAbortControllers.get(lineId)?.abort()
+  mastersAbortControllers.delete(lineId)
+  slotsAbortControllers.delete(lineId)
+}
+
+const fetchMastersForLineNow = async (line: BookingLine) => {
   line.masters = []
   line.masterId = null
   line.slot = null
@@ -207,25 +234,62 @@ const fetchMastersForLine = async (line: BookingLine) => {
 
   if (!line.serviceIds.length) return
 
+  mastersAbortControllers.get(line.id)?.abort()
+  const abortController = new AbortController()
+  mastersAbortControllers.set(line.id, abortController)
+
   line.mastersLoading = true
   try {
-    const response = await api.get<ApiListResponse<Master>>('/masters', { service_ids: line.serviceIds })
+    const response = await api.get<ApiListResponse<Master>>(
+      '/masters',
+      { service_ids: line.serviceIds },
+      { signal: abortController.signal, skipErrorToast: true },
+    )
     line.masters = response?.data || []
     if (line.masterId && !line.masters.some(master => master.id === line.masterId)) {
       line.masterId = null
     }
   }
+  catch (error: any) {
+    if (isAbortError(error)) return
+    toast.push({ type: 'error', title: t('common.requestFailed'), description: t('common.unexpectedError') })
+  }
   finally {
+    if (mastersAbortControllers.get(line.id) === abortController) {
+      mastersAbortControllers.delete(line.id)
+    }
     line.mastersLoading = false
   }
 }
 
-const fetchSlotsForLine = async (line: BookingLine) => {
+const fetchMastersForLine = (line: BookingLine, immediate = false) => {
+  const previousTimer = mastersDebounceTimers.get(line.id)
+  if (previousTimer) {
+    clearTimeout(previousTimer)
+    mastersDebounceTimers.delete(line.id)
+  }
+
+  if (immediate) {
+    return fetchMastersForLineNow(line)
+  }
+
+  const timer = setTimeout(() => {
+    mastersDebounceTimers.delete(line.id)
+    fetchMastersForLineNow(line)
+  }, 180)
+  mastersDebounceTimers.set(line.id, timer)
+}
+
+const fetchSlotsForLineNow = async (line: BookingLine) => {
   line.slot = null
   line.slots = []
 
   if (!line.serviceIds.length || !line.date) return
   if (line.date < minBookingDate.value) return
+
+  slotsAbortControllers.get(line.id)?.abort()
+  const abortController = new AbortController()
+  slotsAbortControllers.set(line.id, abortController)
 
   line.slotsLoading = true
   try {
@@ -234,13 +298,13 @@ const fetchSlotsForLine = async (line: BookingLine) => {
           service_ids: line.serviceIds,
           master_id: line.masterId,
           date: line.date,
-        })
+        }, { signal: abortController.signal, skipErrorToast: true })
       : await api.post<ApiItemResponse<Slot[]> | ApiListResponse<Slot> | any>('/slots/combo', {
           items: line.serviceIds.map(serviceId => ({
             service_id: serviceId,
           })),
           date: line.date,
-        })
+        }, { signal: abortController.signal, skipErrorToast: true })
 
     const rawSlots = Array.isArray(response)
       ? response
@@ -257,9 +321,34 @@ const fetchSlotsForLine = async (line: BookingLine) => {
       }))
       .filter((item: Slot) => Boolean(item.start_at))
   }
+  catch (error: any) {
+    if (isAbortError(error)) return
+    toast.push({ type: 'error', title: t('common.requestFailed'), description: t('common.unexpectedError') })
+  }
   finally {
+    if (slotsAbortControllers.get(line.id) === abortController) {
+      slotsAbortControllers.delete(line.id)
+    }
     line.slotsLoading = false
   }
+}
+
+const fetchSlotsForLine = (line: BookingLine, immediate = false) => {
+  const previousTimer = slotsDebounceTimers.get(line.id)
+  if (previousTimer) {
+    clearTimeout(previousTimer)
+    slotsDebounceTimers.delete(line.id)
+  }
+
+  if (immediate) {
+    return fetchSlotsForLineNow(line)
+  }
+
+  const timer = setTimeout(() => {
+    slotsDebounceTimers.delete(line.id)
+    fetchSlotsForLineNow(line)
+  }, 220)
+  slotsDebounceTimers.set(line.id, timer)
 }
 
 const addLine = () => {
@@ -272,6 +361,7 @@ const addLine = () => {
 }
 
 const removeLine = (lineId: number) => {
+  clearLineNetworkState(lineId)
   lines.value = lines.value.filter(line => line.id !== lineId)
   if (!lines.value.length) {
     lines.value = [createEmptyLine()]
@@ -378,13 +468,19 @@ await useAsyncData('booking-bootstrap', async () => {
   lines.value = [line]
 
   if (line.serviceIds.length) {
-    await fetchMastersForLine(line)
+    await fetchMastersForLine(line, true)
     if (line.masterId && !line.masters.some(master => master.id === line.masterId)) {
       line.masterId = null
     }
   }
 
   return true
+})
+
+onBeforeUnmount(() => {
+  for (const line of lines.value) {
+    clearLineNetworkState(line.id)
+  }
 })
 </script>
 

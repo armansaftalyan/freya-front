@@ -6,6 +6,8 @@ export const useServicesStore = defineStore('servicesStore', () => {
   const categories = ref<Category[]>([])
   const services = ref<Service[]>([])
   const loading = ref(false)
+  const initialized = ref(false)
+  let initPromise: Promise<void> | null = null
 
   const api = useApi()
 
@@ -19,13 +21,24 @@ export const useServicesStore = defineStore('servicesStore', () => {
     services.value = response.data
   }
 
-  const init = async () => {
-    loading.value = true
-    try {
-      await Promise.all([fetchCategories(), fetchServices()])
+  const init = async (force = false) => {
+    if (!force && initialized.value) return
+    if (!force && initPromise) {
+      await initPromise
+      return
     }
-    finally {
+
+    loading.value = true
+    initPromise = (async () => {
+      await Promise.all([fetchCategories(), fetchServices()])
+      initialized.value = true
+    })()
+
+    try {
+      await initPromise
+    } finally {
       loading.value = false
+      initPromise = null
     }
   }
 
@@ -33,6 +46,7 @@ export const useServicesStore = defineStore('servicesStore', () => {
     categories,
     services,
     loading,
+    initialized,
     fetchCategories,
     fetchServices,
     init,

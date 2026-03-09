@@ -6,6 +6,7 @@ type ApiRequestOptions = {
   headers?: Record<string, string>
   query?: Record<string, any>
   body?: Record<string, any>
+  signal?: AbortSignal
   credentials?: 'omit' | 'same-origin' | 'include'
   mode?: 'cors' | 'no-cors' | 'same-origin'
   method?: HttpMethod
