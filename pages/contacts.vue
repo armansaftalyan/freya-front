@@ -1,15 +1,23 @@
 <script setup lang="ts">
 import Card from "~/components/base/Card.vue";
 
-const { t } = useLocale()
+const { t, locale } = useLocale()
 
 useSeoMeta({
   title: () => `Freya - ${t('nav.contacts')}`,
   description: () => t('contactsPage.seoDescription'),
 })
 
-const fixedAddress = 'Азатутян 21, Ереван'
-const fixedSchedule = 'Ежедневно, 10:00-19:00'
+const fixedAddress = computed(() => {
+  if (locale.value === 'ru') return 'Азатутян 21, Ереван'
+  if (locale.value === 'en') return '21 Azatutyan, Yerevan'
+  return 'Ազատության 21, Երևան'
+})
+const fixedSchedule = computed(() => {
+  if (locale.value === 'ru') return 'Ежедневно, 10:00-19:00'
+  if (locale.value === 'en') return 'Daily, 10:00-19:00'
+  return 'Ամեն օր, 10:00-19:00'
+})
 const fixedPhone = '+374 44 733773'
 const yandexMapUrl = 'https://yandex.ru/map-widget/v1/?oid=161971752484&ol=biz&z=17'
 const yandexRouteUrl = 'https://yandex.ru/maps/?oid=161971752484&ol=biz'

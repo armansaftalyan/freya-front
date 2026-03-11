@@ -35,6 +35,7 @@ await useAsyncData('my-appointments', async () => {
         </div>
         <div class="flex gap-2">
           <NuxtLink to="/booking"><BaseButton>{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
+          <NuxtLink to="/account/gift-cards"><BaseButton variant="secondary">{{ t('account.giftCards') }}</BaseButton></NuxtLink>
           <BaseButton variant="secondary" @click="auth.logout">{{ t('nav.logout') }}</BaseButton>
         </div>
       </div>

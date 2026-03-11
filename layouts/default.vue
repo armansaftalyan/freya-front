@@ -6,11 +6,17 @@ const auth = useAuthStore()
 const { t, locale } = useLocale()
 const route = useRoute()
 const isMobileMenuOpen = ref(false)
+const legalLabel = computed(() => {
+  if (locale.value === 'ru') return 'Условия и политики'
+  if (locale.value === 'en') return 'Terms and Policies'
+  return 'Պայմաններ և քաղաքականություններ'
+})
 
 const links = [
   { to: '/', key: 'nav.home' },
   { to: '/services', key: 'nav.services' },
   { to: '/masters', key: 'nav.masters' },
+  { to: '/gift-cards/buy', key: 'nav.giftCards' },
   { to: '/booking', key: 'nav.booking' },
   { to: '/contacts', key: 'nav.contacts' },
 ]
@@ -45,7 +51,7 @@ useHead(() => ({
             :to="link.to"
             class="whitespace-nowrap text-sm text-sand-900 transition hover:text-sand-600"
           >
-            {{ t(link.key) }}
+            {{ link.label || t(link.key) }}
           </NuxtLink>
         </nav>
 
@@ -88,7 +94,7 @@ useHead(() => ({
                 :to="link.to"
                 class="rounded-xl bg-white px-4 py-3 text-sm font-medium text-sand-900 shadow-soft"
               >
-                {{ t(link.key) }}
+                {{ link.label || t(link.key) }}
               </NuxtLink>
             </nav>
 
@@ -109,12 +115,22 @@ useHead(() => ({
       <slot />
     </main>
 
-    <footer class="py-8 border-t border-sand-200">
-      <div class="container-shell flex flex-col gap-3 text-sm text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
+    <footer class="border-t border-sand-200 py-8">
+      <div class="container-shell flex flex-col gap-4 text-sm text-[var(--muted)]">
+        <div class="flex flex-wrap items-center gap-2">
+          <img src="/payments/visa.svg" alt="Visa" class="h-8 w-auto rounded-lg border border-sand-200 bg-white p-1">
+          <img src="/payments/mastercard.svg" alt="Mastercard" class="h-8 w-auto rounded-lg border border-sand-200 bg-white p-1">
+          <img src="/payments/arca.svg" alt="ArCa" class="h-8 w-auto rounded-lg border border-sand-200 bg-white p-1">
+          <img src="/payments/idram.svg" alt="Idram" class="h-8 w-auto rounded-lg border border-sand-200 bg-white p-1">
+        </div>
+
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p>© {{ new Date().getFullYear() }} Freya Beauty Salon</p>
         <div class="flex gap-4">
           <NuxtLink to="/contacts" class="hover:text-sand-800">{{ t('nav.contacts') }}</NuxtLink>
+          <NuxtLink to="/legal" class="hover:text-sand-800">{{ legalLabel }}</NuxtLink>
           <NuxtLink to="/booking" class="hover:text-sand-800">{{ t('nav.bookNow') }}</NuxtLink>
+        </div>
         </div>
       </div>
     </footer>

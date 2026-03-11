@@ -1,5 +1,11 @@
 <script setup lang="ts">
-defineProps<{ modelValue: boolean; title?: string }>()
+withDefaults(defineProps<{
+  modelValue: boolean
+  title?: string
+  maxWidthClass?: string
+}>(), {
+  maxWidthClass: 'max-w-md',
+})
 defineEmits<{ (e: 'update:modelValue', value: boolean): void }>()
 </script>
 
@@ -12,7 +18,8 @@ defineEmits<{ (e: 'update:modelValue', value: boolean): void }>()
         @click="$emit('update:modelValue', false)"
       >
         <div
-          class="w-full max-w-md rounded-3xl bg-white p-6 shadow-soft"
+          class="w-full rounded-3xl bg-white p-6 shadow-soft"
+          :class="maxWidthClass"
           @click.stop
         >
           <div class="mb-4 flex items-center justify-between">
