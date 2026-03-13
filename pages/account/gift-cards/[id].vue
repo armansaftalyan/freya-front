@@ -32,7 +32,8 @@ const config = useRuntimeConfig()
 const qrUrl = computed(() => {
   if (!card.value) return ''
   const scanUrl = `${config.public.siteUrl}/account/gift-cards/scan/${encodeURIComponent(card.value.qr_token)}`
-  return `https://quickchart.io/qr?size=240&text=${encodeURIComponent(scanUrl)}`
+  const backendBaseUrl = String(config.public.apiBase).replace(/\/api\/?$/, '')
+  return `${backendBaseUrl}/mail/qr/${encodeURIComponent(scanUrl)}.png`
 })
 
 await useAsyncData(`gift-card-${cardId.value}`, async () => {

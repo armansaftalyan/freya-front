@@ -38,7 +38,8 @@ const selectedAmount = computed(() => {
 const qrUrl = computed(() => {
   if (!issuedCard.value) return ''
   const scanUrl = `${config.public.siteUrl}/account/gift-cards/scan/${encodeURIComponent(issuedCard.value.qr_token)}`
-  return `https://quickchart.io/qr?size=240&text=${encodeURIComponent(scanUrl)}`
+  const backendBaseUrl = String(config.public.apiBase).replace(/\/api\/?$/, '')
+  return `${backendBaseUrl}/mail/qr/${encodeURIComponent(scanUrl)}.png`
 })
 
 const idramPayload = computed(() => {
