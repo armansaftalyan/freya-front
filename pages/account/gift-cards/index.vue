@@ -65,8 +65,11 @@ await useAsyncData('my-gift-cards', async () => {
               <p class="text-sm text-[var(--muted)]">{{ t('giftCards.balance') }}: <span class="font-semibold text-sand-900">{{ formatMoney(card.balance, card.currency) }}</span></p>
               <p class="text-sm text-[var(--muted)]">{{ t('giftCards.initialAmount') }}: {{ formatMoney(card.initial_amount, card.currency) }}</p>
               <p class="text-sm text-[var(--muted)]">{{ t('giftCards.expires') }}: {{ card.expires_at ? formatYerevanDateTime(card.expires_at) : t('giftCards.noExpiration') }}</p>
-              <div class="pt-2">
+              <div class="flex flex-wrap gap-2 pt-2">
                 <NuxtLink :to="`/account/gift-cards/${card.id}`"><BaseButton size="sm" variant="secondary">{{ t('giftCards.viewTransactions') }}</BaseButton></NuxtLink>
+                <a :href="card.image_url" :download="`${card.code}.png`" target="_blank" rel="noopener noreferrer">
+                  <BaseButton size="sm" variant="secondary">{{ t('giftCards.saveCardImage') }}</BaseButton>
+                </a>
               </div>
             </div>
             <div class="flex justify-center md:justify-end">

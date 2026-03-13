@@ -18,6 +18,7 @@ export interface GiftCard {
   id: number
   code: string
   qr_token: string
+  image_url: string
   owner_user_id: number | null
   gift_card_order_id: number | null
   initial_amount: number

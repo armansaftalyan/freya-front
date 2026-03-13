@@ -221,6 +221,11 @@ const submit = async () => {
             <p class="text-sm">{{ t('giftCards.code') }}: <span class="font-semibold">{{ issuedCard.code }}</span></p>
             <p class="text-sm text-[var(--muted)]">{{ t('giftCards.balance') }}: {{ formatMoney(issuedCard.balance, issuedCard.currency) }}</p>
             <p class="text-sm text-[var(--muted)]">{{ t('giftCards.expires') }}: {{ issuedCard.expires_at ? formatYerevanDateTime(issuedCard.expires_at) : t('giftCards.noExpiration') }}</p>
+            <div class="pt-2">
+              <a :href="issuedCard.image_url" :download="`${issuedCard.code}.png`" target="_blank" rel="noopener noreferrer">
+                <BaseButton size="sm" variant="secondary">{{ t('giftCards.saveCardImage') }}</BaseButton>
+              </a>
+            </div>
           </div>
           <div class="flex justify-center md:justify-end">
             <img :src="qrUrl" :alt="`QR ${issuedCard.code}`" class="h-[240px] w-[240px] rounded-2xl border border-sand-200 bg-white p-2">

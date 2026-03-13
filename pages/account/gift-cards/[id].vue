@@ -64,6 +64,11 @@ await useAsyncData(`gift-card-${cardId.value}`, async () => {
               <p class="text-sm text-[var(--muted)]">{{ t('giftCards.balance') }}: <span class="font-semibold text-sand-900">{{ formatMoney(card.balance, card.currency) }}</span></p>
               <p class="text-sm text-[var(--muted)]">{{ t('giftCards.initialAmount') }}: {{ formatMoney(card.initial_amount, card.currency) }}</p>
               <p class="text-sm text-[var(--muted)]">{{ t('giftCards.expires') }}: {{ card.expires_at ? formatYerevanDateTime(card.expires_at) : t('giftCards.noExpiration') }}</p>
+              <div class="pt-2">
+                <a :href="card.image_url" :download="`${card.code}.png`" target="_blank" rel="noopener noreferrer">
+                  <BaseButton size="sm" variant="secondary">{{ t('giftCards.saveCardImage') }}</BaseButton>
+                </a>
+              </div>
             </div>
             <div class="flex justify-center md:justify-end">
               <img :src="qrUrl" :alt="`QR ${card.code}`" class="h-[240px] w-[240px] rounded-2xl border border-sand-200 bg-white p-2">
