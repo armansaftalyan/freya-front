@@ -14,17 +14,13 @@ const props = withDefaults(defineProps<{
   theme: 'gold',
 })
 
+const { formatAmd } = useCurrency()
+
 const formatMoney = (value: number, currency: string) => {
-  try {
-    return new Intl.NumberFormat('hy-AM', {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 2,
-    }).format(value)
-  }
-  catch {
-    return `${value.toFixed(2)} ${currency}`
-  }
+  if (currency === 'AMD')
+    return formatAmd(value)
+
+  return `${value.toFixed(2)} ${currency}`
 }
 
 const themeClass = computed(() => {

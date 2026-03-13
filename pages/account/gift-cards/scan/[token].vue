@@ -11,6 +11,7 @@ const api = useApi()
 const toast = useToast()
 const { formatYerevanDateTime } = useDateTime()
 const { t } = useLocale()
+const { formatAmd } = useCurrency()
 
 const canManage = computed(() => {
   const roles = auth.user?.roles || []
@@ -24,16 +25,10 @@ const redeeming = ref(false)
 const loading = ref(true)
 
 const formatMoney = (value: number, currency: string) => {
-  try {
-    return new Intl.NumberFormat('hy-AM', {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 2,
-    }).format(value)
-  }
-  catch {
-    return `${value.toFixed(2)} ${currency}`
-  }
+  if (currency === 'AMD')
+    return formatAmd(value)
+
+  return `${value.toFixed(2)} ${currency}`
 }
 
 const loadGiftCard = async () => {

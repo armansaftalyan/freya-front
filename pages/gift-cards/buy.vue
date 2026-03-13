@@ -7,7 +7,8 @@ const api = useApi()
 const config = useRuntimeConfig()
 const toast = useToast()
 const { formatYerevanDateTime } = useDateTime()
-const { t } = useLocale()
+const { locale, t } = useLocale()
+const { formatAmd } = useCurrency()
 
 const form = reactive({
   amount: '10000',
@@ -48,16 +49,10 @@ const idramPayload = computed(() => {
 })
 
 const formatMoney = (value: number, currency: string) => {
-  try {
-    return new Intl.NumberFormat('hy-AM', {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 2,
-    }).format(value)
-  }
-  catch {
-    return `${value.toFixed(2)} ${currency}`
-  }
+  if (currency === 'AMD')
+    return formatAmd(value)
+
+  return `${value.toFixed(2)} ${currency}`
 }
 
 const applyAmountPreset = (amount: number) => {
@@ -82,6 +77,8 @@ const submit = async () => {
       amount,
       currency: 'AMD',
       payment_provider: paymentProvider.value,
+      theme: selectedTheme.value,
+      locale: locale.value,
       recipient_name: form.recipient_name.trim() || undefined,
       recipient_email: form.recipient_email.trim() || undefined,
       recipient_phone: form.recipient_phone.trim() || undefined,

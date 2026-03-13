@@ -8,20 +8,15 @@ definePageMeta({ middleware: 'auth' })
 
 const { t } = useLocale()
 const { formatYerevanDateTime } = useDateTime()
+const { formatAmd } = useCurrency()
 const store = useGiftCardsStore()
 const { cards, loading } = storeToRefs(store)
 
 const formatMoney = (value: number, currency: string) => {
-  try {
-    return new Intl.NumberFormat('hy-AM', {
-      style: 'currency',
-      currency,
-      maximumFractionDigits: 2,
-    }).format(value)
-  }
-  catch {
-    return `${value.toFixed(2)} ${currency}`
-  }
+  if (currency === 'AMD')
+    return formatAmd(value)
+
+  return `${value.toFixed(2)} ${currency}`
 }
 
 const config = useRuntimeConfig()
