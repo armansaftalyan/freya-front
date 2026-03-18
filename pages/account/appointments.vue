@@ -8,10 +8,15 @@ definePageMeta({ middleware: 'auth' })
 
 const { t } = useLocale()
 const { formatYerevanDateTime } = useDateTime()
+const { localePath } = useLocalizedPath()
+const { isTor, bookingPath, authMasterProfilePath, authGiftCardsPath } = useBrandContext()
+const route = useRoute()
+useLocalizedSeo(() => route.path)
 
 useSeoMeta({
   title: () => t('nav.myAppointments'),
   description: () => t('account.appointmentsSeoDescription'),
+  robots: 'noindex, nofollow',
 })
 
 const auth = useAuthStore()
@@ -26,35 +31,36 @@ await useAsyncData('my-appointments', async () => {
 </script>
 
 <template>
-  <section class="section-gap">
+  <section class="section-gap" :class="isTor ? 'text-stone-100' : ''">
     <div class="container-shell space-y-8">
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 class="text-3xl sm:text-5xl">{{ t('nav.myAppointments') }}</h1>
-          <p class="mt-2 text-sm text-[var(--muted)]">{{ auth.user?.name }} · {{ auth.user?.email }}</p>
+          <p class="mt-2 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ auth.user?.name }} · {{ auth.user?.email }}</p>
         </div>
-        <div class="flex gap-2">
-          <NuxtLink to="/booking"><BaseButton>{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
-          <NuxtLink to="/account/gift-cards"><BaseButton variant="secondary">{{ t('account.giftCards') }}</BaseButton></NuxtLink>
-          <BaseButton variant="secondary" @click="auth.logout">{{ t('nav.logout') }}</BaseButton>
+        <div class="flex flex-wrap gap-2">
+          <NuxtLink :to="localePath(bookingPath)"><BaseButton :theme="isTor ? 'tor' : 'default'">{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
+          <NuxtLink v-if="auth.user?.roles?.includes('master')" :to="localePath(authMasterProfilePath)"><BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('account.masterProfile') }}</BaseButton></NuxtLink>
+          <NuxtLink :to="localePath(authGiftCardsPath)"><BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('account.giftCards') }}</BaseButton></NuxtLink>
+          <BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'" @click="auth.logout">{{ t('nav.logout') }}</BaseButton>
         </div>
       </div>
 
       <div v-if="loading" class="grid gap-4">
-        <SkeletonBlock v-for="idx in 3" :key="idx" class="h-32" />
+        <SkeletonBlock v-for="idx in 3" :key="idx" :theme="isTor ? 'dark' : 'light'" class="h-32" />
       </div>
 
-      <div v-else-if="!appointments.length" class="rounded-3xl border border-dashed border-sand-300 bg-white p-6 text-sm text-sand-700">
+      <div v-else-if="!appointments.length" class="rounded-3xl p-6 text-sm" :class="isTor ? 'border border-dashed border-white/10 bg-white/[0.03] text-stone-300' : 'border border-dashed border-sand-300 bg-white text-sand-700'">
         {{ t('nav.myAppointments') }}: 0
       </div>
 
       <div v-else class="grid gap-4">
-        <Card v-for="item in appointments" :key="item.id" class="fade-in">
+        <Card v-for="item in appointments" :key="item.id" class="fade-in" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
           <div class="flex flex-wrap items-start justify-between gap-4">
             <div class="space-y-2 text-sm">
               <p class="text-lg font-semibold">#{{ item.id }} · {{ item.service?.name }}</p>
-              <p class="text-[var(--muted)]">{{ item.master?.name }}</p>
-              <p class="text-[var(--muted)]">{{ formatYerevanDateTime(item.start_at) }}</p>
+              <p :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ item.master?.name }}</p>
+              <p :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ formatYerevanDateTime(item.start_at) }}</p>
             </div>
             <div class="flex items-center gap-2">
               <BadgeStatus :status="item.status" />
@@ -62,6 +68,7 @@ await useAsyncData('my-appointments', async () => {
                 v-if="item.status !== 'cancelled'"
                 size="sm"
                 variant="secondary"
+                :theme="isTor ? 'tor' : 'default'"
                 @click="appointmentsStore.cancel(item.id)"
               >
                 {{ t('account.cancel') }}

@@ -22,7 +22,7 @@ export default {
           300: '#d8bf98',
           600: '#9f7f55',
           700: '#7a5f3f',
-          900: '#3f311f',
+          900: 'rgb(122 95 63 / <alpha-value>)',
         },
       },
       boxShadow: {

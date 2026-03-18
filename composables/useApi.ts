@@ -5,7 +5,7 @@ type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE'
 type ApiRequestOptions = {
   headers?: Record<string, string>
   query?: Record<string, any>
-  body?: Record<string, any>
+  body?: BodyInit | Record<string, any>
   signal?: AbortSignal
   credentials?: 'omit' | 'same-origin' | 'include'
   mode?: 'cors' | 'no-cors' | 'same-origin'
@@ -37,15 +37,23 @@ export const useApi = () => {
       }, {})
       : undefined
 
+    const requestQuery = {
+      ...(normalizedQuery || {}),
+      lang: locale.value || 'hy',
+    }
+
     try {
+      const isFormData = typeof FormData !== 'undefined' && fetchOptions.body instanceof FormData
       const response = await $fetch<T>(path, {
         baseURL,
         ...fetchOptions,
-        query: normalizedQuery,
+        query: requestQuery,
         headers: {
           ...(fetchOptions.headers || {}),
           Accept: 'application/json',
           'Accept-Language': locale.value || 'hy',
+          'X-Locale': locale.value || 'hy',
+          ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
           ...(token.value ? { Authorization: `Bearer ${token.value}` } : {}),
         },
       } as any)

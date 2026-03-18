@@ -22,6 +22,8 @@ export const useAuthStore = defineStore('authStore', () => {
 
   const api = useApi()
   const { t } = useLocale()
+  const { localePath } = useLocalizedPath()
+  const { authLoginPath } = useBrandContext()
 
   const login = async (payload: LoginPayload) => {
     loading.value = true
@@ -90,6 +92,7 @@ export const useAuthStore = defineStore('authStore', () => {
 
     clearAuth()
     useToast().push({ type: 'info', title: t('common.signedOut') })
+    await navigateTo(localePath(authLoginPath.value))
   }
 
   return {

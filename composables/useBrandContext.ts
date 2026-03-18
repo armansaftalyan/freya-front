@@ -1,0 +1,33 @@
+export const useBrandContext = () => {
+  const route = useRoute()
+
+  const isTor = computed(() => /(^|\/)tor(\/|$)/.test(route.path))
+  const brand = computed<'freya' | 'tor'>(() => (isTor.value ? 'tor' : 'freya'))
+  const rootPath = computed(() => (isTor.value ? '/tor' : ''))
+  const bookingPath = computed(() => (isTor.value ? '/tor/booking' : '/booking'))
+  const productsPath = computed(() => (isTor.value ? '/tor/products' : '/products'))
+  const mastersPath = computed(() => (isTor.value ? '/tor/masters' : '/masters'))
+  const giftCardsPath = computed(() => (isTor.value ? '/tor/gift-cards/buy' : '/gift-cards/buy'))
+  const authLoginPath = computed(() => (isTor.value ? '/tor/account/login' : '/account/login'))
+  const authRegisterPath = computed(() => (isTor.value ? '/tor/account/register' : '/account/register'))
+  const authAppointmentsPath = computed(() => (isTor.value ? '/tor/account/appointments' : '/account/appointments'))
+  const authMasterProfilePath = computed(() => (isTor.value ? '/tor/account/master-profile' : '/account/master-profile'))
+  const authGiftCardsPath = computed(() => (isTor.value ? '/tor/account/gift-cards' : '/account/gift-cards'))
+  const authGiftCardScanBasePath = computed(() => (isTor.value ? '/tor/account/gift-cards/scan' : '/account/gift-cards/scan'))
+
+  return {
+    isTor,
+    brand,
+    rootPath,
+    bookingPath,
+    productsPath,
+    mastersPath,
+    giftCardsPath,
+    authLoginPath,
+    authRegisterPath,
+    authAppointmentsPath,
+    authMasterProfilePath,
+    authGiftCardsPath,
+    authGiftCardScanBasePath,
+  }
+}

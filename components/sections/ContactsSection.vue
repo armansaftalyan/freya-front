@@ -1,10 +1,19 @@
 <script setup lang="ts">
 import Card from "~/components/base/Card.vue";
 
-const { t } = useLocale()
-const fixedAddress = 'Азатутян 21, Ереван'
+const { t, locale } = useLocale()
+const { localePath } = useLocalizedPath()
+const fixedAddress = computed(() => {
+  if (locale.value === 'ru') return 'Азатутян 21, Ереван'
+  if (locale.value === 'en') return '21 Azatutyan, Yerevan'
+  return 'Ազատության 21, Երևան'
+})
 const fixedPhone = '+374 44 733773'
-const fixedSchedule = 'Ежедневно, 10:00-19:00'
+const fixedSchedule = computed(() => {
+  if (locale.value === 'ru') return 'Ежедневно, 10:00-19:00'
+  if (locale.value === 'en') return 'Daily, 10:00-19:00'
+  return 'Ամեն օր, 10:00-19:00'
+})
 </script>
 
 <template>
@@ -12,7 +21,7 @@ const fixedSchedule = 'Ежедневно, 10:00-19:00'
     <div class="container-shell">
       <div class="mb-8 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between">
         <h2 class="text-3xl leading-tight sm:text-4xl">{{ t('homePage.contacts.title') }}</h2>
-        <NuxtLink to="/contacts" class="inline-flex">
+        <NuxtLink :to="localePath('/contacts')" class="inline-flex">
           <BaseButton variant="secondary" size="sm">
             {{ t('homePage.contacts.all') }}
             <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -23,10 +32,10 @@ const fixedSchedule = 'Ежедневно, 10:00-19:00'
       </div>
       <div class="grid gap-4">
         <Card class="fade-in">
-          <p class="mt-2 text-sm text-[var(--muted)]">{{ fixedAddress }}</p>
-          <p class="mt-2 text-sm text-[var(--muted)]">{{ fixedPhone }}</p>
+          <p class="mt-2 break-words text-sm text-[var(--muted)]">{{ fixedAddress }}</p>
+          <p class="mt-2 break-all text-sm text-[var(--muted)]">{{ fixedPhone }}</p>
           <p class="mt-2 text-sm text-[var(--muted)]">{{ fixedSchedule }}</p>
-          <NuxtLink to="/booking" class="mt-5 inline-block">
+          <NuxtLink :to="localePath('/booking')" class="mt-5 inline-block">
             <BaseButton size="sm">{{ t('nav.bookNow') }}</BaseButton>
           </NuxtLink>
         </Card>

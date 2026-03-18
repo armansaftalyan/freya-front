@@ -6,6 +6,7 @@ const props = defineProps<{
   label?: string
   placeholder?: string
   type?: string
+  theme?: 'light' | 'dark'
   required?: boolean
   min?: string
   max?: string
@@ -26,7 +27,7 @@ const openPicker = () => {
 
 <template>
   <label class="block space-y-2">
-    <span v-if="label" class="text-sm font-medium text-sand-900">{{ label }}</span>
+    <span v-if="label" class="text-sm font-medium" :class="props.theme === 'dark' ? 'text-stone-300' : 'text-sand-900'">{{ label }}</span>
     <input
       ref="inputRef"
       :value="modelValue"
@@ -37,7 +38,10 @@ const openPicker = () => {
       :max="max"
       class="w-full min-w-0 rounded-2xl border bg-white px-4 py-3 text-sm outline-none transition focus:border-sand-600"
       :class="[
-        error ? 'border-rose-300 focus:border-rose-500' : 'border-sand-200',
+        props.theme === 'dark'
+          ? 'border-white/10 bg-white/[0.04] text-white placeholder:text-stone-500 focus:border-[#d79a49]'
+          : '',
+        error ? 'border-rose-300 focus:border-rose-500' : props.theme === 'dark' ? 'border-white/10' : 'border-sand-200',
         isDateLike ? 'date-safe-input' : '',
       ]"
       @click="openPicker"

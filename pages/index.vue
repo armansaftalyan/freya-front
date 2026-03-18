@@ -3,7 +3,6 @@ import HeroSection from "~/components/sections/HeroSection.vue";
 import ServicesGrid from "~/components/sections/ServicesGrid.vue";
 import MastersGrid from "~/components/sections/MastersGrid.vue";
 import HowToBookSection from "~/components/sections/HowToBookSection.vue";
-import PriceBlock from "~/components/sections/PriceBlock.vue";
 import ReviewsSection from "~/components/sections/ReviewsSection.vue";
 import InstagramStrip from "~/components/sections/InstagramStrip.vue";
 import ContactsSection from "~/components/sections/ContactsSection.vue";
@@ -11,6 +10,10 @@ import CtaBookingSection from "~/components/sections/CtaBookingSection.vue";
 import BaseModal from "~/components/base/BaseModal.vue";
 
 const { t } = useLocale()
+const { localePath } = useLocalizedPath()
+const route = useRoute()
+const { siteUrl, salonName } = useSiteMeta()
+const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const showGiftPromo = ref(false)
 const giftPromoStorageKey = 'freya_gift_promo_seen_session_v1'
 
@@ -33,7 +36,41 @@ useSeoMeta({
   ogTitle: 'Freya Beauty Salon',
   ogDescription: () => t('homePage.ogDescription'),
   ogType: 'website',
+  ogUrl: () => canonicalUrl.value,
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'Freya Beauty Salon',
+  twitterDescription: () => t('homePage.ogDescription'),
 })
+
+useStructuredData(() => ({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${canonicalUrl.value}#webpage`,
+      url: canonicalUrl.value,
+      name: salonName,
+      description: t('homePage.seoDescription'),
+      isPartOf: {
+        '@id': `${siteUrl.value}#website`,
+      },
+      about: {
+        '@id': `${siteUrl.value}#salon`,
+      },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: salonName,
+          item: canonicalUrl.value,
+        },
+      ],
+    },
+  ],
+}))
 </script>
 
 <template>
@@ -48,10 +85,10 @@ useSeoMeta({
           </div>
         </div>
         <div class="grid gap-2 sm:grid-cols-2">
-          <NuxtLink to="/gift-cards/buy" class="inline-flex items-center justify-center rounded-2xl bg-sand-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-black" @click="showGiftPromo = false">
+          <NuxtLink :to="localePath('/gift-cards/buy')" class="inline-flex items-center justify-center rounded-2xl bg-sand-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-black" @click="showGiftPromo = false">
             {{ t('homePage.giftPromo.primary') }}
           </NuxtLink>
-          <NuxtLink to="/booking" class="inline-flex items-center justify-center rounded-2xl border border-sand-300 bg-white px-4 py-3 text-sm font-semibold text-sand-900 transition hover:border-sand-600" @click="showGiftPromo = false">
+          <NuxtLink :to="localePath('/booking')" class="inline-flex items-center justify-center rounded-2xl border border-sand-300 bg-white px-4 py-3 text-sm font-semibold text-sand-900 transition hover:border-sand-600" @click="showGiftPromo = false">
             {{ t('homePage.giftPromo.secondary') }}
           </NuxtLink>
         </div>
@@ -61,7 +98,6 @@ useSeoMeta({
     <ServicesGrid />
     <MastersGrid />
     <HowToBookSection />
-    <PriceBlock />
     <ReviewsSection />
     <InstagramStrip />
     <ContactsSection />

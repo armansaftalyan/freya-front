@@ -1,9 +1,19 @@
 <script setup lang="ts">
 const { locale } = useLocale()
+const route = useRoute()
+const { siteUrl } = useSiteMeta()
+const { canonicalUrl } = useLocalizedSeo(() => route.path)
 
 useSeoMeta({
   title: 'Freya - Terms and Policies',
   description: 'Privacy, personal data processing, cancellation/refund, delivery terms and payment details.',
+  robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+  ogTitle: 'Freya - Terms and Policies',
+  ogDescription: 'Privacy, personal data processing, cancellation/refund, delivery terms and payment details.',
+  ogUrl: () => canonicalUrl.value,
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'Freya - Terms and Policies',
+  twitterDescription: 'Privacy, personal data processing, cancellation/refund, delivery terms and payment details.',
 })
 
 const content = computed(() => {
@@ -173,6 +183,41 @@ const content = computed(() => {
     ],
   }
 })
+
+useStructuredData(() => ({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      url: canonicalUrl.value,
+      name: content.value.title,
+      description: 'Privacy, personal data processing, cancellation/refund, delivery terms and payment details.',
+      isPartOf: {
+        '@id': `${siteUrl.value}#website`,
+      },
+      about: {
+        '@id': `${siteUrl.value}#salon`,
+      },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: locale.value === 'ru' ? 'Главная' : locale.value === 'en' ? 'Home' : 'Գլխավոր',
+          item: siteUrl.value,
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: content.value.title,
+          item: canonicalUrl.value,
+        },
+      ],
+    },
+  ],
+}))
 </script>
 
 <template>

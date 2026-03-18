@@ -2,12 +2,14 @@
 import { storeToRefs } from 'pinia'
 import Card from "~/components/base/Card.vue";
 
-const { t } = useLocale()
+const { t, locale } = useLocale()
+const { localePath } = useLocalizedPath()
 const { formatAmd } = useCurrency()
+const { brand } = useBrandContext()
 const servicesStore = useServicesStore()
 const { categories, services } = storeToRefs(servicesStore)
 
-await useAsyncData('home-services', async () => {
+await useAsyncData(() => `home-services-${brand.value}-${locale.value}`, async () => {
   await servicesStore.init()
 
   return true
@@ -15,9 +17,12 @@ await useAsyncData('home-services', async () => {
 
 const grouped = computed(() =>
   categories.value
+    .filter((category) => category.brand === brand.value)
     .map((category) => ({
       category,
-      items: services.value.filter((service) => service.category_id === category.id).slice(0, 3),
+      items: services.value
+        .filter((service) => service.brand === brand.value && service.category_id === category.id)
+        .slice(0, 3),
     }))
     .filter((entry) => entry.items.length),
 )
@@ -26,9 +31,9 @@ const grouped = computed(() =>
 <template>
   <section class="section-gap">
     <div class="container-shell">
-      <div class="mb-8 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <h2 class="text-3xl leading-tight sm:text-4xl">{{ t('homePage.services.title') }}</h2>
-        <NuxtLink to="/services" class="inline-flex">
+      <div class="mb-10 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <h2 class="text-4xl leading-tight tracking-[-0.02em] text-sand-950 sm:text-5xl">{{ t('homePage.services.title') }}</h2>
+        <NuxtLink :to="localePath('/services')" class="inline-flex">
           <BaseButton variant="secondary" size="sm">
             {{ t('homePage.services.all') }}
             <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -39,13 +44,27 @@ const grouped = computed(() =>
       </div>
       <div class="space-y-8">
         <div v-for="entry in grouped" :key="entry.category.id" class="space-y-4">
-          <h3 class="text-2xl">{{ entry.category.name }}</h3>
+          <h3 class="text-[1.9rem] leading-tight text-sand-950 sm:text-[2.1rem]">{{ entry.category.name }}</h3>
           <div class="grid gap-4 md:grid-cols-3">
-            <Card v-for="service in entry.items" :key="service.id" class="fade-in">
-              <p class="text-xl">{{ service.name }}</p>
-              <p class="mt-2 text-sm text-[var(--muted)]">{{ service.duration_minutes }} {{ t('homePage.services.durationUnit') }}</p>
-              <p class="mt-2 text-sm font-semibold text-sand-700">{{ formatAmd(service.price_from) }} <span v-if="service.price_to">- {{ formatAmd(service.price_to) }}</span></p>
-              <NuxtLink to="/booking" class="mt-4 inline-block"><BaseButton size="sm">{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
+            <Card v-for="service in entry.items" :key="service.id" class="fade-in flex h-full flex-col">
+              <div class="flex-1">
+                <div class="flex items-start justify-between gap-3">
+                  <p class="text-2xl leading-tight text-sand-950">{{ service.name }}</p>
+                  <span class="shrink-0 whitespace-nowrap rounded-full border border-sand-300 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-sand-700">
+                    {{ service.duration_minutes }} {{ t('homePage.services.durationUnit') }}
+                  </span>
+                </div>
+                <p class="mt-3 text-sm leading-6 text-[var(--muted)]">{{ service.description }}</p>
+              </div>
+              <div class="mt-auto flex items-end justify-between gap-3 pt-6">
+                <p class="text-base font-semibold text-sand-700">
+                  {{ formatAmd(service.price_from) }}
+                  <span v-if="service.price_to && service.price_to !== service.price_from" class="text-[var(--muted)]">- {{ formatAmd(service.price_to) }}</span>
+                </p>
+                <NuxtLink :to="localePath('/booking')" class="inline-block">
+                  <BaseButton size="sm">{{ t('nav.bookNow') }}</BaseButton>
+                </NuxtLink>
+              </div>
             </Card>
           </div>
         </div>

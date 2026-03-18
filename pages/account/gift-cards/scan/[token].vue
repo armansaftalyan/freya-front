@@ -12,6 +12,13 @@ const toast = useToast()
 const { formatYerevanDateTime } = useDateTime()
 const { t } = useLocale()
 const { formatAmd } = useCurrency()
+const { isTor } = useBrandContext()
+
+useSeoMeta({
+  title: () => t('giftCards.scanTitle'),
+  description: () => t('giftCards.redeemTitle'),
+  robots: 'noindex, nofollow',
+})
 
 const canManage = computed(() => {
   const roles = auth.user?.roles || []
@@ -81,35 +88,35 @@ await useAsyncData(`gift-card-scan-${token.value}`, async () => {
 </script>
 
 <template>
-  <section class="section-gap">
+  <section class="section-gap" :class="isTor ? 'text-stone-100' : ''">
     <div class="container-shell max-w-3xl space-y-6">
       <h1 class="text-3xl sm:text-4xl">{{ t('giftCards.scanTitle') }}</h1>
 
-      <Card v-if="!canManage">
+      <Card v-if="!canManage" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100' : ''">
         <p class="text-sm text-rose-700">{{ t('giftCards.accessDenied') }}</p>
       </Card>
 
-      <Card v-else-if="loading">
-        <p class="text-sm text-[var(--muted)]">{{ t('giftCards.loading') }}</p>
+      <Card v-else-if="loading" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100' : ''">
+        <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.loading') }}</p>
       </Card>
 
-      <Card v-else-if="!giftCard">
+      <Card v-else-if="!giftCard" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100' : ''">
         <p class="text-sm text-rose-700">{{ t('giftCards.notFound') }}</p>
       </Card>
 
       <template v-else>
-        <Card class="space-y-2">
+        <Card class="space-y-2" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
           <p class="text-xl font-semibold">{{ giftCard.code }}</p>
-          <p class="text-sm text-[var(--muted)]">{{ t('giftCards.status') }}: <span class="font-semibold text-sand-900">{{ giftCard.status }}</span></p>
-          <p class="text-sm text-[var(--muted)]">{{ t('giftCards.balance') }}: <span class="font-semibold text-sand-900">{{ formatMoney(giftCard.balance, giftCard.currency) }}</span></p>
-          <p class="text-sm text-[var(--muted)]">{{ t('giftCards.expires') }}: {{ giftCard.expires_at ? formatYerevanDateTime(giftCard.expires_at) : t('giftCards.noExpiration') }}</p>
+          <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.status') }}: <span class="font-semibold" :class="isTor ? 'text-white' : 'text-sand-900'">{{ giftCard.status }}</span></p>
+          <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.balance') }}: <span class="font-semibold" :class="isTor ? 'text-white' : 'text-sand-900'">{{ formatMoney(giftCard.balance, giftCard.currency) }}</span></p>
+          <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.expires') }}: {{ giftCard.expires_at ? formatYerevanDateTime(giftCard.expires_at) : t('giftCards.noExpiration') }}</p>
         </Card>
 
-        <Card class="space-y-4">
+        <Card class="space-y-4" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
           <h2 class="text-2xl">{{ t('giftCards.redeemTitle') }}</h2>
-          <BaseInput v-model="redeemAmount" type="number" step="0.01" min="0" :label="t('giftCards.redeemAmountLabel')" />
+          <BaseInput v-model="redeemAmount" type="number" step="0.01" min="0" :label="t('giftCards.redeemAmountLabel')" :theme="isTor ? 'dark' : 'light'" />
           <div>
-            <BaseButton :disabled="redeeming" @click="redeem">{{ redeeming ? t('giftCards.redeeming') : t('giftCards.redeemButton') }}</BaseButton>
+            <BaseButton :theme="isTor ? 'tor' : 'default'" :disabled="redeeming" @click="redeem">{{ redeeming ? t('giftCards.redeeming') : t('giftCards.redeemButton') }}</BaseButton>
           </div>
         </Card>
       </template>

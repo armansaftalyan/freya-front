@@ -18,7 +18,7 @@ export default defineNuxtConfig({
       titleTemplate: '%s | Freya Beauty Salon',
       meta: [
         { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         {
           name: 'description',
           content: 'Premium beauty salon with online booking, top masters, and elegant service.',
@@ -26,12 +26,29 @@ export default defineNuxtConfig({
         { name: 'apple-mobile-web-app-title', content: 'Freya' },
       ],
       link: [
-        { rel: 'icon', type: 'image/png', href: '/favicon-96x96.png?v=2', sizes: '96x96' },
-        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg?v=2' },
-        { rel: 'shortcut icon', href: '/favicon.ico?v=2' },
-        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png?v=2' },
-        { rel: 'manifest', href: '/site.webmanifest?v=2' },
+        { rel: 'icon', type: 'image/png', href: '/logo.png?v=4' },
+        { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg?v=4' },
+        { rel: 'shortcut icon', href: '/logo.png?v=4' },
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/logo.png?v=4' },
+        { rel: 'manifest', href: '/site.webmanifest?v=4' },
       ],
+    },
+  },
+  hooks: {
+    'pages:extend'(pages) {
+      const cloneWithLocale = (page: any): any => ({
+        ...page,
+        name: page.name ? `${page.name}___locale` : undefined,
+        path: page.path === '/' ? '/:locale(ru|en|hy)' : `/:locale(ru|en|hy)${page.path}`,
+        children: page.children?.map((child: any) => ({
+          ...child,
+          name: child.name ? `${child.name}___locale` : undefined,
+          children: child.children,
+        })),
+      })
+
+      const localizedPages = pages.map(cloneWithLocale)
+      pages.push(...localizedPages)
     },
   },
   typescript: {

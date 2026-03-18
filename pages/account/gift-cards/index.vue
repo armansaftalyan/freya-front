@@ -9,8 +9,16 @@ definePageMeta({ middleware: 'auth' })
 const { t } = useLocale()
 const { formatYerevanDateTime } = useDateTime()
 const { formatAmd } = useCurrency()
+const { localePath } = useLocalizedPath()
+const { isTor, authAppointmentsPath, authGiftCardsPath, authGiftCardScanBasePath } = useBrandContext()
 const store = useGiftCardsStore()
 const { cards, loading } = storeToRefs(store)
+
+useSeoMeta({
+  title: () => t('giftCards.listTitle'),
+  description: () => t('giftCards.listSubtitle'),
+  robots: 'noindex, nofollow',
+})
 
 const formatMoney = (value: number, currency: string) => {
   if (currency === 'AMD')
@@ -21,7 +29,7 @@ const formatMoney = (value: number, currency: string) => {
 
 const config = useRuntimeConfig()
 const qrUrl = (card: GiftCard) => {
-  const scanUrl = `${config.public.siteUrl}/account/gift-cards/scan/${encodeURIComponent(card.qr_token)}`
+  const scanUrl = `${config.public.siteUrl}${authGiftCardScanBasePath.value}/${encodeURIComponent(card.qr_token)}`
   const backendBaseUrl = String(config.public.apiBase).replace(/\/api\/?$/, '')
   return `${backendBaseUrl}/mail/qr/${encodeURIComponent(scanUrl)}.png`
 }
@@ -33,42 +41,42 @@ await useAsyncData('my-gift-cards', async () => {
 </script>
 
 <template>
-  <section class="section-gap">
+  <section class="section-gap" :class="isTor ? 'text-stone-100' : ''">
     <div class="container-shell space-y-6">
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 class="text-3xl sm:text-5xl">{{ t('giftCards.listTitle') }}</h1>
-          <p class="mt-2 text-sm text-[var(--muted)]">{{ t('giftCards.listSubtitle') }}</p>
+          <p class="mt-2 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.listSubtitle') }}</p>
         </div>
-        <NuxtLink to="/account/appointments"><BaseButton variant="secondary">{{ t('nav.myAppointments') }}</BaseButton></NuxtLink>
+        <NuxtLink :to="localePath(authAppointmentsPath)"><BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('nav.myAppointments') }}</BaseButton></NuxtLink>
       </div>
 
       <div v-if="loading" class="grid gap-4">
-        <SkeletonBlock v-for="idx in 3" :key="idx" class="h-40" />
+        <SkeletonBlock v-for="idx in 3" :key="idx" :theme="isTor ? 'dark' : 'light'" class="h-40" />
       </div>
 
-      <div v-else-if="!cards.length" class="rounded-3xl border border-dashed border-sand-300 bg-white p-6 text-sm text-sand-700">
+      <div v-else-if="!cards.length" class="rounded-3xl p-6 text-sm" :class="isTor ? 'border border-dashed border-white/10 bg-white/[0.03] text-stone-300' : 'border border-dashed border-sand-300 bg-white text-sand-700'">
         {{ t('giftCards.noCards') }}
       </div>
 
       <div v-else class="grid gap-4">
-        <Card v-for="card in cards" :key="card.id" class="fade-in">
+        <Card v-for="card in cards" :key="card.id" class="fade-in" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
           <div class="grid gap-5 md:grid-cols-[1fr,220px]">
             <div class="space-y-2">
               <p class="text-lg font-semibold">{{ card.code }}</p>
-              <p class="text-sm text-[var(--muted)]">{{ t('giftCards.status') }}: <span class="font-semibold text-sand-900">{{ card.status }}</span></p>
-              <p class="text-sm text-[var(--muted)]">{{ t('giftCards.balance') }}: <span class="font-semibold text-sand-900">{{ formatMoney(card.balance, card.currency) }}</span></p>
-              <p class="text-sm text-[var(--muted)]">{{ t('giftCards.initialAmount') }}: {{ formatMoney(card.initial_amount, card.currency) }}</p>
-              <p class="text-sm text-[var(--muted)]">{{ t('giftCards.expires') }}: {{ card.expires_at ? formatYerevanDateTime(card.expires_at) : t('giftCards.noExpiration') }}</p>
+              <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.status') }}: <span class="font-semibold" :class="isTor ? 'text-white' : 'text-sand-900'">{{ card.status }}</span></p>
+              <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.balance') }}: <span class="font-semibold" :class="isTor ? 'text-white' : 'text-sand-900'">{{ formatMoney(card.balance, card.currency) }}</span></p>
+              <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.initialAmount') }}: {{ formatMoney(card.initial_amount, card.currency) }}</p>
+              <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.expires') }}: {{ card.expires_at ? formatYerevanDateTime(card.expires_at) : t('giftCards.noExpiration') }}</p>
               <div class="flex flex-wrap gap-2 pt-2">
-                <NuxtLink :to="`/account/gift-cards/${card.id}`"><BaseButton size="sm" variant="secondary">{{ t('giftCards.viewTransactions') }}</BaseButton></NuxtLink>
+                <NuxtLink :to="localePath(`${authGiftCardsPath}/${card.id}`)"><BaseButton size="sm" variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('giftCards.viewTransactions') }}</BaseButton></NuxtLink>
                 <a :href="card.image_url" :download="`${card.code}.png`" target="_blank" rel="noopener noreferrer">
-                  <BaseButton size="sm" variant="secondary">{{ t('giftCards.saveCardImage') }}</BaseButton>
+                  <BaseButton size="sm" variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('giftCards.saveCardImage') }}</BaseButton>
                 </a>
               </div>
             </div>
             <div class="flex justify-center md:justify-end">
-              <img :src="qrUrl(card)" :alt="`QR ${card.code}`" class="h-[220px] w-[220px] rounded-2xl border border-sand-200 bg-white p-2">
+              <img :src="qrUrl(card)" :alt="`QR ${card.code}`" class="h-[220px] w-[220px] rounded-2xl p-2" :class="isTor ? 'border border-white/10 bg-white' : 'border border-sand-200 bg-white'">
             </div>
           </div>
         </Card>

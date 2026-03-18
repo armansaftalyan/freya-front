@@ -2,10 +2,15 @@
 import Card from "~/components/base/Card.vue";
 
 const { t } = useLocale()
+const { localePath } = useLocalizedPath()
+const { isTor, authLoginPath, authAppointmentsPath } = useBrandContext()
+const route = useRoute()
+useLocalizedSeo(() => route.path)
 
 useSeoMeta({
   title: () => t('auth.registerTitle'),
   description: () => t('account.registerSeoDescription'),
+  robots: 'noindex, nofollow',
 })
 
 const auth = useAuthStore()
@@ -64,7 +69,7 @@ const submit = async () => {
       ...form,
       phone: normalizedPhone || undefined,
     })
-    await navigateTo('/account/appointments')
+    await navigateTo(localePath(authAppointmentsPath.value))
   }
   catch (error: any) {
     const parsed = useApiError(error)
@@ -74,23 +79,23 @@ const submit = async () => {
 </script>
 
 <template>
-  <section class="section-gap">
+  <section class="section-gap" :class="isTor ? 'text-stone-100' : ''">
     <div class="container-shell">
-      <Card class="mx-auto max-w-xl">
+      <Card class="mx-auto max-w-xl" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
         <h1 class="text-3xl sm:text-4xl">{{ t('auth.registerTitle') }}</h1>
-        <p class="mt-2 text-sm text-[var(--muted)]">{{ t('auth.createText') }}</p>
+        <p class="mt-2 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('auth.createText') }}</p>
         <form class="mt-6 space-y-4" @submit.prevent="submit">
-          <BaseInput v-model="form.name" :label="t('auth.name')" required />
-          <BaseInput v-model="form.email" type="email" :label="t('auth.email')" required />
-          <BaseInput v-model="form.phone" type="tel" :label="t('auth.phone')" />
-          <BaseInput v-model="form.password" type="password" :label="t('auth.password')" required />
-          <BaseButton type="submit" :disabled="auth.loading" block>
+          <BaseInput v-model="form.name" :theme="isTor ? 'dark' : 'light'" :label="t('auth.name')" required />
+          <BaseInput v-model="form.email" type="email" :theme="isTor ? 'dark' : 'light'" :label="t('auth.email')" required />
+          <BaseInput v-model="form.phone" type="tel" :theme="isTor ? 'dark' : 'light'" :label="t('auth.phone')" />
+          <BaseInput v-model="form.password" type="password" :theme="isTor ? 'dark' : 'light'" :label="t('auth.password')" required />
+          <BaseButton type="submit" :theme="isTor ? 'tor' : 'default'" :disabled="auth.loading" block>
             {{ auth.loading ? `${t('auth.createAccount')}...` : t('auth.createAccount') }}
           </BaseButton>
         </form>
-        <p class="mt-5 text-sm text-[var(--muted)]">
+        <p class="mt-5 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">
           {{ t('auth.hasAccount') }}
-          <NuxtLink to="/account/login" class="text-sand-700 underline">{{ t('auth.login') }}</NuxtLink>
+          <NuxtLink :to="localePath(authLoginPath)" :class="isTor ? 'text-[#d79a49] underline' : 'text-sand-700 underline'">{{ t('auth.login') }}</NuxtLink>
         </p>
       </Card>
     </div>

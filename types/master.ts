@@ -25,6 +25,7 @@ export interface Master {
   specialties: string[]
   languages: string[]
   certificates: MasterCertificate[]
+  portfolio: string[]
   instagram: string | null
   services?: MasterService[]
   is_active: boolean
