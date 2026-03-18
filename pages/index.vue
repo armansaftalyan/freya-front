@@ -3,8 +3,6 @@ import HeroSection from "~/components/sections/HeroSection.vue";
 import ServicesGrid from "~/components/sections/ServicesGrid.vue";
 import MastersGrid from "~/components/sections/MastersGrid.vue";
 import HowToBookSection from "~/components/sections/HowToBookSection.vue";
-import ReviewsSection from "~/components/sections/ReviewsSection.vue";
-import InstagramStrip from "~/components/sections/InstagramStrip.vue";
 import ContactsSection from "~/components/sections/ContactsSection.vue";
 import CtaBookingSection from "~/components/sections/CtaBookingSection.vue";
 import BaseModal from "~/components/base/BaseModal.vue";
@@ -98,8 +96,6 @@ useStructuredData(() => ({
     <ServicesGrid />
     <MastersGrid />
     <HowToBookSection />
-    <ReviewsSection />
-    <InstagramStrip />
     <ContactsSection />
     <CtaBookingSection />
   </div>

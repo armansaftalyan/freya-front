@@ -40,6 +40,12 @@ export const useServicesStore = defineStore('servicesStore', () => {
       return
     }
 
+    if (initializedKey.value !== null && initializedKey.value !== contextKey) {
+      categories.value = []
+      services.value = []
+      initialized.value = false
+    }
+
     loading.value = true
     pendingKey.value = contextKey
     initPromise = (async () => {
@@ -57,6 +63,17 @@ export const useServicesStore = defineStore('servicesStore', () => {
       initPromise = null
     }
   }
+
+  watch(
+    () => currentKey(),
+    (nextKey, previousKey) => {
+      if (!previousKey || nextKey === previousKey) {
+        return
+      }
+
+      void init()
+    },
+  )
 
   return {
     categories,
