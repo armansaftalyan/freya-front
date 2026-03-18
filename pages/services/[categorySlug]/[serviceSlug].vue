@@ -9,12 +9,12 @@ const { formatAmd } = useCurrency()
 const route = useRoute()
 const config = useRuntimeConfig()
 const { localePath } = useLocalizedPath()
-const { brand, bookingPath } = useBrandContext()
+const { brand, bookingPath, servicesPath } = useBrandContext()
 
 const categorySlug = computed(() => String(route.params.categorySlug || '').trim())
 const serviceSlug = computed(() => String(route.params.serviceSlug || '').trim())
 
-const { data } = await useAsyncData(() => `service-detail-${categorySlug.value}-${serviceSlug.value}-${locale.value}`, async () => {
+const { data } = await useAsyncData(() => `service-detail-${brand.value}-${categorySlug.value}-${serviceSlug.value}-${locale.value}`, async () => {
   const [categoriesResponse, servicesResponse] = await Promise.all([
     api.get<ApiListResponse<Category>>('/categories', { brand: brand.value }, { skipErrorToast: true }),
     api.get<ApiListResponse<Service>>('/services', { brand: brand.value }, { skipErrorToast: true }),
@@ -105,7 +105,7 @@ useStructuredData(() => {
 <template>
   <section class="section-gap">
     <div class="container-shell space-y-8">
-      <NuxtLink v-if="category" :to="`/services/${category.slug}`" class="inline-flex items-center text-sm text-sand-700 hover:text-sand-900">
+      <NuxtLink v-if="category" :to="localePath(`${servicesPath}/${category.slug}`)" class="inline-flex items-center text-sm text-sand-700 hover:text-sand-900">
         ← {{ category.name }}
       </NuxtLink>
 
@@ -155,7 +155,7 @@ useStructuredData(() => {
           <NuxtLink
             v-for="item in relatedServices"
             :key="item.id"
-            :to="`/services/${category?.slug}/${item.slug}`"
+            :to="localePath(`${servicesPath}/${category?.slug}/${item.slug}`)"
             class="rounded-3xl border border-sand-200 bg-white p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-sand-300"
           >
             <p class="text-lg">{{ item.name }}</p>

@@ -19,7 +19,7 @@ const productSlug = computed(() => String(route.params.productSlug || '').trim()
 
 const quantity = ref(1)
 
-const { data } = await useAsyncData(() => `product-${categorySlug.value}-${productSlug.value}-${locale.value}`, async () => {
+const { data } = await useAsyncData(() => `product-${brand.value}-${categorySlug.value}-${productSlug.value}-${locale.value}`, async () => {
   const [categoriesResponse, productsResponse] = await Promise.all([
     api.get<ApiListResponse<ProductCategory>>('/product-categories', { brand: brand.value }, { skipErrorToast: true }),
     api.get<ApiListResponse<Product>>('/products', { brand: brand.value }, { skipErrorToast: true }),

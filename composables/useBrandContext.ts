@@ -5,6 +5,7 @@ export const useBrandContext = () => {
   const brand = computed<'freya' | 'tor'>(() => (isTor.value ? 'tor' : 'freya'))
   const rootPath = computed(() => (isTor.value ? '/tor' : ''))
   const bookingPath = computed(() => (isTor.value ? '/tor/booking' : '/booking'))
+  const servicesPath = computed(() => (isTor.value ? '/tor/services' : '/services'))
   const productsPath = computed(() => (isTor.value ? '/tor/products' : '/products'))
   const mastersPath = computed(() => (isTor.value ? '/tor/masters' : '/masters'))
   const giftCardsPath = computed(() => (isTor.value ? '/tor/gift-cards/buy' : '/gift-cards/buy'))
@@ -20,6 +21,7 @@ export const useBrandContext = () => {
     brand,
     rootPath,
     bookingPath,
+    servicesPath,
     productsPath,
     mastersPath,
     giftCardsPath,

@@ -5,7 +5,7 @@ import Card from "~/components/base/Card.vue";
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
 const { formatAmd } = useCurrency()
-const { brand } = useBrandContext()
+const { brand, bookingPath, rootPath } = useBrandContext()
 const servicesStore = useServicesStore()
 const { categories, services } = storeToRefs(servicesStore)
 
@@ -33,7 +33,7 @@ const grouped = computed(() =>
     <div class="container-shell">
       <div class="mb-10 flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
         <h2 class="text-4xl leading-tight tracking-[-0.02em] text-sand-950 sm:text-5xl">{{ t('homePage.services.title') }}</h2>
-        <NuxtLink :to="localePath('/services')" class="inline-flex">
+        <NuxtLink :to="localePath(`${rootPath}/services`)" class="inline-flex">
           <BaseButton variant="secondary" size="sm">
             {{ t('homePage.services.all') }}
             <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -61,7 +61,7 @@ const grouped = computed(() =>
                   {{ formatAmd(service.price_from) }}
                   <span v-if="service.price_to && service.price_to !== service.price_from" class="text-[var(--muted)]">- {{ formatAmd(service.price_to) }}</span>
                 </p>
-                <NuxtLink :to="localePath('/booking')" class="inline-block">
+                <NuxtLink :to="localePath(bookingPath)" class="inline-block">
                   <BaseButton size="sm">{{ t('nav.bookNow') }}</BaseButton>
                 </NuxtLink>
               </div>

@@ -8,6 +8,7 @@ const { localePath } = useLocalizedPath()
 const { formatAmd } = useCurrency()
 const route = useRoute()
 const config = useRuntimeConfig()
+const { brand, bookingPath } = useBrandContext()
 
 usePageSeo({
   title: () => `Freya - ${t('nav.services')}`,
@@ -16,7 +17,7 @@ usePageSeo({
 
 const servicesStore = useServicesStore()
 const { categories, services, loading } = storeToRefs(servicesStore)
-await useAsyncData(() => `services-page-${locale.value}`, async () => {
+await useAsyncData(() => `services-page-${brand.value}-${locale.value}`, async () => {
   await servicesStore.init()
 
   return true
@@ -25,9 +26,10 @@ await useAsyncData(() => `services-page-${locale.value}`, async () => {
 const categoryById = computed(() => new Map(categories.value.map((category) => [category.id, category])))
 const grouped = computed(() =>
   categories.value
+    .filter((category) => category.brand === brand.value)
     .map((category) => ({
       category,
-      items: services.value.filter((service) => service.category_id === category.id),
+      items: services.value.filter((service) => service.brand === brand.value && service.category_id === category.id),
     }))
     .filter((entry) => entry.items.length),
 )
@@ -61,7 +63,7 @@ useStructuredData(() => ({
           <p class="text-xs uppercase tracking-[0.2em] text-sand-700">{{ t('servicesPage.catalog') }}</p>
           <h1 class="text-3xl leading-tight sm:text-5xl">{{ t('nav.services') }}</h1>
         </div>
-        <NuxtLink :to="localePath('/booking')"><BaseButton size="lg">{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
+        <NuxtLink :to="localePath(bookingPath)"><BaseButton size="lg">{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
       </div>
 
       <div v-if="loading" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -85,7 +87,7 @@ useStructuredData(() => ({
                   {{ formatAmd(service.price_from) }}
                   <span v-if="service.price_to && service.price_to !== service.price_from" class="text-[var(--muted)]">- {{ formatAmd(service.price_to) }}</span>
                 </p>
-                <NuxtLink :to="localePath('/booking')" class="inline-block">
+                <NuxtLink :to="localePath(bookingPath)" class="inline-block">
                   <BaseButton size="sm">{{ t('nav.bookNow') }}</BaseButton>
                 </NuxtLink>
               </div>

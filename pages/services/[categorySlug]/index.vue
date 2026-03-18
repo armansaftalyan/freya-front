@@ -9,11 +9,11 @@ const { localePath } = useLocalizedPath()
 const { formatAmd } = useCurrency()
 const route = useRoute()
 const config = useRuntimeConfig()
-const { brand } = useBrandContext()
+const { brand, servicesPath } = useBrandContext()
 
 const categorySlug = computed(() => String(route.params.categorySlug || '').trim())
 
-const { data } = await useAsyncData(() => `service-category-${categorySlug.value}-${locale.value}`, async () => {
+const { data } = await useAsyncData(() => `service-category-${brand.value}-${categorySlug.value}-${locale.value}`, async () => {
   const [categoriesResponse, servicesResponse] = await Promise.all([
     api.get<ApiListResponse<Category>>('/categories', { brand: brand.value }, { skipErrorToast: true }),
     api.get<ApiListResponse<Service>>('/services', { brand: brand.value }, { skipErrorToast: true }),
@@ -82,7 +82,7 @@ useStructuredData(() => {
 <template>
   <section class="section-gap">
     <div class="container-shell space-y-8">
-      <NuxtLink :to="localePath('/services')" class="inline-flex items-center text-sm text-sand-700 hover:text-sand-900">
+      <NuxtLink :to="localePath(servicesPath)" class="inline-flex items-center text-sm text-sand-700 hover:text-sand-900">
         ← {{ t('nav.services') }}
       </NuxtLink>
 
@@ -98,7 +98,7 @@ useStructuredData(() => {
         <NuxtLink
           v-for="service in services"
           :key="service.id"
-          :to="localePath(`/services/${category?.slug}/${service.slug}`)"
+          :to="localePath(`${servicesPath}/${category?.slug}/${service.slug}`)"
           class="group flex h-full flex-col rounded-3xl border border-sand-200 bg-white p-6 shadow-soft transition-all duration-200 hover:-translate-y-0.5 hover:border-sand-300 hover:shadow-lg"
         >
           <div class="flex items-start justify-between gap-3">

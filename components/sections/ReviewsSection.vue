@@ -3,7 +3,7 @@
     <div class="container-shell">
       <div class="mb-8 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between">
         <h2 class="text-3xl leading-tight sm:text-4xl">{{ t('homePage.reviews.title') }}</h2>
-        <NuxtLink :to="localePath('/booking')" class="inline-flex">
+        <NuxtLink :to="localePath(bookingPath)" class="inline-flex">
           <BaseButton variant="secondary" size="sm">
             {{ t('nav.bookNow') }}
             <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -27,6 +27,7 @@ import Card from "~/components/base/Card.vue";
 
 const { t } = useLocale()
 const { localePath } = useLocalizedPath()
+const { bookingPath } = useBrandContext()
 
 const reviews = computed(() => [
   { name: 'Sofia M.', text: t('homePage.reviews.first') },

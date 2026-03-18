@@ -27,7 +27,7 @@ const { t, locale } = useLocale()
 const { formatAmd } = useCurrency()
 const { formatYerevanDateTime, todayYerevanDate } = useDateTime()
 const { siteUrl } = useSiteMeta()
-const { isTor, authAppointmentsPath } = useBrandContext()
+const { isTor, brand, authAppointmentsPath } = useBrandContext()
 
 const bookingBrandName = computed(() => (isTor.value ? 'Tor' : 'Freya'))
 const bookingTitle = computed(() => `${bookingBrandName.value} - ${t('nav.booking')}`)
@@ -497,7 +497,7 @@ const submit = async () => {
 
 ensureAtLeastOneLine()
 
-await useAsyncData(() => `booking-bootstrap-${locale.value}`, async () => {
+await useAsyncData(() => `booking-bootstrap-${brand.value}-${locale.value}`, async () => {
   source.value = resolveSourceFromQuery() as any
 
   try {

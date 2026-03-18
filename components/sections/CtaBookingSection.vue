@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
+const { bookingPath } = useBrandContext()
 const bookingCta = computed(() => locale.value === 'hy' ? 'Ամրագրել' : t('nav.bookNow'))
 </script>
 
@@ -12,7 +13,7 @@ const bookingCta = computed(() => locale.value === 'hy' ? 'Ամրագրել' : t
         <h2 class="mt-3 text-3xl leading-tight sm:text-5xl">{{ t('homePage.cta.title') }}</h2>
         <p class="mt-4 max-w-xl text-sand-100">{{ t('homePage.cta.subtitle') }}</p>
         <div class="mt-8">
-          <NuxtLink :to="localePath('/booking')">
+          <NuxtLink :to="localePath(bookingPath)">
             <BaseButton variant="secondary" size="lg">{{ bookingCta }}</BaseButton>
           </NuxtLink>
         </div>

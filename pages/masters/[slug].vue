@@ -26,7 +26,7 @@ if (!masterKey.value) {
   loadError.value = true
 }
 else {
-  const { data } = await useAsyncData(() => `master-profile-${masterKey.value}-${locale.value}`, async () => {
+  const { data } = await useAsyncData(() => `master-profile-${brand.value}-${masterKey.value}-${locale.value}`, async () => {
     try {
       const response = await api.get<ApiItemResponse<Master>>(`/masters/${masterKey.value}`, { brand: brand.value }, { skipErrorToast: true })
       return response.data

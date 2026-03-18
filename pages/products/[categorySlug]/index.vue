@@ -15,7 +15,7 @@ const localizedPath = (target: string) => localePath(target) as string
 
 const categorySlug = computed(() => String(route.params.categorySlug || '').trim())
 
-const { data } = await useAsyncData(() => `product-category-${categorySlug.value}-${locale.value}`, async () => {
+const { data } = await useAsyncData(() => `product-category-${brand.value}-${categorySlug.value}-${locale.value}`, async () => {
   const [categoriesResponse, productsResponse] = await Promise.all([
     api.get<ApiListResponse<ProductCategory>>('/product-categories', { brand: brand.value }, { skipErrorToast: true }),
     api.get<ApiListResponse<Product>>('/products', { brand: brand.value }, { skipErrorToast: true }),
