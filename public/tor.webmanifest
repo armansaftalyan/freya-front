@@ -1,0 +1,21 @@
+{
+  "name": "Tor Barbershop",
+  "short_name": "Tor",
+  "icons": [
+    {
+      "src": "/tor-apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/tor-logo.jpg",
+      "sizes": "1024x1024",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ],
+  "theme_color": "#0b0b0b",
+  "background_color": "#0b0b0b",
+  "display": "standalone"
+}

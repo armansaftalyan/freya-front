@@ -1,9 +1,10 @@
 export const useSiteMeta = () => {
   const config = useRuntimeConfig()
+  const { brand } = useBrandContext()
 
   const siteUrl = computed(() => String(config.public.siteUrl || '').replace(/\/+$/, ''))
-  const logoUrl = computed(() => `${siteUrl.value}/logo.png`)
-  const defaultImageUrl = computed(() => `${siteUrl.value}/logo.png`)
+  const logoUrl = computed(() => `${siteUrl.value}${brand.value === 'tor' ? '/tor-logo.jpg' : '/logo.png'}`)
+  const defaultImageUrl = computed(() => logoUrl.value)
 
   const salonName = 'Freya Beauty Salon'
   const telephone = '+374 44 733773'

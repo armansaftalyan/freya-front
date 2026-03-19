@@ -12,6 +12,7 @@ const { siteUrl, defaultImageUrl } = useSiteMeta()
 const { rootPath, mastersPath, giftCardsPath, authLoginPath, authAppointmentsPath } = useBrandContext()
 const isArmenian = computed(() => locale.value === 'hy')
 const { canonicalUrl, alternates } = useLocalizedSeo(() => route.path)
+const torLogoUrl = computed(() => `${siteUrl.value}/tor-logo.jpg`)
 
 const navLinks = computed(() => [
   { to: `${rootPath.value}/services`, label: copy.value.services },
@@ -69,13 +70,20 @@ useHead(() => ({
     { rel: 'canonical', href: canonicalUrl.value },
     ...alternates.value.map((item) => ({ rel: 'alternate', hreflang: item.locale, href: item.href })),
     { rel: 'alternate', hreflang: 'x-default', href: alternates.value.find((item) => item.locale === 'hy')?.href || canonicalUrl.value },
-    { rel: 'icon', type: 'image/png', href: '/tor-favicon-96x96.png?v=1', sizes: '96x96' },
-    { rel: 'shortcut icon', href: '/tor-favicon-96x96.png?v=1' },
-    { rel: 'apple-touch-icon', sizes: '180x180', href: '/tor-apple-touch-icon.png?v=1' },
+    { key: 'app-manifest', rel: 'manifest', href: '/tor.webmanifest?v=1' },
+    { key: 'app-icon-png', rel: 'icon', type: 'image/png', href: '/tor-favicon-96x96.png?v=1', sizes: '96x96' },
+    { key: 'app-icon-svg', rel: 'icon', type: 'image/png', href: '/tor-favicon-96x96.png?v=1', sizes: '96x96' },
+    { key: 'app-shortcut-icon', rel: 'shortcut icon', href: '/tor-favicon-96x96.png?v=1' },
+    { key: 'app-apple-touch-icon', rel: 'apple-touch-icon', sizes: '180x180', href: '/tor-apple-touch-icon.png?v=1' },
   ],
   meta: [
     { property: 'og:url', content: canonicalUrl.value },
     { property: 'og:site_name', content: 'Tor Barbershop' },
+    { property: 'og:image', content: torLogoUrl.value },
+    { property: 'twitter:image', content: torLogoUrl.value },
+    { name: 'theme-color', content: '#0b0b0b' },
+    { key: 'app-mobile-title', name: 'apple-mobile-web-app-title', content: 'Tor' },
+    { name: 'application-name', content: 'Tor Barbershop' },
   ],
   script: [
     {
@@ -89,7 +97,8 @@ useHead(() => ({
             '@id': `${siteUrl.value}/tor#barbershop`,
             name: 'Tor Barbershop',
             url: `${siteUrl.value}/tor`,
-            image: defaultImageUrl.value,
+            image: torLogoUrl.value,
+            logo: torLogoUrl.value,
             sameAs: ['https://t.me/freyabeauty'],
           },
           {
