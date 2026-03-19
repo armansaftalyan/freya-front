@@ -48,7 +48,7 @@ const form = reactive({
   customer_phone: '',
   customer_email: '',
   delivery_type: 'courier' as 'pickup' | 'courier',
-  payment_provider: 'bank_card' as 'idram' | 'bank_card' | 'on_site',
+  payment_provider: 'bank_card' as 'idram' | 'bank_card',
   city: 'Yerevan',
   address_line: '',
   comment: '',
@@ -117,15 +117,10 @@ await useAsyncData(
 const summarySubtotal = computed(() => orderQuote.value?.subtotal_price ?? cart.totalPrice)
 const summaryDeliveryFee = computed(() => orderQuote.value?.delivery_fee ?? (form.delivery_type === 'pickup' ? 0 : 0))
 const summaryTotal = computed(() => orderQuote.value?.total_price ?? (summarySubtotal.value + summaryDeliveryFee.value))
-const paymentOptions = computed(() => form.delivery_type === 'pickup'
-  ? [
-      { value: 'on_site', label: t('productsPage.paymentProviderOnSite') },
-      { value: 'bank_card', label: t('productsPage.paymentProviderBankCard') },
-    ]
-  : [
-      { value: 'idram', label: t('productsPage.paymentProviderIdram') },
-      { value: 'bank_card', label: t('productsPage.paymentProviderBankCard') },
-    ])
+const paymentOptions = computed(() => [
+  { value: 'idram', label: t('productsPage.paymentProviderIdram') },
+  { value: 'bank_card', label: t('productsPage.paymentProviderBankCard') },
+])
 const paymentStatusLabel = computed(() => {
   if (createdOrder.value?.paid_at) return t('productsPage.paymentStatusPaid')
   if (payment.value?.status === 'failed') return t('productsPage.paymentStatusFailed')
@@ -134,7 +129,6 @@ const paymentStatusLabel = computed(() => {
 const createdOrderPaymentLabel = computed(() => {
   if (!createdOrder.value) return ''
   if (createdOrder.value.payment_provider === 'idram') return t('productsPage.paymentProviderIdram')
-  if (createdOrder.value.payment_provider === 'on_site') return t('productsPage.paymentProviderOnSite')
   return t('productsPage.paymentProviderBankCard')
 })
 const idramPayload = computed(() => {
@@ -157,20 +151,6 @@ watch(
 
     if (!form.customer_email.trim()) {
       form.customer_email = user.email || ''
-    }
-  },
-  { immediate: true },
-)
-
-watch(
-  () => form.delivery_type,
-  (deliveryType) => {
-    if (deliveryType === 'pickup' && form.payment_provider === 'idram') {
-      form.payment_provider = 'on_site'
-    }
-
-    if (deliveryType === 'courier' && form.payment_provider === 'on_site') {
-      form.payment_provider = 'bank_card'
     }
   },
   { immediate: true },

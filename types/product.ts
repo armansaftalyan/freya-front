@@ -42,7 +42,7 @@ export interface ProductOrder {
   customer_phone: string
   customer_email: string | null
   delivery_type: 'pickup' | 'courier'
-  payment_provider: 'idram' | 'bank_card' | 'on_site'
+  payment_provider: 'idram' | 'bank_card'
   provider_payment_id: string | null
   city: string | null
   address_line: string | null
