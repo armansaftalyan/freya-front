@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ApiItemResponse } from '~/types/api'
-import type { Product, ProductOrder, ProductOrderQuote } from '~/types/product'
+import type { Product, ProductOrder, ProductOrderPayment, ProductOrderQuote } from '~/types/product'
 
 const api = useApi()
 const toast = useToast()
@@ -8,8 +8,10 @@ const { t, locale } = useLocale()
 const { formatAmd } = useCurrency()
 const { siteUrl } = useSiteMeta()
 const { localePath } = useLocalizedPath()
+const route = useRoute()
+const auth = useAuthStore()
 const cart = useCartStore()
-const { isTor, productsPath } = useBrandContext()
+const { isTor, brand, productsPath } = useBrandContext()
 const cartSyncKey = computed(() => cart.items.map(item => item.product.id).sort((a, b) => a - b).join(','))
 const catalogPath = computed(() => productsPath.value)
 const increaseItem = (productId: number) => {
@@ -46,6 +48,7 @@ const form = reactive({
   customer_phone: '',
   customer_email: '',
   delivery_type: 'courier' as 'pickup' | 'courier',
+  payment_provider: 'bank_card' as 'idram' | 'bank_card' | 'on_site',
   city: 'Yerevan',
   address_line: '',
   comment: '',
@@ -53,6 +56,9 @@ const form = reactive({
 
 const ordering = ref(false)
 const orderQuote = ref<ProductOrderQuote | null>(null)
+const createdOrder = ref<ProductOrder | null>(null)
+const payment = ref<ProductOrderPayment | null>(null)
+const idramFormRef = ref<HTMLFormElement | null>(null)
 
 usePageSeo({
   title: () => `${isTor.value ? 'Tor' : 'Freya'} - ${t('cartPage.title')}`,
@@ -83,7 +89,6 @@ await useAsyncData(
 const quoteKey = computed(() => JSON.stringify({
   items: cart.items.map(item => ({ product_id: item.product.id, quantity: item.quantity })),
   delivery_type: form.delivery_type,
-  city: form.city.trim(),
 }))
 
 await useAsyncData(
@@ -100,25 +105,97 @@ await useAsyncData(
         quantity: Math.max(1, Number(item.quantity || 1)),
       })),
       delivery_type: form.delivery_type,
-      city: form.city.trim() || undefined,
+      city: form.delivery_type === 'courier' ? 'Yerevan' : form.city.trim() || 'Yerevan',
     }, { skipErrorToast: true })
 
     orderQuote.value = response.data
     return response.data
   },
-  { watch: [locale, cartSyncKey, () => form.delivery_type, () => form.city] },
+  { watch: [locale, cartSyncKey, () => form.delivery_type] },
 )
 
 const summarySubtotal = computed(() => orderQuote.value?.subtotal_price ?? cart.totalPrice)
 const summaryDeliveryFee = computed(() => orderQuote.value?.delivery_fee ?? (form.delivery_type === 'pickup' ? 0 : 0))
 const summaryTotal = computed(() => orderQuote.value?.total_price ?? (summarySubtotal.value + summaryDeliveryFee.value))
+const paymentOptions = computed(() => form.delivery_type === 'pickup'
+  ? [
+      { value: 'on_site', label: t('productsPage.paymentProviderOnSite') },
+      { value: 'bank_card', label: t('productsPage.paymentProviderBankCard') },
+    ]
+  : [
+      { value: 'idram', label: t('productsPage.paymentProviderIdram') },
+      { value: 'bank_card', label: t('productsPage.paymentProviderBankCard') },
+    ])
+const paymentStatusLabel = computed(() => {
+  if (createdOrder.value?.paid_at) return t('productsPage.paymentStatusPaid')
+  if (payment.value?.status === 'failed') return t('productsPage.paymentStatusFailed')
+  return t('productsPage.paymentStatusPending')
+})
+const createdOrderPaymentLabel = computed(() => {
+  if (!createdOrder.value) return ''
+  if (createdOrder.value.payment_provider === 'idram') return t('productsPage.paymentProviderIdram')
+  if (createdOrder.value.payment_provider === 'on_site') return t('productsPage.paymentProviderOnSite')
+  return t('productsPage.paymentProviderBankCard')
+})
+const idramPayload = computed(() => {
+  if (payment.value?.status !== 'redirect' || !payment.value.payload?.fields) return null
+  return payment.value.payload
+})
+
+watch(
+  () => auth.user,
+  (user) => {
+    if (!user) return
+
+    if (!form.customer_name.trim()) {
+      form.customer_name = user.name || ''
+    }
+
+    if (!form.customer_phone.trim()) {
+      form.customer_phone = user.phone || ''
+    }
+
+    if (!form.customer_email.trim()) {
+      form.customer_email = user.email || ''
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => form.delivery_type,
+  (deliveryType) => {
+    if (deliveryType === 'pickup' && form.payment_provider === 'idram') {
+      form.payment_provider = 'on_site'
+    }
+
+    if (deliveryType === 'courier' && form.payment_provider === 'on_site') {
+      form.payment_provider = 'bank_card'
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => route.query.payment_status,
+  (status) => {
+    if (status === 'success') {
+      toast.push({ type: 'success', title: t('productsPage.paymentReturnSuccess') })
+    }
+
+    if (status === 'fail') {
+      toast.push({ type: 'error', title: t('productsPage.paymentReturnFail') })
+    }
+  },
+  { immediate: true },
+)
 
 const submit = async () => {
   if (!cart.items.length) return
 
   ordering.value = true
   try {
-    const response = await api.post<ApiItemResponse<ProductOrder>>('/product-orders', {
+    const response = await api.post<ApiItemResponse<ProductOrder> & { payment?: ProductOrderPayment }>('/product-orders', {
       items: cart.items.map(item => ({
         product_id: item.product.id,
         quantity: Math.max(1, Number(item.quantity || 1)),
@@ -127,10 +204,17 @@ const submit = async () => {
       customer_phone: form.customer_phone.trim(),
       customer_email: form.customer_email.trim() || undefined,
       delivery_type: form.delivery_type,
-      city: form.city.trim() || undefined,
+      payment_provider: form.payment_provider,
+      city: form.delivery_type === 'courier' ? 'Yerevan' : form.city.trim() || 'Yerevan',
       address_line: form.delivery_type === 'courier' ? form.address_line.trim() || undefined : undefined,
       comment: form.comment.trim() || undefined,
+      meta: {
+        brand: brand.value,
+      },
     })
+
+    createdOrder.value = response.data
+    payment.value = response.payment || null
 
     toast.push({
       type: 'success',
@@ -138,14 +222,28 @@ const submit = async () => {
       description: `${t('productsPage.orderNumber')} #${response.data.id}`,
     })
 
+    if (response.payment?.status === 'redirect') {
+      toast.push({
+        type: 'success',
+        title: t('productsPage.idramReady'),
+      })
+    }
+
     cart.clear()
     form.customer_name = ''
     form.customer_phone = ''
     form.customer_email = ''
     form.delivery_type = 'courier'
+    form.payment_provider = 'bank_card'
     form.city = 'Yerevan'
     form.address_line = ''
     form.comment = ''
+
+    if (response.payment?.status === 'redirect' && idramPayload.value) {
+      nextTick(() => {
+        idramFormRef.value?.submit()
+      })
+    }
   }
   finally {
     ordering.value = false
@@ -166,7 +264,45 @@ const submit = async () => {
       </div>
 
       <div
-        v-if="!cart.items.length"
+        v-if="createdOrder"
+        class="rounded-[2rem] p-6"
+        :class="isTor
+          ? 'border border-white/10 bg-[linear-gradient(180deg,rgba(22,22,22,0.96),rgba(12,12,12,0.94))] shadow-[0_20px_50px_rgba(0,0,0,0.24)]'
+          : 'border border-sand-200 bg-[linear-gradient(180deg,rgba(255,251,244,0.98),rgba(245,234,216,0.95))] shadow-soft'"
+      >
+        <div class="space-y-2">
+          <p class="text-xs uppercase tracking-[0.14em]" :class="isTor ? 'text-[#c58a3a]' : 'text-sand-600'">{{ t('productsPage.orderAcceptedTitle') }}</p>
+          <h2 class="text-2xl">{{ t('productsPage.orderNumber') }} #{{ createdOrder.id }}</h2>
+          <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('productsPage.orderAcceptedHint') }}</p>
+        </div>
+
+        <div class="mt-5 grid gap-3 rounded-2xl p-4" :class="isTor ? 'border border-white/10 bg-white/[0.04]' : 'border border-sand-200 bg-white'">
+          <div class="flex items-center justify-between gap-3">
+            <span class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('productsPage.total') }}</span>
+            <span class="text-lg font-semibold" :class="isTor ? 'text-white' : 'text-sand-900'">{{ formatAmd(createdOrder.total_price) }}</span>
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <span class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('productsPage.paymentProviderTitle') }}</span>
+            <span class="text-sm font-medium" :class="isTor ? 'text-white' : 'text-sand-900'">
+              {{ createdOrderPaymentLabel }}
+            </span>
+          </div>
+          <div class="flex items-center justify-between gap-3">
+            <span class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('productsPage.paymentStatus') }}</span>
+            <span class="text-sm font-medium" :class="isTor ? 'text-white' : 'text-sand-900'">{{ paymentStatusLabel }}</span>
+          </div>
+          <p v-if="payment?.message" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ payment.message }}</p>
+        </div>
+
+        <form v-if="idramPayload" ref="idramFormRef" :action="idramPayload.action" method="POST" class="mt-4 space-y-3 rounded-2xl p-4" :class="isTor ? 'border border-white/10 bg-white/[0.04]' : 'border border-sand-200 bg-white'">
+          <input v-for="(value, key) in idramPayload.fields" :key="String(key)" type="hidden" :name="String(key)" :value="String(value ?? '')">
+          <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('productsPage.idramReady') }}</p>
+          <BaseButton type="submit">{{ t('productsPage.continueToIdram') }}</BaseButton>
+        </form>
+      </div>
+
+      <div
+        v-else-if="!cart.items.length"
         class="rounded-3xl p-8 text-center"
         :class="isTor
           ? 'border border-white/10 bg-white/[0.03] shadow-[0_20px_50px_rgba(0,0,0,0.22)]'
@@ -274,7 +410,36 @@ const submit = async () => {
                   { label: t('productsPage.deliveryPickup'), value: 'pickup' },
                 ]"
               />
-              <BaseInput v-model="form.city" :label="t('productsPage.city')" :theme="isTor ? 'dark' : 'light'" />
+              <label class="block space-y-2">
+                <span class="text-sm font-medium" :class="isTor ? 'text-stone-300' : 'text-sand-900'">{{ t('productsPage.city') }}</span>
+                <div
+                  class="w-full min-w-0 rounded-2xl border px-4 py-3 text-sm"
+                  :class="isTor
+                    ? 'border-white/10 bg-white/[0.04] text-stone-400'
+                    : 'border-sand-200 bg-sand-50 text-sand-700'"
+                >
+                  {{ form.city }}
+                </div>
+                <p class="text-xs" :class="isTor ? 'text-stone-500' : 'text-[var(--muted)]'">{{ t('productsPage.cityFixedHint') }}</p>
+              </label>
+            </div>
+
+            <div class="grid gap-1">
+              <span class="text-sm" :class="isTor ? 'text-stone-300' : 'text-sand-700'">{{ t('productsPage.paymentProviderTitle') }}</span>
+              <div class="grid grid-cols-2 gap-2">
+                <button
+                  v-for="option in paymentOptions"
+                  :key="option.value"
+                  type="button"
+                  class="rounded-xl border px-3 py-2 text-sm font-semibold transition"
+                  :class="form.payment_provider === option.value
+                    ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
+                    : (isTor ? 'border-white/10 bg-white/[0.04] text-stone-100 hover:border-[#c58a3a]/50' : 'border-sand-200 bg-white text-sand-900 hover:border-sand-600')"
+                  @click="form.payment_provider = option.value as typeof form.payment_provider"
+                >
+                  {{ option.label }}
+                </button>
+              </div>
             </div>
 
             <BaseInput

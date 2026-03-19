@@ -6,8 +6,5 @@ export default defineNuxtRouteMiddleware((to) => {
     return
   }
 
-  return navigateTo(withLocalePath(to.fullPath, defaultLocale), {
-    redirectCode: 301,
-    replace: true,
-  })
+  return
 })

@@ -10,7 +10,7 @@ import BaseModal from "~/components/base/BaseModal.vue";
 const { t } = useLocale()
 const { localePath } = useLocalizedPath()
 const route = useRoute()
-const { siteUrl, salonName } = useSiteMeta()
+const { siteUrl, salonName, defaultImageUrl } = useSiteMeta()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const showGiftPromo = ref(false)
 const giftPromoStorageKey = 'freya_gift_promo_seen_session_v1'
@@ -35,9 +35,11 @@ useSeoMeta({
   ogDescription: () => t('homePage.ogDescription'),
   ogType: 'website',
   ogUrl: () => canonicalUrl.value,
+  ogImage: () => defaultImageUrl.value,
   twitterCard: 'summary_large_image',
   twitterTitle: 'Freya Beauty Salon',
   twitterDescription: () => t('homePage.ogDescription'),
+  twitterImage: () => defaultImageUrl.value,
 })
 
 useStructuredData(() => ({

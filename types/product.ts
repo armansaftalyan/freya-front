@@ -37,10 +37,13 @@ export interface Product {
 export interface ProductOrder {
   id: number
   status: string
+  customer_user_id: number | null
   customer_name: string
   customer_phone: string
   customer_email: string | null
   delivery_type: 'pickup' | 'courier'
+  payment_provider: 'idram' | 'bank_card' | 'on_site'
+  provider_payment_id: string | null
   city: string | null
   address_line: string | null
   comment: string | null
@@ -48,8 +51,19 @@ export interface ProductOrder {
   subtotal_price: number
   delivery_fee: number
   total_price: number
+  paid_at: string | null
   items?: ProductOrderItem[]
   created_at: string
+}
+
+export interface ProductOrderPayment {
+  status: 'pending' | 'redirect' | 'failed' | 'paid'
+  message: string
+  payload?: {
+    action: string
+    method: 'POST'
+    fields: Record<string, string | null>
+  } | null
 }
 
 export interface ProductOrderQuote {

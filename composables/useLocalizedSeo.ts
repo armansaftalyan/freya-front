@@ -2,6 +2,7 @@ import { defaultLocale, stripLocalePrefix, supportedLocales, withLocalePath, typ
 
 export const useLocalizedSeo = (path?: MaybeRefOrGetter<string>) => {
   const route = useRoute()
+  const { locale } = useLocale()
   const { siteUrl } = useSiteMeta()
 
   const normalizedPath = computed(() => {
@@ -9,7 +10,8 @@ export const useLocalizedSeo = (path?: MaybeRefOrGetter<string>) => {
     return stripLocalePrefix(rawPath || '/')
   })
 
-  const canonicalUrl = computed(() => `${siteUrl.value}${withLocalePath(normalizedPath.value, defaultLocale)}`)
+  const canonicalLocale = computed(() => locale.value || defaultLocale)
+  const canonicalUrl = computed(() => `${siteUrl.value}${withLocalePath(normalizedPath.value, canonicalLocale.value as SupportedLocale)}`)
   const alternates = computed(() =>
     supportedLocales.map((locale) => ({
       locale,
