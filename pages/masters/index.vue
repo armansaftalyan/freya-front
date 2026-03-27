@@ -8,6 +8,7 @@ const { t, locale } = useLocale()
 const { siteUrl } = useSiteMeta()
 const { localePath } = useLocalizedPath()
 const { isTor, brand, bookingPath, mastersPath } = useBrandContext()
+const { masterAvatarSrc, onMasterAvatarError } = useMasterAvatar()
 const route = useRoute()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const { faqCopy } = usePageFaqContent(isTor.value ? 'tor' : 'freya', 'masters')
@@ -104,10 +105,11 @@ useStructuredData(() => ({
           :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''"
         >
           <img
-            :src="master.avatar || 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=700&q=80'"
+            :src="masterAvatarSrc(master.avatar, master.name)"
             :alt="master.name"
             class="h-56 w-full rounded-2xl object-cover"
             loading="lazy"
+            @error="onMasterAvatarError($event, master.name)"
           >
           <p class="mt-4 text-2xl">{{ master.name }}</p>
           <p class="mt-2 min-h-10 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ master.bio || t('mastersPage.fallbackBio') }}</p>

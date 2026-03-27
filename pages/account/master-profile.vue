@@ -11,6 +11,7 @@ const toast = useToast()
 const { t } = useLocale()
 const { localePath } = useLocalizedPath()
 const { isTor, bookingPath, authAppointmentsPath } = useBrandContext()
+const { masterAvatarPlaceholder, onMasterAvatarError } = useMasterAvatar()
 const config = useRuntimeConfig()
 const localizedPath = (target: string) => localePath(target) as string
 const route = useRoute()
@@ -77,7 +78,7 @@ const resolveMediaUrl = (value: string | null | undefined) => {
   return backendBaseUrl.value ? `${backendBaseUrl.value}/${value.replace(/^\/+/, '')}` : value
 }
 
-const fallbackAvatar = 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=900&q=80'
+const fallbackAvatar = computed(() => masterAvatarPlaceholder(profile.value?.name || auth.user?.name))
 const portfolioFallback = `data:image/svg+xml;utf8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 960">
   <defs>
@@ -94,13 +95,11 @@ const portfolioFallback = `data:image/svg+xml;utf8,${encodeURIComponent(`
   <text x="360" y="528" text-anchor="middle" fill="#8f8a83" font-family="Arial, sans-serif" font-size="24" letter-spacing="5">IMAGE</text>
 </svg>
 `)}`;
-const avatarPreview = computed(() => resolveMediaUrl(profile.value?.avatar) || fallbackAvatar)
+const avatarPreview = computed(() => resolveMediaUrl(profile.value?.avatar) || fallbackAvatar.value)
 const portfolioPreviews = computed(() => form.portfolio.map(image => resolveMediaUrl(image) || ''))
 
 const onAvatarError = (event: Event) => {
-  const target = event.target as HTMLImageElement | null
-  if (!target) return
-  target.src = fallbackAvatar
+  onMasterAvatarError(event, profile.value?.name || auth.user?.name)
 }
 
 const onPortfolioError = (event: Event) => {

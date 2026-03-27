@@ -5,6 +5,7 @@ import Card from "~/components/base/Card.vue";
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
 const { isTor, brand, bookingPath, mastersPath } = useBrandContext()
+const { masterAvatarSrc, onMasterAvatarError } = useMasterAvatar()
 const mastersStore = useMastersStore()
 const { masters } = storeToRefs(mastersStore)
 
@@ -54,10 +55,11 @@ const filteredMasters = computed(() =>
         >
           <div class="flex items-center gap-4">
             <img
-              :src="master.avatar || 'https://images.unsplash.com/photo-1519415943484-9fa1873496d4?auto=format&fit=crop&w=300&q=80'"
+              :src="masterAvatarSrc(master.avatar, master.name)"
               :alt="master.name"
               class="h-16 w-16 rounded-2xl object-cover"
               loading="lazy"
+              @error="onMasterAvatarError($event, master.name)"
             >
             <div>
               <p class="text-lg font-semibold">{{ master.name }}</p>

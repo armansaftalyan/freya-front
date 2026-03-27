@@ -10,6 +10,7 @@ const route = useRoute()
 const { siteUrl, defaultImageUrl } = useSiteMeta()
 const { localePath } = useLocalizedPath()
 const { isTor, brand, bookingPath, mastersPath } = useBrandContext()
+const { masterAvatarSrc, masterAvatarPlaceholder, onMasterAvatarError } = useMasterAvatar()
 const loadingLabel = computed(() => t('common.loading'))
 const closeLabel = computed(() => t('common.close'))
 const previousLabel = computed(() => t('common.previous'))
@@ -58,6 +59,7 @@ const seoDescription = computed(() => master.value?.bio || t('mastersPage.profil
 const seoImage = computed(() =>
   master.value?.avatar
   || certificates.value.find((certificate) => certificate.image)?.image
+  || masterAvatarPlaceholder(master.value?.name)
   || defaultImageUrl.value,
 )
 const canonicalUrl = computed(() => `${siteUrl.value}${route.path}`)
@@ -226,10 +228,11 @@ onBeforeUnmount(() => {
       <div v-else-if="master" class="grid gap-6 lg:grid-cols-[360px,1fr]">
         <Card class="h-fit" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
           <img
-            :src="master.avatar || 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=900&q=80'"
+            :src="masterAvatarSrc(master.avatar, master.name)"
             :alt="master.name"
             class="h-80 w-full rounded-2xl object-cover"
             loading="lazy"
+            @error="onMasterAvatarError($event, master.name)"
           >
           <h1 class="mt-4 text-3xl sm:text-4xl">{{ master.name }}</h1>
           <p class="mt-3 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ master.bio || t('mastersPage.fallbackBio') }}</p>

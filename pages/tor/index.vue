@@ -16,6 +16,7 @@ const route = useRoute()
 const { locale, t } = useLocale()
 const { localePath } = useLocalizedPath()
 const { formatAmd } = useCurrency()
+const { masterAvatarSrc, onMasterAvatarError } = useMasterAvatar()
 const { siteUrl } = useSiteMeta()
 const { bookingPath, productsPath, mastersPath, servicesPath } = useBrandContext()
 const cart = useCartStore()
@@ -292,10 +293,11 @@ useStructuredData(() => ({
         <article v-for="master in torMasters" :key="master.id" class="tor-panel fade-in flex h-full flex-col">
           <div class="flex flex-1 items-start gap-4">
             <img
-              :src="master.avatar || '/tor-logo.jpg'"
+              :src="masterAvatarSrc(master.avatar, master.name)"
               :alt="master.name"
               class="h-16 w-16 rounded-2xl object-cover"
               loading="lazy"
+              @error="onMasterAvatarError($event, master.name)"
             >
             <div class="flex-1">
               <p class="text-lg font-bold uppercase tracking-[0.03em]">{{ master.name }}</p>
