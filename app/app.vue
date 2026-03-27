@@ -9,20 +9,6 @@ const runtimeConfig = useRuntimeConfig()
 const cartSyncKey = computed(() => cart.items.map(item => item.product.id).sort((a, b) => a - b).join(','))
 const googleAnalyticsId = computed(() => String(runtimeConfig.public.googleAnalyticsId || '').trim())
 const yandexMetricaId = computed(() => String(runtimeConfig.public.yandexMetricaId || '').trim())
-const analyticsHost = computed(() => {
-  try {
-    return new URL(String(runtimeConfig.public.siteUrl || '')).hostname
-  }
-  catch {
-    return ''
-  }
-})
-const analyticsEnabled = computed(() => {
-  const host = analyticsHost.value.toLowerCase()
-  const isLocalHost = host === '' || host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0'
-
-  return !isLocalHost && (googleAnalyticsId.value !== '' || yandexMetricaId.value !== '')
-})
 const hasQueryParams = computed(() => Object.keys(useRoute().query).length > 0)
 
 useHead(() => ({
@@ -39,7 +25,7 @@ useHead(() => ({
       ]
     : [],
   script: [
-    ...(analyticsEnabled.value && googleAnalyticsId.value
+    ...(googleAnalyticsId.value
       ? [
           {
             key: 'google-analytics-loader',
@@ -57,7 +43,7 @@ useHead(() => ({
           },
         ]
       : []),
-    ...(analyticsEnabled.value && yandexMetricaId.value
+    ...(yandexMetricaId.value
       ? [
           {
             key: 'yandex-metrica-init',
@@ -77,7 +63,7 @@ useHead(() => ({
       : []),
   ],
   noscript: [
-    ...(analyticsEnabled.value && yandexMetricaId.value
+    ...(yandexMetricaId.value
       ? [
           {
             key: 'yandex-metrica-noscript',
