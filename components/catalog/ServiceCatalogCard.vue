@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { RouteLocationRaw } from 'vue-router'
+
 const props = withDefaults(defineProps<{
   name: string
   description?: string
@@ -6,7 +8,7 @@ const props = withDefaults(defineProps<{
   durationLabel: string
   priceLabel: string
   actionLabel: string
-  actionTo: string
+  actionTo: RouteLocationRaw
   theme?: 'default' | 'tor'
   eyebrow?: string
   cardTo?: string
