@@ -4,6 +4,8 @@ import type { Category } from '~/types/category'
 import type { Master } from '~/types/master'
 import type { Product, ProductCategory } from '~/types/product'
 import type { Service } from '~/types/service'
+import ServiceCatalogCard from '~/components/catalog/ServiceCatalogCard.vue'
+import FaqSection from '~/components/sections/FaqSection.vue'
 
 definePageMeta({
   layout: 'tor',
@@ -15,9 +17,10 @@ const { locale, t } = useLocale()
 const { localePath } = useLocalizedPath()
 const { formatAmd } = useCurrency()
 const { siteUrl } = useSiteMeta()
-const { bookingPath, productsPath, mastersPath } = useBrandContext()
+const { bookingPath, productsPath, mastersPath, servicesPath } = useBrandContext()
 const cart = useCartStore()
 const localizedPath = (target: string) => localePath(target) as string
+const { faqCopy } = usePageFaqContent('tor', 'home')
 
 const copy = computed(() => {
   if (locale.value === 'ru') {
@@ -26,6 +29,7 @@ const copy = computed(() => {
       subtitle: 'Мужские стрижки, борода и уход без салонной сладости.',
       eyebrow: 'Точная мужская подача',
       primary: 'Записаться',
+      allServices: 'Все услуги',
       services: 'Услуги',
       servicesLead: 'Стрижки, окантовка, борода и мужской уход. Чётко, быстро, без лишнего.',
       teamLead: 'Барберы Tor, которые держат форму, темп и чистый результат.',
@@ -55,6 +59,7 @@ const copy = computed(() => {
       subtitle: 'Cuts, beard work and grooming with a harder edge.',
       eyebrow: 'Precision Grooming',
       primary: 'Book now',
+      allServices: 'All services',
       services: 'Services',
       servicesLead: 'Cuts, line-ups, beard shaping and male grooming with no extra noise.',
       teamLead: 'Tor barbers focused on shape, pace and clean results.',
@@ -83,6 +88,7 @@ const copy = computed(() => {
     subtitle: 'Տղամարդկանց սանրվածք, մորուք և խնամք ավելի կոշտ ոճով։',
     eyebrow: 'Ճշգրիտ խնամք',
     primary: 'Ամրագրել',
+    allServices: 'Բոլոր ծառայությունները',
     services: 'Ծառայություններ',
     servicesLead: 'Սանրվածք, եզրագծում, մորուք և տղամարդկանց խնամք առանց ավելորդության։',
     teamLead: 'Tor-ի բարբերները աշխատում են ձևի, տեմպի և մաքուր արդյունքի վրա։',
@@ -144,6 +150,7 @@ const torProducts = computed(() => {
 })
 const torMasters = computed(() => masters.value.slice(0, 3))
 const productPath = (product: Product) => localizedPath(`${productsPath.value}/${categoryById.value.get(product.category_id)?.slug || 'beard-care'}/${product.slug}`)
+const servicePath = (service: Service) => localizedPath(`${servicesPath.value}/${menCategory.value?.slug || 'men-hair'}/${service.slug}`)
 const productQuantity = (productId: number) => cart.getItemQuantity(productId)
 const addToCart = (product: Product) => cart.addItem(product, 1)
 const decreaseFromCart = (productId: number) => cart.decreaseItem(productId, 1)
@@ -182,6 +189,17 @@ useStructuredData(() => ({
       '@type': 'CollectionPage',
       name: copy.value.title,
       url: `${siteUrl.value}${route.path}`,
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqCopy.value.items.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer,
+        },
+      })),
     },
   ],
 }))
@@ -233,30 +251,28 @@ useStructuredData(() => ({
           <h2 class="mt-3 text-3xl font-black uppercase tracking-[0.06em] sm:text-5xl">{{ copy.services }}</h2>
           <p class="mt-4 text-stone-300">{{ copy.servicesLead }}</p>
         </div>
-        <NuxtLink :to="bookingUrl">
-          <BaseButton size="sm" theme="tor">{{ copy.primary }}</BaseButton>
-        </NuxtLink>
+        <div class="flex flex-wrap gap-3">
+          <NuxtLink :to="localePath('/tor/services')">
+            <BaseButton size="sm" variant="secondary" theme="tor">{{ copy.allServices }}</BaseButton>
+          </NuxtLink>
+        </div>
       </div>
 
-        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <article v-for="service in menServices" :key="service.id" class="tor-panel fade-in flex h-full flex-col">
-          <div class="flex items-start justify-between gap-3">
-            <h3 class="min-h-[3.5rem] text-xl font-bold uppercase tracking-[0.04em]">{{ service.name }}</h3>
-            <span class="shrink-0 whitespace-nowrap rounded-full border border-[#c58a3a]/50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#d8a15a]">
-              {{ service.duration_minutes }} {{ t('servicesPage.minutes') }}
-            </span>
-          </div>
-          <p class="mt-3 min-h-[4.5rem] text-sm leading-6 text-stone-400">{{ service.description }}</p>
-          <div class="mt-auto flex items-end justify-between gap-3 pt-5">
-            <p class="text-lg font-semibold text-white">
-              {{ formatAmd(service.price_from) }}
-              <span v-if="service.price_to && service.price_to !== service.price_from" class="text-stone-400">- {{ formatAmd(service.price_to) }}</span>
-            </p>
-            <NuxtLink :to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } })" class="inline-block">
-              <BaseButton size="sm" theme="tor">{{ copy.bookCard }}</BaseButton>
-            </NuxtLink>
-          </div>
-        </article>
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <ServiceCatalogCard
+          v-for="service in menServices"
+          :key="service.id"
+          class="fade-in"
+          theme="tor"
+          :name="service.name"
+          :description="service.description || ''"
+          :duration-minutes="service.duration_minutes"
+          :duration-label="t('servicesPage.minutes')"
+          :price-label="`${formatAmd(service.price_from)}${service.price_to && service.price_to !== service.price_from ? ` - ${formatAmd(service.price_to)}` : ''}`"
+          :action-label="copy.bookCard"
+          :action-to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } }) as string"
+          :card-to="servicePath(service)"
+        />
       </div>
     </section>
 
@@ -345,6 +361,14 @@ useStructuredData(() => ({
         </article>
       </div>
     </section>
+
+    <FaqSection
+      theme="tor"
+      :eyebrow="faqCopy.eyebrow"
+      :title="faqCopy.title"
+      :lead="faqCopy.lead"
+      :items="faqCopy.items"
+    />
   </div>
 </template>
 

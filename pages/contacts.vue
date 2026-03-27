@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Card from "~/components/base/Card.vue";
+import FaqSection from "~/components/sections/FaqSection.vue";
 
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
@@ -43,6 +44,7 @@ const mapButtonCopy = computed(() => {
   }
   return { yandex: 'Բացել Yandex-ում', google: 'Բացել Google-ում' }
 })
+const { faqCopy } = usePageFaqContent('freya', 'contacts')
 
 useStructuredData(() => ({
   '@context': 'https://schema.org',
@@ -100,6 +102,17 @@ useStructuredData(() => ({
         },
       ],
     },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqCopy.value.items.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer,
+        },
+      })),
+    },
   ],
 }))
 </script>
@@ -148,6 +161,13 @@ useStructuredData(() => ({
         <a :href="yandexRouteUrl" target="_blank" rel="noopener noreferrer"><BaseButton variant="secondary">{{ mapButtonCopy.yandex }}</BaseButton></a>
         <a :href="googleRouteUrl" target="_blank" rel="noopener noreferrer"><BaseButton variant="secondary">{{ mapButtonCopy.google }}</BaseButton></a>
       </div>
+
+      <FaqSection
+        :eyebrow="faqCopy.eyebrow"
+        :title="faqCopy.title"
+        :lead="faqCopy.lead"
+        :items="faqCopy.items"
+      />
     </div>
   </section>
 </template>

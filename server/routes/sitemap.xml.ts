@@ -36,67 +36,117 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
   const siteUrl = String(config.public.siteUrl || '').replace(/\/+$/, '')
   const apiBase = String(config.public.apiBase || '').replace(/\/+$/, '')
+  const locales = ['hy', 'ru', 'en'] as const
 
   const staticRoutes = [
-    '/',
-    '/tor',
-    '/tor/services',
-    '/tor/products',
     '/services',
     '/products',
     '/masters',
     '/booking',
     '/contacts',
+    '/privacy-policy',
     '/gift-cards/buy',
-    '/legal',
+    '/tor',
+    '/tor/services',
+    '/tor/products',
+    '/tor/masters',
+    '/tor/booking',
+    '/tor/contacts',
+    '/tor/privacy-policy',
+    '/tor/gift-cards/buy',
   ]
 
-  const routes = new Set(staticRoutes)
+  const routes = new Set<string>()
+
+  const addLocalizedRoute = (route: string) => {
+    for (const locale of locales) {
+      routes.add(route === '/' ? `/${locale}` : `/${locale}${route}`)
+    }
+  }
+
+  for (const route of staticRoutes) {
+    addLocalizedRoute(route)
+  }
 
   if (apiBase) {
     try {
-      const [categoriesResponse, servicesResponse, mastersResponse, productCategoriesResponse, productsResponse] = await Promise.all([
-        $fetch<ApiListResponse<SitemapCategory>>(`${apiBase}/categories`),
-        $fetch<ApiListResponse<SitemapService>>(`${apiBase}/services`),
-        $fetch<ApiListResponse<SitemapMaster>>(`${apiBase}/masters`),
-        $fetch<ApiListResponse<SitemapProductCategory>>(`${apiBase}/product-categories`),
-        $fetch<ApiListResponse<SitemapProduct>>(`${apiBase}/products`),
+      const [
+        freyaCategoriesResponse,
+        freyaServicesResponse,
+        freyaMastersResponse,
+        freyaProductCategoriesResponse,
+        freyaProductsResponse,
+        torCategoriesResponse,
+        torServicesResponse,
+        torMastersResponse,
+        torProductCategoriesResponse,
+        torProductsResponse,
+      ] = await Promise.all([
+        $fetch<ApiListResponse<SitemapCategory>>(`${apiBase}/categories`, { query: { brand: 'freya' } }),
+        $fetch<ApiListResponse<SitemapService>>(`${apiBase}/services`, { query: { brand: 'freya' } }),
+        $fetch<ApiListResponse<SitemapMaster>>(`${apiBase}/masters`, { query: { brand: 'freya' } }),
+        $fetch<ApiListResponse<SitemapProductCategory>>(`${apiBase}/product-categories`, { query: { brand: 'freya' } }),
+        $fetch<ApiListResponse<SitemapProduct>>(`${apiBase}/products`, { query: { brand: 'freya' } }),
+        $fetch<ApiListResponse<SitemapCategory>>(`${apiBase}/categories`, { query: { brand: 'tor' } }),
+        $fetch<ApiListResponse<SitemapService>>(`${apiBase}/services`, { query: { brand: 'tor' } }),
+        $fetch<ApiListResponse<SitemapMaster>>(`${apiBase}/masters`, { query: { brand: 'tor' } }),
+        $fetch<ApiListResponse<SitemapProductCategory>>(`${apiBase}/product-categories`, { query: { brand: 'tor' } }),
+        $fetch<ApiListResponse<SitemapProduct>>(`${apiBase}/products`, { query: { brand: 'tor' } }),
       ])
 
-      const activeCategories = (categoriesResponse.data || []).filter(category => category.is_active !== false)
+      const addServiceRoutes = (
+        categoriesResponse: ApiListResponse<SitemapCategory>,
+        servicesResponse: ApiListResponse<SitemapService>,
+        basePath: '/services' | '/tor/services',
+      ) => {
+        const activeCategories = (categoriesResponse.data || []).filter(category => category.is_active !== false)
+        const categorySlugById = new Map<number, string>()
 
-      for (const category of activeCategories) {
-        routes.add(`/services/${category.slug}`)
+        for (const category of activeCategories) {
+          categorySlugById.set(category.id, category.slug)
+          addLocalizedRoute(`${basePath}/${category.slug}`)
+        }
+
+        for (const service of (servicesResponse.data || []).filter(service => service.is_active !== false)) {
+          const categorySlug = categorySlugById.get(service.category_id)
+          if (!categorySlug) continue
+          addLocalizedRoute(`${basePath}/${categorySlug}/${service.slug}`)
+        }
       }
 
-      const categorySlugById = new Map<number, string>()
-      for (const category of activeCategories) {
-        categorySlugById.set(category.id, category.slug)
+      addServiceRoutes(freyaCategoriesResponse, freyaServicesResponse, '/services')
+      addServiceRoutes(torCategoriesResponse, torServicesResponse, '/tor/services')
+
+      for (const master of (freyaMastersResponse.data || []).filter(master => master.is_active !== false && master.slug)) {
+        addLocalizedRoute(`/masters/${master.slug}`)
       }
 
-      for (const service of (servicesResponse.data || []).filter(service => service.is_active !== false)) {
-        const categorySlug = categorySlugById.get(service.category_id)
-        if (!categorySlug) continue
-        routes.add(`/services/${categorySlug}/${service.slug}`)
+      for (const master of (torMastersResponse.data || []).filter(master => master.is_active !== false && master.slug)) {
+        addLocalizedRoute(`/tor/masters/${master.slug}`)
       }
 
-      for (const master of (mastersResponse.data || []).filter(master => master.is_active !== false && master.slug)) {
-        routes.add(`/masters/${master.slug}`)
+      const addProductRoutes = (
+        categoriesResponse: ApiListResponse<SitemapProductCategory>,
+        productsResponse: ApiListResponse<SitemapProduct>,
+        basePath: '/products' | '/tor/products',
+      ) => {
+        const activeProductCategories = (categoriesResponse.data || []).filter(category => category.is_active !== false)
+        const productCategorySlugById = new Map<number, string>()
+
+        for (const category of activeProductCategories) {
+          productCategorySlugById.set(category.id, category.slug)
+          addLocalizedRoute(`${basePath}/${category.slug}`)
+        }
+
+        for (const product of (productsResponse.data || []).filter(product => product.is_active !== false)) {
+          const categorySlug = productCategorySlugById.get(product.category_id)
+          if (!categorySlug) continue
+          addLocalizedRoute(`${basePath}/${categorySlug}/${product.slug}`)
+        }
       }
 
-      const activeProductCategories = (productCategoriesResponse.data || []).filter(category => category.is_active !== false)
-      const productCategorySlugById = new Map<number, string>()
-
-      for (const category of activeProductCategories) {
-        productCategorySlugById.set(category.id, category.slug)
-        routes.add(`/products/${category.slug}`)
-      }
-
-      for (const product of (productsResponse.data || []).filter(product => product.is_active !== false)) {
-        const categorySlug = productCategorySlugById.get(product.category_id)
-        if (!categorySlug) continue
-        routes.add(`/products/${categorySlug}/${product.slug}`)
-      }
+      addProductRoutes(freyaProductCategoriesResponse, freyaProductsResponse, '/products')
+      addProductRoutes(torProductCategoriesResponse, torProductsResponse, '/tor/products')
     }
     catch (error) {
       console.error('Failed to build dynamic sitemap URLs', error)
@@ -107,7 +157,7 @@ export default defineEventHandler(async (event) => {
   const urls = Array.from(routes)
     .sort()
     .map((route) => {
-      const priority = route === '/' ? '1.0' : route.startsWith('/services/') || route.startsWith('/masters/') ? '0.9' : '0.8'
+      const priority = /\/(services|masters)\//.test(route) ? '0.9' : route.endsWith('/contacts') || route.endsWith('/privacy-policy') ? '0.7' : '0.8'
       return `\n  <url>\n    <loc>${siteUrl}${route}</loc>\n    <lastmod>${now}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`
     })
     .join('')

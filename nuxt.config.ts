@@ -1,5 +1,7 @@
 const apiBase = import.meta.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api'
 const siteUrl = import.meta.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+const googleAnalyticsId = import.meta.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_ID || ''
+const yandexMetricaId = import.meta.env.NUXT_PUBLIC_YANDEX_METRIKA_ID || ''
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
@@ -11,6 +13,8 @@ export default defineNuxtConfig({
     public: {
       apiBase,
       siteUrl,
+      googleAnalyticsId,
+      yandexMetricaId,
     },
   },
   app: {

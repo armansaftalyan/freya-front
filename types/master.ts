@@ -5,6 +5,8 @@ export interface MasterService {
   name: string
   duration_minutes: number
   price: number
+  price_from: number
+  price_to: number | null
 }
 
 export interface MasterCertificate {
@@ -22,6 +24,7 @@ export interface Master {
   bio: string | null
   avatar: string | null
   experience_years: number | null
+  experience_duration_years?: number | null
   specialties: string[]
   languages: string[]
   certificates: MasterCertificate[]

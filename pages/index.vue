@@ -5,15 +5,17 @@ import MastersGrid from "~/components/sections/MastersGrid.vue";
 import HowToBookSection from "~/components/sections/HowToBookSection.vue";
 import ContactsSection from "~/components/sections/ContactsSection.vue";
 import CtaBookingSection from "~/components/sections/CtaBookingSection.vue";
+import FaqSection from "~/components/sections/FaqSection.vue";
 import BaseModal from "~/components/base/BaseModal.vue";
 
-const { t } = useLocale()
+const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
 const route = useRoute()
 const { siteUrl, salonName, defaultImageUrl } = useSiteMeta()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const showGiftPromo = ref(false)
 const giftPromoStorageKey = 'freya_gift_promo_seen_session_v1'
+const { faqCopy } = usePageFaqContent('freya', 'home')
 
 onMounted(() => {
   try {
@@ -69,6 +71,17 @@ useStructuredData(() => ({
         },
       ],
     },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqCopy.value.items.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer,
+        },
+      })),
+    },
   ],
 }))
 </script>
@@ -98,6 +111,12 @@ useStructuredData(() => ({
     <ServicesGrid />
     <MastersGrid />
     <HowToBookSection />
+    <FaqSection
+      :eyebrow="faqCopy.eyebrow"
+      :title="faqCopy.title"
+      :lead="faqCopy.lead"
+      :items="faqCopy.items"
+    />
     <ContactsSection />
     <CtaBookingSection />
   </div>

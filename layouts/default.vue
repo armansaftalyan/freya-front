@@ -6,7 +6,7 @@ import SharedToastStack from "~/components/shared/ToastStack.vue";
 const auth = useAuthStore()
 const { t, locale, locales } = useLocale()
 const route = useRoute()
-const { authLoginPath, authAppointmentsPath } = useBrandContext()
+const { authLoginPath, authAppointmentsPath, contactsPath, privacyPolicyPath } = useBrandContext()
 const { salonName, telephone, email, address, sameAs, siteUrl, logoUrl, defaultImageUrl } = useSiteMeta()
 const isMobileMenuOpen = ref(false)
 const { localePath } = useLocalizedPath()
@@ -17,13 +17,13 @@ const alternateLinks = computed(() => locales.map(item => ({
   hreflang: item.code,
   href: `${siteUrl.value}${withLocalePath(stripLocalePrefix(route.path), item.code)}`,
 })))
-const legalLabel = computed(() => {
-  if (locale.value === 'ru') return 'Условия и политики'
-  if (locale.value === 'en') return 'Terms and Policies'
-  return 'Պայմաններ և քաղաքականություններ'
-})
 const isArmenian = computed(() => locale.value === 'hy')
 const bookingCta = computed(() => locale.value === 'hy' ? 'Ամրագրել' : t('nav.bookNow'))
+const privacyPolicyLabel = computed(() => {
+  if (locale.value === 'ru') return 'Политика конфиденциальности'
+  if (locale.value === 'en') return 'Privacy Policy'
+  return 'Գաղտնիության քաղաքականություն'
+})
 const navLinkClass = computed(() => isArmenian.value
   ? 'whitespace-nowrap text-[13px] font-medium tracking-[-0.01em] text-sand-900 transition hover:text-sand-600 xl:text-[14px]'
   : 'whitespace-nowrap text-[15px] font-medium text-sand-900 transition hover:text-sand-600 xl:text-base')
@@ -218,9 +218,8 @@ useHead(() => ({
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p>© {{ new Date().getFullYear() }} Freya Beauty Salon</p>
         <div class="flex gap-4">
-          <NuxtLink :to="localePath('/masters')" class="hover:text-sand-800">{{ t('nav.masters') }}</NuxtLink>
-          <NuxtLink :to="localePath('/legal')" class="hover:text-sand-800">{{ legalLabel }}</NuxtLink>
-          <NuxtLink :to="localePath('/gift-cards/buy')" class="hover:text-sand-800">{{ t('nav.giftCards') }}</NuxtLink>
+          <NuxtLink :to="localePath(contactsPath)" class="hover:text-sand-800">{{ t('nav.contacts') }}</NuxtLink>
+          <NuxtLink :to="localePath(privacyPolicyPath)" class="hover:text-sand-800">{{ privacyPolicyLabel }}</NuxtLink>
         </div>
         </div>
       </div>

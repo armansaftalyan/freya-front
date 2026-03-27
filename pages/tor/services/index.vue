@@ -2,6 +2,8 @@
 import type { ApiListResponse } from '~/types/api'
 import type { Category } from '~/types/category'
 import type { Service } from '~/types/service'
+import ServiceCatalogCard from '~/components/catalog/ServiceCatalogCard.vue'
+import FaqSection from '~/components/sections/FaqSection.vue'
 
 definePageMeta({
   layout: 'tor',
@@ -13,7 +15,8 @@ const { locale, t } = useLocale()
 const { localePath } = useLocalizedPath()
 const { formatAmd } = useCurrency()
 const { siteUrl } = useSiteMeta()
-const { bookingPath } = useBrandContext()
+const { bookingPath, servicesPath } = useBrandContext()
+const { faqCopy } = usePageFaqContent('tor', 'services')
 
 const copy = computed(() => {
   if (locale.value === 'ru') {
@@ -57,10 +60,17 @@ const { data } = await useAsyncData(() => `tor-services-page-${locale.value}`, a
 const categories = computed(() => data.value?.categories || [])
 const services = computed(() => data.value?.services || [])
 const menCategory = computed(() => categories.value.find(item => item.slug === 'men-hair') || null)
+const categoryUrl = computed(() => menCategory.value ? localePath(`/tor/services/${menCategory.value.slug}`) : localePath('/tor/services'))
+const categoryCta = computed(() => {
+  if (locale.value === 'ru') return 'Все →'
+  if (locale.value === 'en') return 'All →'
+  return 'Բոլորը →'
+})
 const menServices = computed(() => {
   if (!menCategory.value) return []
   return services.value.filter(item => item.category_id === menCategory.value?.id)
 })
+const detailPathFor = (service: Service) => localePath(`${servicesPath.value}/${menCategory.value?.slug || 'men-hair'}/${service.slug}`) as string
 
 usePageSeo({
   title: () => copy.value.title,
@@ -69,10 +79,25 @@ usePageSeo({
 
 useStructuredData(() => ({
   '@context': 'https://schema.org',
-  '@type': 'CollectionPage',
-  name: copy.value.title,
-  description: copy.value.lead,
-  url: `${siteUrl.value}${route.path}`,
+  '@graph': [
+    {
+      '@type': 'CollectionPage',
+      name: copy.value.title,
+      description: copy.value.lead,
+      url: `${siteUrl.value}${route.path}`,
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqCopy.value.items.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer,
+        },
+      })),
+    },
+  ],
 }))
 </script>
 
@@ -87,39 +112,40 @@ useStructuredData(() => ({
       <p class="mt-4 text-stone-300">{{ copy.lead }}</p>
     </div>
 
-    <div class="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      <article
+    <div v-if="menCategory" class="mt-10 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <h2 class="text-[1.9rem] leading-tight text-stone-100 sm:text-[2.1rem]">{{ menCategory.name }}</h2>
+      <NuxtLink
+        :to="categoryUrl"
+        class="inline-flex items-center rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm font-semibold text-[#d8a15a] transition hover:border-[#c58a3a]/40 hover:text-[#efbf7f]"
+      >
+        {{ categoryCta }}
+      </NuxtLink>
+    </div>
+
+    <div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <ServiceCatalogCard
         v-for="service in menServices"
         :key="service.id"
-        class="tor-panel flex h-full min-h-[17rem] flex-col fade-in"
-      >
-        <div class="flex items-start justify-between gap-3">
-          <h2 class="min-h-[3.5rem] flex-1 text-xl font-bold uppercase leading-tight tracking-[0.03em]">{{ service.name }}</h2>
-          <span class="shrink-0 whitespace-nowrap rounded-full border border-[#c58a3a]/50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#d8a15a]">
-            {{ service.duration_minutes }} {{ t('servicesPage.minutes') }}
-          </span>
-        </div>
-        <p class="mt-3 min-h-[4.5rem] text-sm leading-6 text-stone-400">{{ service.description }}</p>
-        <div class="mt-auto flex items-end justify-between gap-3 pt-5">
-          <p class="text-lg font-semibold text-white">
-            {{ formatAmd(service.price_from) }}
-            <span v-if="service.price_to && service.price_to !== service.price_from" class="text-stone-400">- {{ formatAmd(service.price_to) }}</span>
-          </p>
-          <NuxtLink :to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } })" class="inline-block shrink-0">
-            <BaseButton size="sm" theme="tor">{{ copy.cta }}</BaseButton>
-          </NuxtLink>
-        </div>
-      </article>
+        class="fade-in"
+        theme="tor"
+        :name="service.name"
+        :description="service.description || ''"
+        :duration-minutes="service.duration_minutes"
+        :duration-label="t('servicesPage.minutes')"
+        :price-label="`${formatAmd(service.price_from)}${service.price_to && service.price_to !== service.price_from ? ` - ${formatAmd(service.price_to)}` : ''}`"
+        :action-label="copy.cta"
+        :action-to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } }) as string"
+        :card-to="detailPathFor(service)"
+      />
     </div>
+
+    <FaqSection
+      theme="tor"
+      :bordered="false"
+      :eyebrow="faqCopy.eyebrow"
+      :title="faqCopy.title"
+      :lead="faqCopy.lead"
+      :items="faqCopy.items"
+    />
   </section>
 </template>
-
-<style scoped>
-.tor-panel {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.02));
-  border-radius: 1.5rem;
-  padding: 1.25rem;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
-}
-</style>

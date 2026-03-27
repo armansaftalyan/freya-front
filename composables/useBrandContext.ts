@@ -8,6 +8,8 @@ export const useBrandContext = () => {
   const servicesPath = computed(() => (isTor.value ? '/tor/services' : '/services'))
   const productsPath = computed(() => (isTor.value ? '/tor/products' : '/products'))
   const mastersPath = computed(() => (isTor.value ? '/tor/masters' : '/masters'))
+  const contactsPath = computed(() => (isTor.value ? '/tor/contacts' : '/contacts'))
+  const privacyPolicyPath = computed(() => (isTor.value ? '/tor/privacy-policy' : '/privacy-policy'))
   const giftCardsPath = computed(() => (isTor.value ? '/tor/gift-cards/buy' : '/gift-cards/buy'))
   const authLoginPath = computed(() => (isTor.value ? '/tor/account/login' : '/account/login'))
   const authRegisterPath = computed(() => (isTor.value ? '/tor/account/register' : '/account/register'))
@@ -24,6 +26,8 @@ export const useBrandContext = () => {
     servicesPath,
     productsPath,
     mastersPath,
+    contactsPath,
+    privacyPolicyPath,
     giftCardsPath,
     authLoginPath,
     authRegisterPath,

@@ -45,6 +45,7 @@ const form = reactive({
 })
 
 const portfolioCountLabel = computed(() => String(form.portfolio.length).padStart(2, '0'))
+const currentYear = String(new Date().getFullYear())
 
 const backendBaseUrl = computed(() => String(config.public.apiBase || '').replace(/\/api\/?$/, ''))
 
@@ -125,7 +126,9 @@ const parseLines = (value: string) =>
 const syncForm = (master: Master) => {
   form.name = master.name || ''
   form.bio = master.bio || ''
-  form.experience_years = master.experience_years === null ? '' : String(master.experience_years)
+  form.experience_years = master.experience_years === null || master.experience_years === undefined
+    ? ''
+    : String(master.experience_years)
   form.instagram = master.instagram || ''
   form.specialtiesText = (master.specialties || []).join('\n')
   form.languagesText = (master.languages || []).join('\n')
@@ -150,7 +153,7 @@ const persistPortfolio = async () => {
   const response = await api.patch<ApiItemResponse<Master>>('/master/profile', {
     name: form.name.trim(),
     bio: form.bio.trim() || null,
-    experience_years: form.experience_years.trim() ? Number(form.experience_years) : null,
+    experience_start_year: form.experience_years.trim() ? Number(form.experience_years) : null,
     instagram: form.instagram.trim() || null,
     specialties: parseLines(form.specialtiesText),
     languages: parseLines(form.languagesText),
@@ -281,7 +284,7 @@ const removePortfolioItem = async (index: number) => {
           <form class="space-y-6" @submit.prevent="saveProfile">
             <div class="grid gap-4 md:grid-cols-2">
               <BaseInput v-model="form.name" :label="t('auth.name')" :theme="isTor ? 'dark' : 'light'" required />
-              <BaseInput v-model="form.experience_years" type="number" min="0" max="60" :label="t('account.experienceYears')" :theme="isTor ? 'dark' : 'light'" />
+              <BaseInput v-model="form.experience_years" type="number" min="1900" :max="currentYear" :label="t('account.experienceYears')" :theme="isTor ? 'dark' : 'light'" />
             </div>
 
             <BaseInput v-model="form.instagram" :label="t('account.instagram')" :theme="isTor ? 'dark' : 'light'" placeholder="@username" />

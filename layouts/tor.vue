@@ -8,8 +8,8 @@ const route = useRoute()
 const { locale } = useLocale()
 const isMobileMenuOpen = ref(false)
 const { localePath } = useLocalizedPath()
-const { siteUrl, defaultImageUrl } = useSiteMeta()
-const { rootPath, mastersPath, giftCardsPath, authLoginPath, authAppointmentsPath } = useBrandContext()
+const { siteUrl } = useSiteMeta()
+const { rootPath, mastersPath, contactsPath, privacyPolicyPath, giftCardsPath, authLoginPath, authAppointmentsPath } = useBrandContext()
 const isArmenian = computed(() => locale.value === 'hy')
 const { canonicalUrl, alternates } = useLocalizedSeo(() => route.path)
 const torLogoUrl = computed(() => `${siteUrl.value}/tor-logo.jpg`)
@@ -53,6 +53,12 @@ const copy = computed(() => {
     care: 'Խնամք',
     tagline: 'Ճշգրիտ սանրվածք, մորուք և վստահ խնամք։',
   }
+})
+
+const privacyPolicyLabel = computed(() => {
+  if (locale.value === 'ru') return 'Политика конфиденциальности'
+  if (locale.value === 'en') return 'Privacy Policy'
+  return 'Գաղտնիության քաղաքականություն'
 })
 
 watch(
@@ -226,10 +232,8 @@ useHead(() => ({
             <p class="mt-1">{{ copy.tagline }}</p>
           </div>
           <div class="flex gap-4">
-            <NuxtLink :to="localePath(mastersPath)" class="transition hover:text-[#d79a49]">{{ locale === 'ru' ? 'Мастера' : locale === 'en' ? 'Masters' : 'Մասնագետներ' }}</NuxtLink>
-            <NuxtLink :to="localePath('/tor/services')" class="transition hover:text-[#d79a49]">{{ copy.services }}</NuxtLink>
-            <NuxtLink :to="localePath('/tor/products')" class="transition hover:text-[#d79a49]">{{ copy.care }}</NuxtLink>
-            <NuxtLink :to="localePath(giftCardsPath)" class="transition hover:text-[#d79a49]">{{ locale === 'ru' ? 'Подарочные карты' : locale === 'en' ? 'Gift Cards' : 'Նվեր քարտեր' }}</NuxtLink>
+            <NuxtLink :to="localePath(contactsPath)" class="transition hover:text-[#d79a49]">{{ locale === 'ru' ? 'Контакты' : locale === 'en' ? 'Contacts' : 'Կոնտակտներ' }}</NuxtLink>
+            <NuxtLink :to="localePath(privacyPolicyPath)" class="transition hover:text-[#d79a49]">{{ privacyPolicyLabel }}</NuxtLink>
           </div>
         </div>
       </div>

@@ -235,9 +235,9 @@ onBeforeUnmount(() => {
           <p class="mt-3 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ master.bio || t('mastersPage.fallbackBio') }}</p>
 
           <div class="mt-5 grid gap-2 text-sm">
-            <p v-if="master.experience_years !== null">
+            <p v-if="master.experience_duration_years !== null && master.experience_duration_years !== undefined">
               <span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('mastersPage.experience') }}:</span>
-              <span class="font-semibold"> {{ master.experience_years }} {{ t('mastersPage.years') }}</span>
+              <span class="font-semibold"> {{ master.experience_duration_years }} {{ t('mastersPage.years') }}</span>
             </p>
             <p v-if="master.instagram">
               <span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">Instagram:</span>
@@ -303,7 +303,10 @@ onBeforeUnmount(() => {
                   <span class="inline-flex h-7 w-7 items-center justify-center rounded-full" :class="isTor ? 'bg-white/[0.08] text-[#c58a3a]' : 'bg-sand-100 text-sand-700'">→</span>
                 </div>
                 <p class="mt-1 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ service.duration_minutes }} {{ t('servicesPage.minutes') }}</p>
-                <p class="mt-1 text-sm font-semibold" :class="isTor ? 'text-[#d79a49]' : 'text-sand-700'">{{ formatAmd(service.price) }}</p>
+                <p class="mt-1 text-sm font-semibold" :class="isTor ? 'text-[#d79a49]' : 'text-sand-700'">
+                  {{ formatAmd(service.price_from) }}
+                  <span v-if="service.price_to && service.price_to !== service.price_from" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">- {{ formatAmd(service.price_to) }}</span>
+                </p>
               </NuxtLink>
             </div>
           </Card>

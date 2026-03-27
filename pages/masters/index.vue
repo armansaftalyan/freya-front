@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import Card from "~/components/base/Card.vue";
+import FaqSection from "~/components/sections/FaqSection.vue";
 import SkeletonBlock from "~/components/shared/SkeletonBlock.vue";
 
 const { t, locale } = useLocale()
@@ -9,6 +10,7 @@ const { localePath } = useLocalizedPath()
 const { isTor, brand, bookingPath, mastersPath } = useBrandContext()
 const route = useRoute()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
+const { faqCopy } = usePageFaqContent(isTor.value ? 'tor' : 'freya', 'masters')
 
 useSeoMeta({
   title: () => `${brand.value === 'tor' ? 'Tor' : 'Freya'} - ${t('nav.masters')}`,
@@ -64,6 +66,17 @@ useStructuredData(() => ({
           },
         ],
       },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqCopy.value.items.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer,
+        },
+      })),
+    },
   ],
 }))
 </script>
@@ -105,6 +118,14 @@ useStructuredData(() => ({
           </div>
         </Card>
       </div>
+
+      <FaqSection
+        :theme="isTor ? 'tor' : 'default'"
+        :eyebrow="faqCopy.eyebrow"
+        :title="faqCopy.title"
+        :lead="faqCopy.lead"
+        :items="faqCopy.items"
+      />
     </div>
   </section>
 </template>
