@@ -115,7 +115,7 @@ useStructuredData(() => ({
               :duration-label="t('homePage.services.durationUnit')"
               :price-label="`${formatAmd(service.price_from)}${service.price_to && service.price_to !== service.price_from ? ` - ${formatAmd(service.price_to)}` : ''}`"
               :action-label="t('nav.bookNow')"
-              :action-to="localePath(bookingPath) as string"
+              :action-to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } }) as string"
               :card-to="localePath(`${servicesPath}/${entry.category.slug}/${service.slug}`) as string"
             />
           </div>

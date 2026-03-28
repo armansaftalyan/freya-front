@@ -61,7 +61,7 @@ const grouped = computed(() =>
                   {{ formatAmd(service.price_from) }}
                   <span v-if="service.price_to && service.price_to !== service.price_from" class="text-[var(--muted)]">- {{ formatAmd(service.price_to) }}</span>
                 </p>
-                <NuxtLink :to="localePath(bookingPath)" class="inline-block">
+                <NuxtLink :to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } })" class="inline-block">
                   <BaseButton size="sm">{{ t('nav.bookNow') }}</BaseButton>
                 </NuxtLink>
               </div>
