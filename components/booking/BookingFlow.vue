@@ -364,12 +364,15 @@ const clearLineNetworkState = (lineId: number) => {
 }
 
 const fetchMastersForLineNow = async (line: BookingLine) => {
+  const previousMasterId = line.masterId
   line.masters = []
-  line.masterId = null
   line.slot = null
   line.slots = []
 
-  if (!line.serviceIds.length) return
+  if (!line.serviceIds.length) {
+    line.masterId = null
+    return
+  }
 
   mastersAbortControllers.get(line.id)?.abort()
   const abortController = new AbortController()
@@ -379,10 +382,12 @@ const fetchMastersForLineNow = async (line: BookingLine) => {
   try {
     const response = await api.get<ApiListResponse<Master>>(
       '/masters',
-      { service_ids: line.serviceIds },
+      { service_ids: line.serviceIds, brand: brand.value },
       { signal: abortController.signal, skipErrorToast: true },
     )
     line.masters = response?.data || []
+    line.masterId = previousMasterId
+
     if (line.masterId && !line.masters.some(master => master.id === line.masterId)) {
       line.masterId = null
     }
