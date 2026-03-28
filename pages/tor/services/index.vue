@@ -146,7 +146,7 @@ useStructuredData(() => ({
       </div>
     </div>
 
-    <SeoIntentSection section="services" theme="tor" />
+    <SeoIntentSection section="services" theme="tor" :bordered="false" />
 
     <FaqSection
       theme="tor"

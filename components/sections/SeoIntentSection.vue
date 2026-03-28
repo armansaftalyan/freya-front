@@ -10,6 +10,7 @@ type SeoIntentCopy = {
 const props = defineProps<{
   section: SeoSectionKey
   theme?: 'default' | 'tor'
+  bordered?: boolean
 }>()
 
 const { locale } = useLocale()
@@ -302,9 +303,9 @@ const isTorTheme = computed(() => props.theme === 'tor')
 </script>
 
 <template>
-  <section class="section-gap" :class="isTorTheme ? 'border-t border-white/10' : ''">
+  <section class="section-gap" :class="isTorTheme && props.bordered !== false ? 'border-t border-white/10' : ''">
     <div class="container-shell" :class="isTorTheme ? 'text-stone-100' : ''">
-      <div class="max-w-4xl space-y-4">
+      <div class="space-y-4">
         <p class="text-xs font-semibold uppercase tracking-[0.22em]" :class="isTorTheme ? 'text-[#c58a3a]' : 'text-sand-600'">
           SEO Intent
         </p>

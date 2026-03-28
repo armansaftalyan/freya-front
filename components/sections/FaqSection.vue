@@ -36,7 +36,7 @@ const iconClass = computed(() => isTor.value ? 'text-[#c58a3a]' : 'text-sand-600
 <template>
   <section class="section-gap" :class="theme === 'tor' && bordered ? 'border-t border-white/10' : ''">
     <div :class="sectionClass">
-      <div class="mb-8" :class="isTor ? 'max-w-4xl' : 'max-w-3xl'">
+      <div class="mb-8">
         <p v-if="eyebrow" class="text-xs font-semibold uppercase tracking-[0.22em]" :class="isTor ? 'text-[#c58a3a]' : 'text-sand-600'">
           {{ eyebrow }}
         </p>

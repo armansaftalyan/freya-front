@@ -142,18 +142,15 @@ const products = computed(() => data.value?.products || [])
 const masters = computed(() => data.value?.masters || [])
 
 const serviceCategoryById = computed(() => new Map(categories.value.map(item => [item.id, item])))
-const featuredServices = computed(() =>
-  services.value
-    .slice()
-    .sort((a, b) => {
-      const categoryA = serviceCategoryById.value.get(a.category_id)
-      const categoryB = serviceCategoryById.value.get(b.category_id)
-      if ((categoryA?.sort ?? 0) !== (categoryB?.sort ?? 0)) {
-        return (categoryA?.sort ?? 0) - (categoryB?.sort ?? 0)
-      }
-      return a.id - b.id
-    })
-    .slice(0, 8),
+const groupedServices = computed(() =>
+  categories.value
+    .map((category) => ({
+      category,
+      items: services.value
+        .filter((service) => service.category_id === category.id)
+        .slice(0, 3),
+    }))
+    .filter((entry) => entry.items.length),
 )
 const productCategoryById = computed(() => new Map(productCategories.value.map(item => [item.id, item])))
 const torProducts = computed(() => {
@@ -260,7 +257,7 @@ useStructuredData(() => ({
       </div>
     </section>
 
-    <SeoIntentSection section="home" theme="tor" />
+
 
     <section id="services" class="container-shell py-14">
       <div class="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -276,22 +273,26 @@ useStructuredData(() => ({
         </div>
       </div>
 
-      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <ServiceCatalogCard
-          v-for="service in featuredServices"
-          :key="service.id"
-          class="fade-in"
-          theme="tor"
-          :eyebrow="serviceCategoryById.get(service.category_id)?.name || ''"
-          :name="service.name"
-          :description="service.description || ''"
-          :duration-minutes="service.duration_minutes"
-          :duration-label="t('servicesPage.minutes')"
-          :price-label="`${formatAmd(service.price_from)}${service.price_to && service.price_to !== service.price_from ? ` - ${formatAmd(service.price_to)}` : ''}`"
-          :action-label="copy.bookCard"
-          :action-to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } }) as string"
-          :card-to="servicePath(service)"
-        />
+      <div class="space-y-8">
+        <div v-for="entry in groupedServices" :key="entry.category.id" class="space-y-4">
+          <h3 class="text-[1.9rem] leading-tight text-stone-100 sm:text-[2.1rem]">{{ entry.category.name }}</h3>
+          <div class="grid gap-4 md:grid-cols-3">
+            <ServiceCatalogCard
+              v-for="service in entry.items"
+              :key="service.id"
+              class="fade-in"
+              theme="tor"
+              :name="service.name"
+              :description="service.description || ''"
+              :duration-minutes="service.duration_minutes"
+              :duration-label="t('servicesPage.minutes')"
+              :price-label="`${formatAmd(service.price_from)}${service.price_to && service.price_to !== service.price_from ? ` - ${formatAmd(service.price_to)}` : ''}`"
+              :action-label="copy.bookCard"
+              :action-to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } }) as string"
+              :card-to="servicePath(service)"
+            />
+          </div>
+        </div>
       </div>
     </section>
 
@@ -382,6 +383,7 @@ useStructuredData(() => ({
       </div>
     </section>
 
+      <SeoIntentSection section="home" theme="tor" />
     <FaqSection
       theme="tor"
       :eyebrow="faqCopy.eyebrow"
