@@ -55,6 +55,7 @@ useHead(() => ({
   meta: [
     { property: 'og:url', content: canonicalUrl.value },
     { property: 'og:site_name', content: 'Freya Beauty Salon' },
+    { name: 'yandex-verification', content: '80a17421b9f1f3e7' },
   ],
   script: [
     {
