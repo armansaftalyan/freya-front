@@ -7,10 +7,100 @@ type FaqCopy = {
   items: FaqItem[]
 }
 
-export const useBrandFaqFallback = (brand: 'freya' | 'tor', pageKey: 'home' | 'contacts' | 'masters' | 'privacy-policy' | 'services' = 'home') => {
+export const useBrandFaqFallback = (brand: 'freya' | 'tor', pageKey: 'home' | 'contacts' | 'masters' | 'privacy-policy' | 'services' | 'booking' = 'home') => {
   const { locale } = useLocale()
 
   return computed<FaqCopy>(() => {
+    if (pageKey === 'booking') {
+      if (brand === 'tor') {
+        if (locale.value === 'ru') {
+          return {
+            eyebrow: 'FAQ',
+            title: 'Вопросы о записи в Tor',
+            lead: 'Короткие ответы о записи в барбершоп, выборе барбера, мужских услугах и свободных слотах в Tor Barbershop.',
+            items: [
+              { question: 'Можно ли записаться в Tor онлайн?', answer: 'Да, через сайт можно выбрать мужскую услугу, барбера и свободное время для визита в Tor Barbershop.' },
+              { question: 'Можно ли выбрать конкретного барбера?', answer: 'Да, если у нужного барбера есть свободные слоты, его можно выбрать во время записи.' },
+              { question: 'Нужно ли записываться заранее?', answer: 'Да, лучше бронировать время заранее, особенно на вечер, выходные и к конкретному барберу.' },
+              { question: 'Можно ли записаться на стрижку и бороду сразу?', answer: 'Да, в процессе онлайн-записи можно выбрать одну или несколько услуг в рамках подходящей категории.' },
+              { question: 'Есть ли запись на мужской маникюр, педикюр и массаж?', answer: 'Да, если эти услуги есть в активном каталоге Tor, они также доступны для онлайн-записи через сайт.' },
+            ],
+          }
+        }
+
+        if (locale.value === 'en') {
+          return {
+            eyebrow: 'FAQ',
+            title: 'Tor Booking Questions',
+            lead: 'Short answers about barbershop booking, choosing a barber, men’s services, and available appointment slots at Tor Barbershop.',
+            items: [
+              { question: 'Can I book Tor online?', answer: 'Yes, you can book online by choosing a men’s service, barber, and available time slot at Tor Barbershop.' },
+              { question: 'Can I choose a specific barber?', answer: 'Yes, if the barber has open slots, you can select them during the booking flow.' },
+              { question: 'Should I book in advance?', answer: 'Yes, booking ahead is recommended, especially for evenings, weekends, and specific barbers.' },
+              { question: 'Can I book a haircut and beard service together?', answer: 'Yes, the online booking flow allows one or more compatible services inside the relevant category group.' },
+              { question: 'Are men manicure, pedicure, and massage bookings available?', answer: 'Yes, when those services are active in the Tor catalog, they can also be booked online through the website.' },
+            ],
+          }
+        }
+
+        return {
+          eyebrow: 'FAQ',
+          title: 'Tor ամրագրման հարցեր',
+          lead: 'Կարճ պատասխաններ Tor Barbershop-ում օնլայն ամրագրման, բարբերի ընտրության, տղամարդկանց ծառայությունների և ազատ ժամերի մասին։',
+          items: [
+            { question: 'Հնարավո՞ր է Tor-ում օնլայն ամրագրել։', answer: 'Այո, կայքի միջոցով կարող եք ընտրել տղամարդկանց ծառայությունը, բարբերին և ազատ ժամը Tor Barbershop այցի համար։' },
+            { question: 'Կարո՞ղ եմ ընտրել կոնկրետ բարբերի։', answer: 'Այո, եթե բարդերն ունի ազատ ժամ, կարող եք ընտրել նրան ամրագրման ընթացքում։' },
+            { question: 'Պե՞տք է նախապես ամրագրել։', answer: 'Այո, խորհուրդ է տրվում նախապես ամրագրել, հատկապես երեկոյան ժամերի, հանգստյան օրերի և կոնկրետ բարբերի համար։' },
+            { question: 'Կարո՞ղ եմ միասին ամրագրել սանրվածք և մորուք։', answer: 'Այո, օնլայն ամրագրման ընթացքում կարող եք ընտրել մեկ կամ մի քանի համատեղելի ծառայություն համապատասխան կատեգորիայում։' },
+            { question: 'Հասանելի՞ է տղամարդկանց manicure, pedicure և massage ամրագրումը։', answer: 'Այո, եթե այդ ծառայությունները կան Tor-ի ակտիվ կատալոգում, դրանք նույնպես հասանելի են կայքի միջոցով օնլայն ամրագրման համար։' },
+          ],
+        }
+      }
+
+      if (locale.value === 'ru') {
+        return {
+          eyebrow: 'FAQ',
+          title: 'Вопросы об онлайн-записи',
+          lead: 'Короткие ответы о записи в Freya Beauty Salon, выборе мастера, доступных услугах и свободных слотах в Ереване.',
+          items: [
+            { question: 'Можно ли записаться в Freya онлайн?', answer: 'Да, через сайт можно выбрать категорию, услугу, мастера и свободное время визита в Freya Beauty Salon.' },
+            { question: 'Можно ли выбрать конкретного мастера?', answer: 'Да, если у мастера есть доступные слоты, его можно выбрать прямо в процессе записи.' },
+            { question: 'Нужно ли записываться заранее?', answer: 'Да, особенно если вы хотите попасть на популярное время или к конкретному специалисту.' },
+            { question: 'Можно ли записаться без регистрации?', answer: 'Да, сайт поддерживает бронирование без регистрации: достаточно оставить имя и телефон для подтверждения.' },
+            { question: 'Можно ли записаться на маникюр, педикюр, массаж и косметологию через сайт?', answer: 'Да, активные услуги Freya, включая hair, nails, cosmetology, massage и другие beauty-направления, доступны для онлайн-записи.' },
+          ],
+        }
+      }
+
+      if (locale.value === 'en') {
+        return {
+          eyebrow: 'FAQ',
+          title: 'Online Booking Questions',
+          lead: 'Short answers about booking at Freya Beauty Salon, choosing a specialist, available services, and open appointment slots in Yerevan.',
+          items: [
+            { question: 'Can I book Freya online?', answer: 'Yes, you can book online by choosing a category, service, specialist, and available appointment time at Freya Beauty Salon.' },
+            { question: 'Can I choose a specific specialist?', answer: 'Yes, if the specialist has available slots, you can select them directly during the booking flow.' },
+            { question: 'Should I book in advance?', answer: 'Yes, especially if you want a popular time or a specific beauty specialist.' },
+            { question: 'Can I book without registration?', answer: 'Yes, the site supports guest booking with just your name and phone number for confirmation.' },
+            { question: 'Can I book manicure, pedicure, massage, and cosmetology online?', answer: 'Yes, active Freya services including hair, nails, cosmetology, massage, and other beauty categories are available for online booking.' },
+          ],
+        }
+      }
+
+      return {
+        eyebrow: 'FAQ',
+        title: 'Օնլայն ամրագրման հարցեր',
+        lead: 'Կարճ պատասխաններ Freya Beauty Salon-ում օնլայն ամրագրման, մասնագետ ընտրելու, հասանելի ծառայությունների և ազատ ժամերի մասին Երևանում։',
+        items: [
+          { question: 'Հնարավո՞ր է Freya-ում օնլայն ամրագրել։', answer: 'Այո, կայքի միջոցով կարող եք ընտրել կատեգորիան, ծառայությունը, մասնագետին և այցի ազատ ժամը Freya Beauty Salon-ում։' },
+          { question: 'Կարո՞ղ եմ ընտրել կոնկրետ մասնագետի։', answer: 'Այո, եթե մասնագետն ունի ազատ ժամեր, կարող եք ընտրել նրան հենց ամրագրման ընթացքում։' },
+          { question: 'Պե՞տք է նախապես ամրագրել։', answer: 'Այո, հատկապես եթե ցանկանում եք պահանջված ժամ կամ կոնկրետ beauty մասնագետ։' },
+          { question: 'Հնարավո՞ր է ամրագրել առանց գրանցման։', answer: 'Այո, կայքը թույլ է տալիս ամրագրել նաև առանց գրանցման. հաստատման համար բավական է նշել անունն ու հեռախոսահամարը։' },
+          { question: 'Կարո՞ղ եմ կայքի միջոցով ամրագրել manicure, pedicure, massage և cosmetology։', answer: 'Այո, Freya-ի ակտիվ ծառայությունները, ներառյալ hair, nails, cosmetology, massage և այլ beauty կատեգորիաներ, հասանելի են օնլայն ամրագրման համար։' },
+        ],
+      }
+    }
+
     if (pageKey === 'masters') {
       if (brand === 'tor') {
         if (locale.value === 'ru') {

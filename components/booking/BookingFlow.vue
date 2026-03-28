@@ -9,6 +9,7 @@ import type { Slot } from '~/types/slot'
 import Card from '~/components/base/Card.vue'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 import SlotPicker from '~/components/booking/SlotPicker.vue'
+import FaqSection from '~/components/sections/FaqSection.vue'
 
 interface BookingLine {
   id: number
@@ -28,15 +29,80 @@ const { formatAmd } = useCurrency()
 const { formatYerevanDateTime, todayYerevanDate } = useDateTime()
 const { siteUrl } = useSiteMeta()
 const { isTor, brand, authAppointmentsPath } = useBrandContext()
+const { faqCopy } = usePageFaqContent(isTor.value ? 'tor' : 'freya', 'booking')
 
 const bookingBrandName = computed(() => (isTor.value ? 'Tor' : 'Freya'))
-const bookingTitle = computed(() => `${bookingBrandName.value} - ${t('nav.booking')}`)
+const bookingSeoCopy = computed(() => {
+  if (isTor.value) {
+    if (locale.value === 'ru') {
+      return {
+        title: 'Онлайн-запись в Tor Barbershop в Ереване',
+        description: 'Запись в Tor Barbershop онлайн: мужская стрижка, beard trim, fade, мужской маникюр, педикюр и массаж в Ереване с выбором барбера и свободного времени.',
+        ogDescription: 'Выберите барбера, мужскую услугу и свободный слот в Tor Barbershop.',
+        eyebrow: 'Barbershop Booking',
+        lead: 'Онлайн-запись в Tor помогает быстро выбрать мужскую стрижку, beard trim, fade, мужской маникюр, педикюр и другие grooming-услуги в Ереване.',
+        bullets: ['Выбор барбера или любого свободного мастера', 'Свободные слоты по дате и времени', 'Запись на мужские услуги без лишних шагов'],
+      }
+    }
+
+    if (locale.value === 'en') {
+      return {
+        title: 'Online Booking at Tor Barbershop in Yerevan',
+        description: 'Book Tor Barbershop online for men’s haircuts, beard trims, fades, men manicure, pedicure, and massage in Yerevan with barber selection and available time slots.',
+        ogDescription: 'Choose a barber, men’s service, and available slot at Tor Barbershop.',
+        eyebrow: 'Barbershop Booking',
+        lead: 'Tor online booking helps users quickly reserve men’s haircuts, beard work, fades, men manicure, pedicure, and other grooming services in Yerevan.',
+        bullets: ['Choose a barber or any available specialist', 'See open slots by date and time', 'Book men’s grooming services in a few steps'],
+      }
+    }
+
+    return {
+      title: 'Tor Barbershop օնլայն ամրագրում Երևանում',
+      description: 'Tor Barbershop օնլայն ամրագրում Երևանում՝ տղամարդկանց սանրվածք, beard trim, fade, տղամարդկանց manicure, pedicure և massage՝ բարբերի և ազատ ժամի ընտրությամբ։',
+      ogDescription: 'Ընտրեք բարբերին, տղամարդկանց ծառայությունը և ազատ ժամը Tor Barbershop-ում։',
+      eyebrow: 'Barbershop Booking',
+      lead: 'Tor-ի օնլայն ամրագրումը թույլ է տալիս արագ ընտրել տղամարդկանց սանրվածք, beard trim, fade, տղամարդկանց manicure, pedicure և այլ grooming ծառայություններ Երևանում։',
+      bullets: ['Կոնկրետ բարբերի կամ ցանկացած ազատ մասնագետի ընտրություն', 'Ազատ ժամեր ըստ ամսաթվի և ժամի', 'Տղամարդկանց ծառայությունների արագ օնլայն ամրագրում'],
+    }
+  }
+
+  if (locale.value === 'ru') {
+    return {
+      title: 'Онлайн-запись в Freya Beauty Salon в Ереване',
+      description: 'Онлайн-запись в Freya Beauty Salon: маникюр, педикюр, волосы, косметология, массаж и beauty-услуги в Ереване с выбором мастера и свободного времени.',
+      ogDescription: 'Выберите beauty-услугу, мастера и свободный слот в Freya Beauty Salon.',
+      eyebrow: 'Beauty Booking',
+      lead: 'Страница онлайн-записи Freya закрывает коммерческий интент на manicure, pedicure, hair, cosmetology, massage и другие beauty-услуги в Ереване.',
+      bullets: ['Выбор категории, услуги и мастера', 'Свободные слоты по дате и времени', 'Запись без регистрации с подтверждением по телефону'],
+    }
+  }
+
+  if (locale.value === 'en') {
+    return {
+      title: 'Online Booking at Freya Beauty Salon in Yerevan',
+      description: 'Book Freya Beauty Salon online for manicure, pedicure, hair, cosmetology, massage, and beauty services in Yerevan with specialist selection and available time slots.',
+      ogDescription: 'Choose a beauty service, specialist, and available slot at Freya Beauty Salon.',
+      eyebrow: 'Beauty Booking',
+      lead: 'Freya online booking is designed for high-intent beauty searches covering manicure, pedicure, hair, cosmetology, massage, and related services in Yerevan.',
+      bullets: ['Choose category, service, and specialist', 'See available slots by date and time', 'Book without registration with phone confirmation'],
+    }
+  }
+
+  return {
+    title: 'Freya Beauty Salon օնլայն ամրագրում Երևանում',
+    description: 'Freya Beauty Salon օնլայն ամրագրում Երևանում՝ manicure, pedicure, hair, cosmetology, massage և beauty ծառայություններ՝ մասնագետի և ազատ ժամի ընտրությամբ։',
+    ogDescription: 'Ընտրեք beauty ծառայությունը, մասնագետին և ազատ ժամը Freya Beauty Salon-ում։',
+    eyebrow: 'Beauty Booking',
+    lead: 'Freya-ի օնլայն ամրագրումը նախատեսված է բարձր intent ունեցող beauty որոնումների համար՝ manicure, pedicure, hair, cosmetology, massage և այլ ծառայություններով Երևանում։',
+    bullets: ['Կատեգորիայի, ծառայության և մասնագետի ընտրություն', 'Ազատ ժամեր ըստ ամսաթվի և ժամի', 'Ամրագրում նաև առանց գրանցման՝ հեռախոսով հաստատմամբ'],
+  }
+})
 
 useSeoMeta({
-  title: () => bookingTitle.value,
-  description: () => t('booking.seoDescription'),
-  ogTitle: () => bookingTitle.value,
-  ogDescription: () => t('booking.seoOgDescription'),
+  title: () => bookingSeoCopy.value.title,
+  description: () => bookingSeoCopy.value.description,
+  ogTitle: () => bookingSeoCopy.value.title,
+  ogDescription: () => bookingSeoCopy.value.ogDescription,
   robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
 })
 
@@ -205,13 +271,36 @@ useStructuredData(() => ({
     {
       '@type': 'WebPage',
       url: `${siteUrl.value}${route.path}`,
-      name: t('booking.title'),
-      description: t('booking.seoDescription'),
+      name: bookingSeoCopy.value.title,
+      description: bookingSeoCopy.value.description,
       isPartOf: {
         '@id': `${siteUrl.value}#website`,
       },
       about: {
         '@id': `${siteUrl.value}#salon`,
+      },
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: faqCopy.value.items.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer,
+        },
+      })),
+    },
+    {
+      '@type': 'ReserveAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${siteUrl.value}${route.path}`,
+        inLanguage: locale.value,
+      },
+      result: {
+        '@type': 'Reservation',
+        name: bookingSeoCopy.value.title,
       },
     },
     {
@@ -537,10 +626,22 @@ onBeforeUnmount(() => {
     <div class="container-shell mx-auto max-w-6xl space-y-6">
       <div class="flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-4">
         <div>
-          <p class="text-xs uppercase tracking-[0.2em]" :class="isTor ? 'text-[#d79a49]' : 'text-sand-600'">{{ t('booking.wizard') }}</p>
+          <p class="text-xs uppercase tracking-[0.2em]" :class="isTor ? 'text-[#d79a49]' : 'text-sand-600'">{{ bookingSeoCopy.eyebrow }}</p>
           <h1 class="text-3xl leading-tight sm:text-4xl lg:text-5xl">{{ t('booking.title') }}</h1>
+          <p class="mt-3 max-w-3xl text-sm leading-7 sm:text-base" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ bookingSeoCopy.lead }}</p>
         </div>
         <NuxtLink :to="authAppointmentsPath"><BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('nav.myAppointments') }}</BaseButton></NuxtLink>
+      </div>
+
+      <div class="grid gap-3 md:grid-cols-3">
+        <div
+          v-for="item in bookingSeoCopy.bullets"
+          :key="item"
+          class="rounded-2xl px-4 py-3 text-sm"
+          :class="isTor ? 'border border-white/10 bg-white/[0.03] text-stone-300' : 'border border-sand-200 bg-white text-sand-800 shadow-soft'"
+        >
+          {{ item }}
+        </div>
       </div>
 
       <div v-if="successCount" class="rounded-3xl p-6" :class="isTor ? 'border border-emerald-500/30 bg-white/[0.03] shadow-[0_20px_50px_rgba(0,0,0,0.22)]' : 'border border-emerald-200 bg-white shadow-soft'">
@@ -718,6 +819,15 @@ onBeforeUnmount(() => {
           <BaseButton :theme="isTor ? 'tor' : 'default'" :disabled="creating" @click="submit">{{ creating ? t('booking.creating') : t('booking.create') }}</BaseButton>
         </div>
       </Card>
+
+      <FaqSection
+        :theme="isTor ? 'tor' : 'default'"
+        :bordered="false"
+        :eyebrow="faqCopy.eyebrow"
+        :title="faqCopy.title"
+        :lead="faqCopy.lead"
+        :items="faqCopy.items"
+      />
     </div>
   </section>
 </template>

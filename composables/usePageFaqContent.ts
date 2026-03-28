@@ -1,6 +1,6 @@
 import type { PageContentResponse } from '~/types/page-content'
 
-export const usePageFaqContent = (brand: 'freya' | 'tor', pageKey: 'home' | 'contacts' | 'masters' | 'privacy-policy' | 'services') => {
+export const usePageFaqContent = (brand: 'freya' | 'tor', pageKey: 'home' | 'contacts' | 'masters' | 'privacy-policy' | 'services' | 'booking') => {
   const api = useApi()
   const { locale } = useLocale()
   const fallbackFaqCopy = useBrandFaqFallback(brand, pageKey)
