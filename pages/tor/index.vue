@@ -6,6 +6,7 @@ import type { Product, ProductCategory } from '~/types/product'
 import type { Service } from '~/types/service'
 import ServiceCatalogCard from '~/components/catalog/ServiceCatalogCard.vue'
 import FaqSection from '~/components/sections/FaqSection.vue'
+import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 
 definePageMeta({
   layout: 'tor',
@@ -33,6 +34,7 @@ const copy = computed(() => {
       allServices: 'Все услуги',
       services: 'Услуги',
       servicesLead: 'Стрижки, окантовка, борода и мужской уход. Чётко, быстро, без лишнего.',
+      searchLead: 'Tor усиливает запросы по barbershop, мужским стрижкам, beard trim, мужскому маникюру, педикюру, мужской косметологии, эпиляции и grooming в Ереване.',
       teamLead: 'Барберы Tor, которые держат форму, темп и чистый результат.',
       products: 'Уход дома',
       productsLead: 'Масла, шампуни и ежедневный уход для волос и бороды.',
@@ -50,7 +52,7 @@ const copy = computed(() => {
       blockTwo: 'Одна запись, понятный результат, без хаоса.',
       blockThree: 'Можно уйти со стрижкой, уходом и набором для дома.',
       cta: 'Открыть запись в Tor',
-      seoDescription: 'Tor Barbershop от Freya: мужские стрижки, оформление бороды и уходовые продукты.',
+      seoDescription: 'Tor Barbershop в Ереване: мужские стрижки, борода, мужской маникюр, педикюр, grooming, эпиляция и уходовые продукты.',
     }
   }
 
@@ -63,6 +65,7 @@ const copy = computed(() => {
       allServices: 'All services',
       services: 'Services',
       servicesLead: 'Cuts, line-ups, beard shaping and male grooming with no extra noise.',
+      searchLead: 'Tor is built for barbershop, men haircut, beard trim, men manicure, pedicure, men cosmetology, epilation, and broader grooming searches in Yerevan.',
       teamLead: 'Tor barbers focused on shape, pace and clean results.',
       products: 'Home care',
       productsLead: 'Oils, shampoos and daily care for hair and beard.',
@@ -80,7 +83,7 @@ const copy = computed(() => {
       blockTwo: 'One booking, clear result, zero fluff.',
       blockThree: 'Leave with a cut, a beard reset and a care kit.',
       cta: 'Open Tor booking',
-      seoDescription: 'Tor Barbershop by Freya: men haircut, beard shaping and grooming products.',
+      seoDescription: 'Tor Barbershop in Yerevan: men haircut, beard shaping, men manicure, pedicure, grooming, epilation, and men’s care products.',
     }
   }
 
@@ -92,6 +95,7 @@ const copy = computed(() => {
     allServices: 'Բոլոր ծառայությունները',
     services: 'Ծառայություններ',
     servicesLead: 'Սանրվածք, եզրագծում, մորուք և տղամարդկանց խնամք առանց ավելորդության։',
+    searchLead: 'Tor-ը նախատեսված է barbershop, տղամարդկանց սանրվածք, beard trim, տղամարդկանց manicure, pedicure, տղամարդկանց cosmetology, epilation և grooming որոնումների համար Երևանում։',
     teamLead: 'Tor-ի բարբերները աշխատում են ձևի, տեմպի և մաքուր արդյունքի վրա։',
     products: 'Տնային խնամք',
     productsLead: 'Յուղեր, շամպուններ և ամենօրյա խնամք մազերի ու մորուքի համար։',
@@ -109,7 +113,7 @@ const copy = computed(() => {
     blockTwo: 'Մեկ ամրագրում, հստակ արդյունք, առանց քաոսի։',
     blockThree: 'Կարող ես դուրս գալ սանրվածքով, beard reset-ով ու տնային care kit-ով։',
     cta: 'Բացել Tor ամրագրումը',
-    seoDescription: 'Tor Barbershop by Freya: տղամարդկանց սանրվածք, մորուքի ձևավորում և խնամքի ապրանքներ։',
+    seoDescription: 'Tor Barbershop Երևանում՝ տղամարդկանց սանրվածք, մորուք, տղամարդկանց manicure, pedicure, grooming, epilation և խնամքի ապրանքներ։',
   }
 })
 
@@ -137,34 +141,42 @@ const productCategories = computed(() => data.value?.productCategories || [])
 const products = computed(() => data.value?.products || [])
 const masters = computed(() => data.value?.masters || [])
 
-const menCategory = computed(() => categories.value.find(item => item.slug === 'men-hair') || null)
-const menServices = computed(() => {
-  if (!menCategory.value) return []
-  return services.value
-    .filter(item => item.category_id === menCategory.value?.id)
-    .slice(0, 6)
-})
-
-const categoryById = computed(() => new Map(productCategories.value.map(item => [item.id, item])))
+const serviceCategoryById = computed(() => new Map(categories.value.map(item => [item.id, item])))
+const featuredServices = computed(() =>
+  services.value
+    .slice()
+    .sort((a, b) => {
+      const categoryA = serviceCategoryById.value.get(a.category_id)
+      const categoryB = serviceCategoryById.value.get(b.category_id)
+      if ((categoryA?.sort ?? 0) !== (categoryB?.sort ?? 0)) {
+        return (categoryA?.sort ?? 0) - (categoryB?.sort ?? 0)
+      }
+      return a.id - b.id
+    })
+    .slice(0, 8),
+)
+const productCategoryById = computed(() => new Map(productCategories.value.map(item => [item.id, item])))
 const torProducts = computed(() => {
   return products.value.slice(0, 4)
 })
 const torMasters = computed(() => masters.value.slice(0, 3))
-const productPath = (product: Product) => localizedPath(`${productsPath.value}/${categoryById.value.get(product.category_id)?.slug || 'beard-care'}/${product.slug}`)
-const servicePath = (service: Service) => localizedPath(`${servicesPath.value}/${menCategory.value?.slug || 'men-hair'}/${service.slug}`)
+const productPath = (product: Product) => localizedPath(`${productsPath.value}/${productCategoryById.value.get(product.category_id)?.slug || 'beard-care'}/${product.slug}`)
+const servicePath = (service: Service) => localizedPath(`${servicesPath.value}/${serviceCategoryById.value.get(service.category_id)?.slug || 'men-hair'}/${service.slug}`)
 const productQuantity = (productId: number) => cart.getItemQuantity(productId)
 const addToCart = (product: Product) => cart.addItem(product, 1)
 const decreaseFromCart = (productId: number) => cart.decreaseItem(productId, 1)
 
 const bookingUrl = computed(() => {
-  if (!menCategory.value) {
+  const firstCategory = categories.value[0]
+
+  if (!firstCategory) {
     return localePath(bookingPath.value)
   }
 
   return localePath({
     path: bookingPath.value,
     query: {
-      category_id: String(menCategory.value.id),
+      category_id: String(firstCategory.id),
     },
   })
 })
@@ -218,6 +230,9 @@ useStructuredData(() => ({
           <p class="max-w-2xl text-base leading-7 text-stone-300 sm:text-lg">
             {{ copy.subtitle }}
           </p>
+          <p class="max-w-2xl text-sm leading-7 text-stone-300 sm:text-base">
+            {{ copy.searchLead }}
+          </p>
           <div class="flex flex-wrap gap-3">
             <NuxtLink :to="bookingUrl">
               <BaseButton size="lg" theme="tor">{{ copy.primary }}</BaseButton>
@@ -245,6 +260,8 @@ useStructuredData(() => ({
       </div>
     </section>
 
+    <SeoIntentSection section="home" theme="tor" />
+
     <section id="services" class="container-shell py-14">
       <div class="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div class="max-w-3xl">
@@ -261,10 +278,11 @@ useStructuredData(() => ({
 
       <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <ServiceCatalogCard
-          v-for="service in menServices"
+          v-for="service in featuredServices"
           :key="service.id"
           class="fade-in"
           theme="tor"
+          :eyebrow="serviceCategoryById.get(service.category_id)?.name || ''"
           :name="service.name"
           :description="service.description || ''"
           :duration-minutes="service.duration_minutes"

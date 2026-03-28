@@ -6,6 +6,7 @@ import HowToBookSection from "~/components/sections/HowToBookSection.vue";
 import ContactsSection from "~/components/sections/ContactsSection.vue";
 import CtaBookingSection from "~/components/sections/CtaBookingSection.vue";
 import FaqSection from "~/components/sections/FaqSection.vue";
+import SeoIntentSection from "~/components/sections/SeoIntentSection.vue";
 import BaseModal from "~/components/base/BaseModal.vue";
 
 const { t, locale } = useLocale()
@@ -111,6 +112,7 @@ useStructuredData(() => ({
     <ServicesGrid />
     <MastersGrid />
     <HowToBookSection />
+    <SeoIntentSection section="home" />
     <FaqSection
       :eyebrow="faqCopy.eyebrow"
       :title="faqCopy.title"

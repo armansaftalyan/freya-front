@@ -13,15 +13,57 @@ const route = useRoute()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const { faqCopy } = usePageFaqContent(isTor.value ? 'tor' : 'freya', 'masters')
 
+const seoCopy = computed(() => {
+  if (brand.value === 'tor') {
+    if (locale.value === 'ru') {
+      return {
+        title: 'Мастера Tor | Барбер, мужской маникюр, элос, массаж',
+        description: 'Мастера Tor в Ереване: барбер, мужской маникюр, педикюр, мужской элос и массаж. Выберите специалиста и запишитесь онлайн.',
+      }
+    }
+
+    if (locale.value === 'en') {
+      return {
+        title: 'Tor Masters | Barber, Men Nails, Elos, Massage',
+        description: 'Meet Tor masters in Yerevan for barber services, men manicure, pedicure, men elos, and massage. Choose your specialist and book online.',
+      }
+    }
+
+    return {
+      title: 'Tor վարպետներ | Barber, men nails, elos, massage',
+      description: 'Tor-ի վարպետները Երևանում` barber ծառայություններ, տղամարդկանց manicure, pedicure, elos և massage։ Ընտրեք մասնագետին և ամրագրեք օնլայն։',
+    }
+  }
+
+  if (locale.value === 'ru') {
+    return {
+      title: 'Мастера Freya | Маникюр, косметология, массаж, волосы',
+      description: 'Мастера Freya Beauty Salon в Ереване: маникюр, педикюр, косметология, массаж, элос, женские стрижки и окрашивание. Выберите специалиста и запишитесь онлайн.',
+    }
+  }
+
+  if (locale.value === 'en') {
+    return {
+      title: 'Freya Masters | Nails, Cosmetology, Massage, Hair',
+      description: 'Meet Freya Beauty Salon masters in Yerevan for nails, cosmetology, massage, elos, women haircuts, coloring, and premium beauty care.',
+    }
+  }
+
+  return {
+    title: 'Freya վարպետներ | Nails, cosmetology, massage, hair',
+    description: 'Freya Beauty Salon-ի վարպետները Երևանում` մանիկյուր, պեդիկյուր, կոսմետոլոգիա, մերսում, էլոս, կանացի կտրվածք և ներկում։ Ընտրեք մասնագետին և ամրագրեք օնլայն։',
+  }
+})
+
 useSeoMeta({
-  title: () => `${brand.value === 'tor' ? 'Tor' : 'Freya'} - ${t('nav.masters')}`,
-  description: () => t('mastersPage.seoDescription'),
-  ogTitle: () => `${brand.value === 'tor' ? 'Tor' : 'Freya'} - ${t('nav.masters')}`,
-  ogDescription: () => t('mastersPage.seoOgDescription'),
+  title: () => seoCopy.value.title,
+  description: () => seoCopy.value.description,
+  ogTitle: () => seoCopy.value.title,
+  ogDescription: () => seoCopy.value.description,
   ogUrl: () => canonicalUrl.value,
   twitterCard: 'summary_large_image',
-  twitterTitle: () => `${brand.value === 'tor' ? 'Tor' : 'Freya'} - ${t('nav.masters')}`,
-  twitterDescription: () => t('mastersPage.seoOgDescription'),
+  twitterTitle: () => seoCopy.value.title,
+  twitterDescription: () => seoCopy.value.description,
 })
 const mastersStore = useMastersStore()
 const { masters, loading } = storeToRefs(mastersStore)
@@ -39,7 +81,7 @@ useStructuredData(() => ({
       '@type': 'CollectionPage',
       url: canonicalUrl.value,
       name: t('nav.masters'),
-      description: t('mastersPage.seoDescription'),
+      description: seoCopy.value.description,
       mainEntity: {
         '@type': 'ItemList',
         itemListElement: masters.value.map((master, index) => ({

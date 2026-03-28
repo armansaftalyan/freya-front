@@ -124,6 +124,7 @@ useStructuredData(() => ({
         <div class="min-w-0">
           <p class="text-xs uppercase tracking-[0.2em] text-sand-600">{{ t('contactsPage.reachUs') }}</p>
           <h1 class="max-w-3xl text-3xl leading-tight sm:text-5xl">{{ t('nav.contacts') }}</h1>
+          <p class="mt-3 max-w-3xl text-sm leading-7 text-[var(--muted)] sm:text-base">{{ t('contactsPage.intro') }}</p>
         </div>
         <NuxtLink :to="localePath('/booking')" class="inline-flex lg:justify-self-start">
           <BaseButton>{{ t('nav.bookNow') }}</BaseButton>

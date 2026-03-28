@@ -3,6 +3,7 @@ import type { ApiListResponse } from '~/types/api'
 import type { Product, ProductCategory } from '~/types/product'
 import ProductCard from '~/components/product/ProductCard.vue'
 import ProductCategorySection from '~/components/product/ProductCategorySection.vue'
+import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 
 const api = useApi()
 const route = useRoute()
@@ -129,6 +130,8 @@ useStructuredData(() => ({
           </div>
         </ProductCategorySection>
       </div>
+
+      <SeoIntentSection section="products" />
     </div>
   </section>
 </template>

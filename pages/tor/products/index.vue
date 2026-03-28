@@ -3,6 +3,7 @@ import type { ApiListResponse } from '~/types/api'
 import type { Product, ProductCategory } from '~/types/product'
 import ProductCard from '~/components/product/ProductCard.vue'
 import ProductCategorySection from '~/components/product/ProductCategorySection.vue'
+import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 
 definePageMeta({
   layout: 'tor',
@@ -21,7 +22,7 @@ const copy = computed(() => {
   if (locale.value === 'ru') {
     return {
       title: 'Tor Care',
-      lead: 'Подборка мужских товаров для бороды, волос и ежедневного ухода.',
+      lead: 'Подборка мужских товаров для бороды, волос, кожи, ежедневного ухода и grooming-процедур.',
       back: 'Назад в Tor',
     }
   }
@@ -29,14 +30,14 @@ const copy = computed(() => {
   if (locale.value === 'en') {
     return {
       title: 'Tor Care',
-      lead: 'Selected beard, hair and grooming products for the Tor side of the brand.',
+      lead: 'Selected beard, hair, skin, and grooming products for the Tor side of the brand.',
       back: 'Back to Tor',
     }
   }
 
   return {
     title: 'Tor Care',
-    lead: 'Tor բրենդային ուղղության համար ընտրված մորուքի, մազերի և ամենօրյա խնամքի ապրանքներ։',
+    lead: 'Tor բրենդային ուղղության համար ընտրված մորուքի, մազերի, մաշկի և grooming խնամքի ապրանքներ։',
     back: 'Վերադառնալ Tor',
   }
 })
@@ -127,7 +128,9 @@ useStructuredData(() => ({
             @decrease="decreaseFromCart"
           />
         </div>
-      </ProductCategorySection>
-    </div>
-  </section>
+        </ProductCategorySection>
+      </div>
+
+      <SeoIntentSection section="products" theme="tor" />
+    </section>
 </template>

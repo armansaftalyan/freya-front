@@ -52,10 +52,94 @@ const certificates = computed(() =>
   ),
 )
 const portfolioImages = computed(() => master.value?.portfolio || [])
-const seoTitle = computed(() =>
-  master.value ? `${master.value.name} - ${brand.value === 'tor' ? 'Tor' : 'Freya'}` : `${brand.value === 'tor' ? 'Tor' : 'Freya'} - ${t('nav.masters')}`,
+const masterTopServices = computed(() =>
+  (master.value?.services || [])
+    .slice(0, 3)
+    .map(service => service.name)
+    .filter(Boolean),
 )
-const seoDescription = computed(() => master.value?.bio || t('mastersPage.profileSeoDescription'))
+const masterTopSpecialties = computed(() =>
+  (master.value?.specialties || [])
+    .slice(0, 3)
+    .filter(Boolean),
+)
+const masterKeyword = computed(() => {
+  if (brand.value === 'tor') {
+    if (locale.value === 'ru') return 'барбер и мужской мастер'
+    if (locale.value === 'en') return 'barber and men grooming specialist'
+    return 'barber և տղամարդկանց խնամքի մասնագետ'
+  }
+
+  if (locale.value === 'ru') return 'мастер салона красоты'
+  if (locale.value === 'en') return 'beauty specialist'
+  return 'գեղեցկության մասնագետ'
+})
+const seoTitle = computed(() => {
+  if (!master.value) {
+    return `${brand.value === 'tor' ? 'Tor' : 'Freya'} - ${t('nav.masters')}`
+  }
+
+  const brandLabel = brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon'
+  const specialty = masterTopSpecialties.value[0]
+
+  if (locale.value === 'ru') {
+    return specialty
+      ? `${master.value.name} | ${specialty} | ${brandLabel}`
+      : `${master.value.name} | ${masterKeyword.value} | ${brandLabel}`
+  }
+
+  if (locale.value === 'en') {
+    return specialty
+      ? `${master.value.name} | ${specialty} | ${brandLabel}`
+      : `${master.value.name} | ${masterKeyword.value} | ${brandLabel}`
+  }
+
+  return specialty
+    ? `${master.value.name} | ${specialty} | ${brandLabel}`
+    : `${master.value.name} | ${masterKeyword.value} | ${brandLabel}`
+})
+const seoDescription = computed(() => {
+  if (!master.value) {
+    return t('mastersPage.profileSeoDescription')
+  }
+
+  const services = masterTopServices.value.join(', ')
+  const specialties = masterTopSpecialties.value.join(', ')
+
+  if (brand.value === 'tor') {
+    if (locale.value === 'ru') {
+      return services
+        ? `${master.value.name} в Tor Barbershop, Ереван. Услуги: ${services}. Запись онлайн на мужские услуги и grooming.`
+        : `${master.value.name} в Tor Barbershop, Ереван. ${master.value.bio || 'Мужской мастер, barbershop и grooming услуги.'}`
+    }
+
+    if (locale.value === 'en') {
+      return services
+        ? `${master.value.name} at Tor Barbershop in Yerevan. Services: ${services}. Book online for barber, men nails, elos, and massage services.`
+        : `${master.value.name} at Tor Barbershop in Yerevan. ${master.value.bio || 'Men grooming specialist available for online booking.'}`
+    }
+
+    return services
+      ? `${master.value.name}-ը Tor Barbershop-ում՝ Երևանում։ Ծառայություններ՝ ${services}։ Օնլայն ամրագրում տղամարդկանց ծառայությունների համար։`
+      : `${master.value.name}-ը Tor Barbershop-ում՝ Երևանում։ ${master.value.bio || 'Տղամարդկանց խնամքի մասնագետ օնլայն ամրագրմամբ։'}`
+  }
+
+  if (locale.value === 'ru') {
+    return services
+      ? `${master.value.name} в Freya Beauty Salon, Ереван. Услуги: ${services}. Запись онлайн на beauty-процедуры и услуги салона.`
+      : `${master.value.name} в Freya Beauty Salon, Ереван. ${master.value.bio || 'Мастер салона красоты, онлайн-запись на услуги Freya.'}`
+  }
+
+  if (locale.value === 'en') {
+    return services
+      ? `${master.value.name} at Freya Beauty Salon in Yerevan. Services: ${services}. Book online for nails, cosmetology, massage, elos, and hair services.`
+      : `${master.value.name} at Freya Beauty Salon in Yerevan. ${master.value.bio || 'Beauty specialist available for online booking.'}`
+  }
+
+  return specialties
+    ? `${master.value.name}-ը Freya Beauty Salon-ում՝ Երևանում։ Մասնագիտացում՝ ${specialties}։ Օնլայն ամրագրում գեղեցկության ծառայությունների համար։`
+    : `${master.value.name}-ը Freya Beauty Salon-ում՝ Երևանում։ ${master.value.bio || 'Գեղեցկության մասնագետ օնլայն ամրագրմամբ։'}`
+})
 const seoImage = computed(() =>
   master.value?.avatar
   || certificates.value.find((certificate) => certificate.image)?.image
@@ -101,9 +185,11 @@ useStructuredData(() => {
         url: canonicalUrl.value,
         sameAs: master.value.instagram ? [`https://instagram.com/${master.value.instagram.replace(/^@/, '')}`] : undefined,
         knowsLanguage: master.value.languages.length ? master.value.languages : undefined,
+        knowsAbout: master.value.specialties.length ? master.value.specialties : undefined,
+        jobTitle: masterKeyword.value,
         hasOccupation: {
           '@type': 'Occupation',
-          name: 'Beauty Master',
+          name: masterKeyword.value,
         },
         worksFor: {
           '@id': `${siteUrl.value}#salon`,

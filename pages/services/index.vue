@@ -2,6 +2,7 @@
 import { storeToRefs } from 'pinia'
 import ServiceCatalogCard from "~/components/catalog/ServiceCatalogCard.vue";
 import FaqSection from "~/components/sections/FaqSection.vue";
+import SeoIntentSection from "~/components/sections/SeoIntentSection.vue";
 import SkeletonBlock from "~/components/shared/SkeletonBlock.vue";
 
 const { t, locale } = useLocale()
@@ -120,6 +121,8 @@ useStructuredData(() => ({
           </div>
         </div>
       </div>
+
+      <SeoIntentSection section="services" />
 
       <FaqSection
         :eyebrow="faqCopy.eyebrow"

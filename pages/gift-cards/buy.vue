@@ -2,6 +2,7 @@
 import type { GiftCard } from '~/types/gift-card'
 import Card from '~/components/base/Card.vue'
 import GiftCardVisual from '~/components/giftcards/GiftCardVisual.vue'
+import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 
 const api = useApi()
 const config = useRuntimeConfig()
@@ -58,9 +59,63 @@ const giftCardBranding = computed(() => isTor.value
       logoBadgeStyle: '',
     })
 
+const seoCopy = computed(() => {
+  if (isTor.value) {
+    if (locale.value === 'ru') {
+      return {
+        title: 'Подарочная карта барбершопа в Ереване | Tor Barbershop',
+        description: 'Подарочная карта Tor Barbershop в Ереване: подарок на мужскую стрижку, бороду, grooming, мужской маникюр, педикюр, элос и массаж.',
+        lead: 'Подарочная карта Tor Barbershop: подарок на мужскую стрижку, бороду, grooming, мужской маникюр, педикюр, элос и массаж в Ереване.',
+        productName: 'Tor Barbershop Gift Card',
+      }
+    }
+
+    if (locale.value === 'en') {
+      return {
+        title: 'Barbershop Gift Card in Yerevan | Tor Barbershop',
+        description: 'Tor Barbershop gift card in Yerevan for men haircut, beard trim, grooming, men manicure, pedicure, elos, and massage.',
+        lead: 'Tor Barbershop gift card for men haircut, beard care, grooming, men nails, elos, and massage in Yerevan.',
+        productName: 'Tor Barbershop Gift Card',
+      }
+    }
+
+    return {
+      title: 'Barbershop նվեր քարտ Երևանում | Tor Barbershop',
+      description: 'Tor Barbershop-ի նվեր քարտ Երևանում՝ տղամարդկանց սանրվածք, մորուք, grooming, տղամարդկանց manicure, pedicure, elos և massage ծառայությունների համար։',
+      lead: 'Tor Barbershop-ի նվեր քարտ՝ տղամարդկանց սանրվածք, մորուք, grooming, տղամարդկանց manicure, pedicure, elos և massage ծառայությունների համար Երևանում։',
+      productName: 'Tor Barbershop Gift Card',
+    }
+  }
+
+  if (locale.value === 'ru') {
+    return {
+      title: 'Подарочная карта салона красоты в Ереване | Freya Beauty Salon',
+      description: 'Подарочная карта Freya Beauty Salon в Ереване: подарок на маникюр, педикюр, косметологию, массаж, элос, женские стрижки и окрашивание.',
+      lead: 'Подарочная карта Freya Beauty Salon: подарок на маникюр, педикюр, косметологию, массаж, элос, женские стрижки и окрашивание в Ереване.',
+      productName: 'Freya Beauty Gift Card',
+    }
+  }
+
+  if (locale.value === 'en') {
+    return {
+      title: 'Beauty Salon Gift Card in Yerevan | Freya Beauty Salon',
+      description: 'Freya Beauty Salon gift card in Yerevan for manicure, pedicure, cosmetology, massage, elos, women haircuts, and coloring.',
+      lead: 'Freya Beauty Salon gift card for manicure, pedicure, cosmetology, massage, elos, women haircuts, and coloring in Yerevan.',
+      productName: 'Freya Beauty Gift Card',
+    }
+  }
+
+  return {
+    title: 'Գեղեցկության սրահի նվեր քարտ Երևանում | Freya Beauty Salon',
+    description: 'Freya Beauty Salon-ի նվեր քարտ Երևանում՝ մանիկյուր, պեդիկյուր, կոսմետոլոգիա, մերսում, էլոս, կանացի կտրվածք և ներկում ծառայությունների համար։',
+    lead: 'Freya Beauty Salon-ի նվեր քարտ՝ մանիկյուր, պեդիկյուր, կոսմետոլոգիա, մերսում, էլոս, կանացի կտրվածք և ներկում ծառայությունների համար Երևանում։',
+    productName: 'Freya Beauty Gift Card',
+  }
+})
+
 usePageSeo({
-  title: () => `${t('giftCards.buyTitle')} | ${brand.value === 'tor' ? 'Tor' : 'Freya'}`,
-  description: () => t('giftCards.buySubtitle'),
+  title: () => seoCopy.value.title,
+  description: () => seoCopy.value.description,
   image: () => defaultImageUrl.value,
 })
 
@@ -103,8 +158,8 @@ useStructuredData(() => ({
   '@graph': [
     {
       '@type': 'Product',
-      name: `${salonName} Gift Card`,
-      description: t('giftCards.buySubtitle'),
+      name: seoCopy.value.productName,
+      description: seoCopy.value.description,
       image: defaultImageUrl.value,
       brand: {
         '@type': 'Brand',
@@ -192,7 +247,7 @@ const submit = async () => {
     <div class="container-shell mx-auto max-w-3xl space-y-6">
       <div>
         <h1 class="text-3xl sm:text-5xl">{{ t('giftCards.buyTitle') }}</h1>
-        <p class="mt-2 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.buySubtitle') }}</p>
+        <p class="mt-2 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ seoCopy.lead }}</p>
       </div>
 
       <Card :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
@@ -328,6 +383,8 @@ const submit = async () => {
           </div>
         </div>
       </Card>
+
+      <SeoIntentSection :section="'gift-cards'" :theme="isTor ? 'tor' : 'default'" />
     </div>
   </section>
 </template>

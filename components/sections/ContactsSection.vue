@@ -20,7 +20,10 @@ const fixedSchedule = computed(() => {
   <section class="section-gap">
     <div class="container-shell">
       <div class="mb-8 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <h2 class="text-3xl leading-tight sm:text-4xl">{{ t('homePage.contacts.title') }}</h2>
+        <div class="space-y-2">
+          <h2 class="text-3xl leading-tight sm:text-4xl">{{ t('homePage.contacts.title') }}</h2>
+          <p class="max-w-2xl text-sm leading-7 text-[var(--muted)] sm:text-base">{{ t('contactsPage.intro') }}</p>
+        </div>
         <NuxtLink :to="localePath('/contacts')" class="inline-flex">
           <BaseButton variant="secondary" size="sm">
             {{ t('homePage.contacts.all') }}

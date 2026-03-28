@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import FaqSection from '~/components/sections/FaqSection.vue'
+import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 
 const { locale } = useLocale()
 const { localePath } = useLocalizedPath()
@@ -9,7 +10,7 @@ const { canonicalUrl } = useLocalizedSeo(() => route.path)
 
 useSeoMeta({
   title: () => locale.value === 'ru' ? 'Tor Barbershop - Контакты' : locale.value === 'en' ? 'Tor Barbershop - Contacts' : 'Tor Barbershop - Կոնտակտներ',
-  description: () => locale.value === 'ru' ? 'Контакты Tor Barbershop в Ереване, адрес, телефон и карта.' : locale.value === 'en' ? 'Tor Barbershop contact details in Yerevan, address, phone, and map.' : 'Tor Barbershop-ի կոնտակտները Երևանում, հասցեն, հեռախոսը և քարտեզը։',
+  description: () => locale.value === 'ru' ? 'Контакты Tor Barbershop в Ереване: барбершоп, мужской grooming, адрес, телефон и карта.' : locale.value === 'en' ? 'Tor Barbershop contact details in Yerevan for barbershop and men’s grooming, with address, phone, and map.' : 'Tor Barbershop-ի կոնտակտները Երևանում՝ barbershop և տղամարդկանց grooming ուղղությամբ, հասցեն, հեռախոսը և քարտեզը։',
   ogUrl: () => canonicalUrl.value,
   twitterCard: 'summary_large_image',
 })
@@ -125,6 +126,8 @@ useStructuredData(() => ({
         :lead="faqCopy.lead"
         :items="faqCopy.items"
       />
+
+      <SeoIntentSection section="home" theme="tor" />
     </div>
   </section>
 </template>

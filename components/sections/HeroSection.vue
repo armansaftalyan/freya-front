@@ -18,6 +18,9 @@ const bookingCta = computed(() => locale.value === 'hy' ? 'Ամրագրել' : t
         <p class="max-w-2xl text-lg leading-8 text-[var(--muted)] xl:text-[1.35rem]">
           {{ t('homePage.hero.subtitle') }}
         </p>
+        <p class="max-w-2xl text-sm leading-7 text-sand-700 sm:text-base">
+          {{ t('homePage.hero.searchLead') }}
+        </p>
         <div class="flex flex-wrap gap-3">
           <NuxtLink :to="localePath(bookingPath)">
             <BaseButton size="lg">{{ bookingCta }}</BaseButton>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import BookingFlow from '~/components/booking/BookingFlow.vue'
+import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 
 definePageMeta({
   layout: 'tor',
@@ -7,5 +8,8 @@ definePageMeta({
 </script>
 
 <template>
-  <BookingFlow />
+  <div>
+    <BookingFlow />
+    <SeoIntentSection section="booking" theme="tor" />
+  </div>
 </template>
