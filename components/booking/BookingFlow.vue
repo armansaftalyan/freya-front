@@ -591,7 +591,7 @@ const submit = async () => {
 
 ensureAtLeastOneLine()
 
-await useAsyncData(() => `booking-bootstrap-${brand.value}-${locale.value}`, async () => {
+const bootstrapBookingFlow = async () => {
   source.value = resolveSourceFromQuery() as any
 
   try {
@@ -615,9 +615,9 @@ await useAsyncData(() => `booking-bootstrap-${brand.value}-${locale.value}`, asy
       line.masterId = null
     }
   }
+}
 
-  return true
-})
+await bootstrapBookingFlow()
 
 onBeforeUnmount(() => {
   for (const line of lines.value) {

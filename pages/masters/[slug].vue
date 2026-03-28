@@ -18,13 +18,12 @@ const nextLabel = computed(() => t('common.next'))
 
 const masterKey = computed(() => String(route.params.slug || '').trim())
 const master = ref<Master | null>(null)
-const loadError = ref(false)
 const certificateLightboxIndex = ref<number | null>(null)
 const portfolioLightboxIndex = ref<number | null>(null)
 const loading = ref(true)
 
 if (!masterKey.value) {
-  loadError.value = true
+  throw createError({ statusCode: 404, statusMessage: 'Master not found' })
 }
 else {
   const { data } = await useAsyncData(() => `master-profile-${brand.value}-${masterKey.value}-${locale.value}`, async () => {
@@ -33,14 +32,13 @@ else {
       return response.data
     }
     catch {
-      loadError.value = true
       return null
     }
   })
 
   master.value = data.value || null
-  if (!master.value && !loadError.value) {
-    loadError.value = true
+  if (!master.value) {
+    throw createError({ statusCode: 404, statusMessage: 'Master not found' })
   }
 }
 
@@ -301,14 +299,6 @@ onBeforeUnmount(() => {
 
       <Card v-if="loading" class="max-w-xl" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100' : ''">
         <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ loadingLabel }}</p>
-      </Card>
-
-      <Card v-else-if="loadError" class="max-w-xl" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100' : ''">
-        <h1 class="text-3xl">{{ t('common.backend.notFound') }}</h1>
-        <p class="mt-3 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('mastersPage.profileSeoDescription') }}</p>
-        <NuxtLink :to="localePath(mastersPath)" class="mt-5 inline-block">
-          <BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('nav.masters') }}</BaseButton>
-        </NuxtLink>
       </Card>
 
       <div v-else-if="master" class="grid gap-6 lg:grid-cols-[360px,1fr]">
