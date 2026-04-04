@@ -2,6 +2,7 @@
 import SharedLanguageSwitcher from '~/components/shared/LanguageSwitcher.vue'
 import SharedCartBadge from '~/components/shared/CartBadge.vue'
 import SharedToastStack from '~/components/shared/ToastStack.vue'
+import PaymentMethodIcons from '~/components/layout/PaymentMethodIcons.vue'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -9,7 +10,7 @@ const { locale } = useLocale()
 const isMobileMenuOpen = ref(false)
 const { localePath } = useLocalizedPath()
 const { siteUrl } = useSiteMeta()
-const { rootPath, mastersPath, contactsPath, privacyPolicyPath, giftCardsPath, authLoginPath, authAppointmentsPath } = useBrandContext()
+const { rootPath, mastersPath, contactsPath, legalPath, privacyPolicyPath, giftCardsPath, authLoginPath, authProfilePath } = useBrandContext()
 const isArmenian = computed(() => locale.value === 'hy')
 const { canonicalUrl, alternates } = useLocalizedSeo(() => route.path)
 const torLogoUrl = computed(() => `${siteUrl.value}/tor-logo.jpg`)
@@ -59,6 +60,16 @@ const privacyPolicyLabel = computed(() => {
   if (locale.value === 'ru') return 'Политика конфиденциальности'
   if (locale.value === 'en') return 'Privacy Policy'
   return 'Գաղտնիության քաղաքականություն'
+})
+const legalLabel = computed(() => {
+  if (locale.value === 'ru') return 'Условия и политики'
+  if (locale.value === 'en') return 'Terms and Policies'
+  return 'Պայմաններ և քաղաքականություններ'
+})
+const allPagesLabel = computed(() => {
+  if (locale.value === 'ru') return 'Карта сайта'
+  if (locale.value === 'en') return 'All Pages'
+  return 'Կայքի քարտեզ'
 })
 
 watch(
@@ -156,7 +167,7 @@ useHead(() => ({
             <BaseButton size="sm" theme="tor">{{ locale === 'ru' ? 'Записаться' : locale === 'en' ? 'Book now' : 'Ամրագրել' }}</BaseButton>
           </NuxtLink>
           <SharedCartBadge theme="dark" />
-          <NuxtLink :to="localePath(auth.isAuth ? authAppointmentsPath : authLoginPath)">
+          <NuxtLink :to="localePath(auth.isAuth ? authProfilePath : authLoginPath)">
             <BaseButton variant="secondary" theme="tor" size="sm">{{ copy.account }}</BaseButton>
           </NuxtLink>
         </div>
@@ -204,7 +215,7 @@ useHead(() => ({
               <NuxtLink :to="localePath('/tor/cart')" class="sm:flex-1">
                 <BaseButton variant="secondary" theme="tor" size="sm" block>{{ copy.cart }}</BaseButton>
               </NuxtLink>
-              <NuxtLink :to="localePath(auth.isAuth ? authAppointmentsPath : authLoginPath)" class="sm:flex-1">
+              <NuxtLink :to="localePath(auth.isAuth ? authProfilePath : authLoginPath)" class="sm:flex-1">
                 <BaseButton variant="secondary" theme="tor" size="sm" block>{{ copy.account }}</BaseButton>
               </NuxtLink>
             </div>
@@ -219,12 +230,7 @@ useHead(() => ({
 
     <footer class="border-t border-white/10 bg-black py-8">
       <div class="container-shell flex flex-col gap-4 text-sm text-stone-400">
-        <div class="flex flex-wrap items-center gap-2">
-          <img src="/payments/visa.svg" alt="Visa" class="h-8 w-auto rounded-lg border border-white/10 bg-white/[0.06] p-1">
-          <img src="/payments/mastercard.svg" alt="Mastercard" class="h-8 w-auto rounded-lg border border-white/10 bg-white/[0.06] p-1">
-          <img src="/payments/arca.svg" alt="ArCa" class="h-8 w-auto rounded-lg border border-white/10 bg-white/[0.06] p-1">
-          <img src="/payments/idram.svg" alt="Idram" class="h-8 w-auto rounded-lg border border-white/10 bg-white/[0.06] p-1">
-        </div>
+        <PaymentMethodIcons dark />
 
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -233,7 +239,9 @@ useHead(() => ({
           </div>
           <div class="flex gap-4">
             <NuxtLink :to="localePath(contactsPath)" class="transition hover:text-[#d79a49]">{{ locale === 'ru' ? 'Контакты' : locale === 'en' ? 'Contacts' : 'Կոնտակտներ' }}</NuxtLink>
+            <NuxtLink :to="localePath(legalPath)" class="transition hover:text-[#d79a49]">{{ legalLabel }}</NuxtLink>
             <NuxtLink :to="localePath(privacyPolicyPath)" class="transition hover:text-[#d79a49]">{{ privacyPolicyLabel }}</NuxtLink>
+            <NuxtLink :to="localePath('/tor/all-pages')" class="transition hover:text-[#d79a49]">{{ allPagesLabel }}</NuxtLink>
           </div>
         </div>
       </div>

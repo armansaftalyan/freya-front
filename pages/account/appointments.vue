@@ -3,13 +3,14 @@ import { storeToRefs } from 'pinia'
 import Card from "~/components/base/Card.vue";
 import SkeletonBlock from "~/components/shared/SkeletonBlock.vue";
 import BadgeStatus from "~/components/base/BadgeStatus.vue";
+import AccountNav from '~/components/account/AccountNav.vue'
 
 definePageMeta({ middleware: 'auth' })
 
 const { t } = useLocale()
 const { formatYerevanDateTime } = useDateTime()
 const { localePath } = useLocalizedPath()
-const { isTor, bookingPath, authMasterProfilePath, authGiftCardsPath } = useBrandContext()
+const { isTor } = useBrandContext()
 const route = useRoute()
 useLocalizedSeo(() => route.path)
 
@@ -38,12 +39,7 @@ await useAsyncData('my-appointments', async () => {
           <h1 class="text-3xl sm:text-5xl">{{ t('nav.myAppointments') }}</h1>
           <p class="mt-2 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ auth.user?.name }} · {{ auth.user?.email }}</p>
         </div>
-        <div class="flex flex-wrap gap-2">
-          <NuxtLink :to="localePath(bookingPath)"><BaseButton :theme="isTor ? 'tor' : 'default'">{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
-          <NuxtLink v-if="auth.user?.roles?.includes('master')" :to="localePath(authMasterProfilePath)"><BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('account.masterProfile') }}</BaseButton></NuxtLink>
-          <NuxtLink :to="localePath(authGiftCardsPath)"><BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('account.giftCards') }}</BaseButton></NuxtLink>
-          <BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'" @click="auth.logout">{{ t('nav.logout') }}</BaseButton>
-        </div>
+        <AccountNav :show-master-profile="Boolean(auth.user?.roles?.includes('master'))" />
       </div>
 
       <div v-if="loading" class="grid gap-4">
@@ -64,15 +60,6 @@ await useAsyncData('my-appointments', async () => {
             </div>
             <div class="flex items-center gap-2">
               <BadgeStatus :status="item.status" />
-              <BaseButton
-                v-if="item.status !== 'cancelled'"
-                size="sm"
-                variant="secondary"
-                :theme="isTor ? 'tor' : 'default'"
-                @click="appointmentsStore.cancel(item.id)"
-              >
-                {{ t('account.cancel') }}
-              </BaseButton>
             </div>
           </div>
         </Card>

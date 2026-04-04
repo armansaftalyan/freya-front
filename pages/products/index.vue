@@ -1,137 +1,81 @@
 <script setup lang="ts">
-import type { ApiListResponse } from '~/types/api'
-import type { Product, ProductCategory } from '~/types/product'
-import ProductCard from '~/components/product/ProductCard.vue'
-import ProductCategorySection from '~/components/product/ProductCategorySection.vue'
-import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
+import type { Product } from '~/types/product'
+import ProductsCatalogPageContent from '~/components/pages/ProductsCatalogPageContent.vue'
 
-const api = useApi()
-const route = useRoute()
 const { t, locale } = useLocale()
-const { siteUrl } = useSiteMeta()
-const { brand, productsPath } = useBrandContext()
-const { localePath } = useLocalizedPath()
-const cart = useCartStore()
-const localizedPath = (target: string) => localePath(target) as string
-
-usePageSeo({
-  title: () => `Freya - ${t('nav.products')}`,
-  description: () => t('productsPage.seoDescription'),
+const { brand, isTor, productsPath } = useBrandContext()
+const { categoryById, groupedProducts, structuredData } = await useProductsCatalogPage({
+  brand: brand.value,
 })
 
-const { data } = await useAsyncData(() => `products-page-${brand.value}-${locale.value}`, async () => {
-  const [categoriesResponse, productsResponse] = await Promise.all([
-    api.get<ApiListResponse<ProductCategory>>('/product-categories', { brand: brand.value }, { skipErrorToast: true }),
-    api.get<ApiListResponse<Product>>('/products', { brand: brand.value }, { skipErrorToast: true }),
-  ])
+const copy = computed(() => {
+  if (brand.value === 'tor') {
+    if (locale.value === 'ru') {
+      return {
+        title: 'Tor Care',
+        eyebrow: 'Tor Care',
+        lead: 'Подборка мужских товаров для бороды, волос, кожи, ежедневного ухода и grooming-процедур.',
+        back: 'Назад в Tor',
+      }
+    }
+
+    if (locale.value === 'en') {
+      return {
+        title: 'Tor Care',
+        eyebrow: 'Tor Care',
+        lead: 'Selected beard, hair, skin, and grooming products for the Tor side of the brand.',
+        back: 'Back to Tor',
+      }
+    }
+
+    return {
+      title: 'Tor Care',
+      eyebrow: 'Tor Care',
+      lead: 'Tor բրենդային ուղղության համար ընտրված մորուքի, մազերի, մաշկի և grooming խնամքի ապրանքներ։',
+      back: 'Վերադառնալ Tor',
+    }
+  }
 
   return {
-    categories: categoriesResponse.data,
-    products: productsResponse.data,
+    title: t('nav.products'),
+    eyebrow: t('productsPage.catalog'),
+    lead: t('productsPage.seoDescription'),
+    back: '',
   }
 })
 
-const categories = computed(() => data.value?.categories || [])
-const products = computed(() => data.value?.products || [])
-const categoryById = computed(() => new Map(categories.value.map(category => [category.id, category])))
-const groupedProducts = computed(() =>
-  categories.value
-    .map(category => ({
-      ...category,
-      products: products.value.filter(product => product.category_id === category.id),
-    }))
-    .filter(category => category.products.length > 0),
-)
-const productPath = (product: Product) => localizedPath(`${productsPath.value}/${categoryById.value.get(product.category_id)?.slug || 'catalog'}/${product.slug}`)
-const productQuantity = (productId: number) => cart.getItemQuantity(productId)
-const addToCart = (product: Product) => cart.addItem(product, 1)
-const decreaseFromCart = (productId: number) => cart.decreaseItem(productId, 1)
+usePageSeo({
+  title: () => brand.value === 'tor' ? copy.value.title : `Freya - ${t('nav.products')}`,
+  description: () => copy.value.lead,
+})
 
-useStructuredData(() => ({
-  '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': 'CollectionPage',
-      url: `${siteUrl.value}${route.path}`,
-      name: t('nav.products'),
-      description: t('productsPage.seoDescription'),
-      mainEntity: {
-        '@type': 'ItemList',
-        itemListElement: products.value.map((product, index) => ({
-          '@type': 'ListItem',
-          position: index + 1,
-          url: `${siteUrl.value}${productsPath.value}/${categoryById.value.get(product.category_id)?.slug || 'catalog'}/${product.slug}`,
-          name: product.name,
-        })),
-      },
-    },
-    {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
+const productPath = (product: Product) => `${productsPath.value}/${categoryById.value.get(product.category_id)?.slug || (brand.value === 'tor' ? 'beard-care' : 'catalog')}/${product.slug}`
+
+useStructuredData(() => brand.value === 'tor'
+  ? {
+      ...structuredData.value,
+      '@graph': [
         {
-          '@type': 'ListItem',
-          position: 1,
-          name: t('nav.home'),
-          item: siteUrl.value,
+          ...structuredData.value['@graph'][0],
+          name: copy.value.title,
+          description: copy.value.lead,
         },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: t('nav.products'),
-          item: `${siteUrl.value}${route.path}`,
-        },
+        ...structuredData.value['@graph'].slice(1),
       ],
-    },
-  ],
-}))
+    }
+  : structuredData.value)
 </script>
 
 <template>
-  <section class="section-gap">
-    <div class="container-shell max-w-[88rem] space-y-10">
-      <div class="max-w-3xl">
-        <p class="text-xs uppercase tracking-[0.2em] text-sand-700">{{ t('productsPage.catalog') }}</p>
-        <h1 class="text-3xl leading-tight sm:text-5xl">{{ t('nav.products') }}</h1>
-        <p class="mt-3 text-sm text-[var(--muted)]">{{ t('productsPage.seoDescription') }}</p>
-      </div>
-
-      <div class="flex flex-wrap gap-2">
-        <NuxtLink
-          v-for="category in categories"
-          :key="category.id"
-          :to="localePath(`${productsPath}/${category.slug}`)"
-        >
-          <BaseButton variant="secondary" size="sm">
-            {{ category.name }}
-          </BaseButton>
-        </NuxtLink>
-      </div>
-
-      <div class="space-y-12">
-        <ProductCategorySection
-          v-for="category in groupedProducts"
-          :key="category.id"
-          :title="category.name"
-          :description="category.description"
-          :action-label="locale === 'ru' ? 'Открыть категорию' : locale === 'en' ? 'Open category' : 'Բացել կատեգորիան'"
-          :action-to="localizedPath(`${productsPath}/${category.slug}`)"
-        >
-          <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            <ProductCard
-              v-for="product in category.products"
-              :key="product.id"
-              :product="product"
-              :to="productPath(product)"
-              :quantity="productQuantity(product.id)"
-              :show-compare-price="true"
-              @add="addToCart"
-              @decrease="decreaseFromCart"
-            />
-          </div>
-        </ProductCategorySection>
-      </div>
-
-      <SeoIntentSection section="products" />
-    </div>
-  </section>
+  <ProductsCatalogPageContent
+    :theme="isTor ? 'tor' : 'default'"
+    :title="copy.title"
+    :eyebrow="copy.eyebrow"
+    :lead="copy.lead"
+    :back-label="isTor ? copy.back : ''"
+    :back-to="isTor ? '/tor' : ''"
+    :grouped-products="groupedProducts"
+    :products-path="productsPath"
+    :product-path="productPath"
+  />
 </template>

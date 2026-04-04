@@ -20,6 +20,7 @@ interface BookingLine {
   slot: Slot | null
   masters: Master[]
   mastersLoading: boolean
+  mastersResolved: boolean
   slots: Slot[]
   slotsLoading: boolean
 }
@@ -121,7 +122,8 @@ const successCount = ref(0)
 const createdAppointments = ref<Appointment[]>([])
 
 const comment = ref('')
-const guestName = ref('')
+const guestFirstName = ref('')
+const guestLastName = ref('')
 const guestPhone = ref('')
 const source = ref<'site' | 'phone' | 'instagram' | 'yandex_maps'>('site')
 const mastersDebounceTimers = new Map<number, ReturnType<typeof setTimeout>>()
@@ -130,6 +132,12 @@ const mastersAbortControllers = new Map<number, AbortController>()
 const slotsAbortControllers = new Map<number, AbortController>()
 
 const minBookingDate = computed(() => todayYerevanDate())
+
+const bookingContact = computed(() => ({
+  firstName: auth.user?.first_name?.trim?.() || '',
+  lastName: auth.user?.last_name?.trim?.() || '',
+  phone: auth.user?.phone || '',
+}))
 
 const normalizePhone = (value: string) => {
   const digits = (value || '').replace(/\D+/g, '')
@@ -192,9 +200,7 @@ const totalBookingGroups = computed(() => new Set(
 
 const defaultCategoryId = computed<number | null>(() => {
   if (!categories.value.length) return null
-  if (isTor.value) return categories.value[0]?.id ?? null
-  if (categories.value.length === 1) return categories.value[0]?.id ?? null
-  return null
+  return categories.value[0]?.id ?? null
 })
 
 const createEmptyLine = (preset: Partial<Pick<BookingLine, 'categoryId' | 'masterId'>> & { serviceId?: number } = {}): BookingLine => ({
@@ -206,6 +212,7 @@ const createEmptyLine = (preset: Partial<Pick<BookingLine, 'categoryId' | 'maste
   slot: null,
   masters: [],
   mastersLoading: false,
+  mastersResolved: false,
   slots: [],
   slotsLoading: false,
 })
@@ -340,6 +347,7 @@ const setLineCategory = async (line: BookingLine, categoryId: number) => {
     line.masterId = null
     line.slot = null
     line.masters = []
+    line.mastersResolved = false
     line.slots = []
   }
 }
@@ -366,6 +374,7 @@ const clearLineNetworkState = (lineId: number) => {
 const fetchMastersForLineNow = async (line: BookingLine) => {
   const previousMasterId = line.masterId
   line.masters = []
+  line.mastersResolved = false
   line.slot = null
   line.slots = []
 
@@ -386,6 +395,7 @@ const fetchMastersForLineNow = async (line: BookingLine) => {
       { signal: abortController.signal, skipErrorToast: true },
     )
     line.masters = response?.data || []
+    line.mastersResolved = true
     line.masterId = previousMasterId
 
     if (line.masterId && !line.masters.some(master => master.id === line.masterId)) {
@@ -528,7 +538,8 @@ const validate = () => {
   }
 
   if (comment.value && comment.value.length > 2000) return t('booking.errors.comment')
-  if (!auth.isAuth && !guestName.value.trim()) return t('booking.errors.guestName')
+  if (!auth.isAuth && !guestFirstName.value.trim()) return t('booking.errors.guestFirstName')
+  if (!auth.isAuth && !guestLastName.value.trim()) return t('booking.errors.guestLastName')
   if (!auth.isAuth && !guestPhone.value.trim()) return t('booking.errors.guestPhone')
   if (!auth.isAuth && !isPhoneValid(normalizePhone(guestPhone.value))) return t('common.phoneInvalid')
 
@@ -536,6 +547,15 @@ const validate = () => {
 }
 
 const submit = async () => {
+  if (auth.token && !auth.user) {
+    try {
+      await auth.fetchMe()
+    }
+    catch {
+      // Continue with guest fallback payload below.
+    }
+  }
+
   const validationError = validate()
   if (validationError) {
     toast.push({ type: 'error', title: t('common.requestFailed'), description: validationError })
@@ -547,6 +567,10 @@ const submit = async () => {
   createdAppointments.value = []
 
   try {
+    const fallbackFirstName = bookingContact.value.firstName || undefined
+    const fallbackLastName = bookingContact.value.lastName || undefined
+    const fallbackPhone = bookingContact.value.phone ? normalizePhone(bookingContact.value.phone) : undefined
+
     const response = await api.post<any>(
       '/appointments',
       {
@@ -559,8 +583,9 @@ const submit = async () => {
         })),
         source: source.value,
         comment: comment.value || undefined,
-        guest_name: guestName.value.trim() || undefined,
-        guest_phone: normalizePhone(guestPhone.value) || undefined,
+        guest_first_name: guestFirstName.value.trim() || fallbackFirstName,
+        guest_last_name: guestLastName.value.trim() || fallbackLastName,
+        guest_phone: normalizePhone(guestPhone.value) || fallbackPhone,
       },
       { skipErrorToast: true },
     )
@@ -574,7 +599,8 @@ const submit = async () => {
 
     lines.value = [createEmptyLine()]
     comment.value = ''
-    guestName.value = ''
+    guestFirstName.value = ''
+    guestLastName.value = ''
     guestPhone.value = ''
   }
   catch (error: any) {
@@ -780,7 +806,7 @@ onBeforeUnmount(() => {
                   <p class="font-semibold">{{ master.name }}</p>
                   <p class="line-clamp-1 text-xs" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ master.bio || t('booking.masterFallbackBio') }}</p>
                 </button>
-                <p v-if="line.serviceIds.length && !line.masters.length" class="text-xs text-amber-700">{{ t('booking.noMastersForSelection') }}</p>
+                <p v-if="line.serviceIds.length && line.mastersResolved && !line.mastersLoading && !line.masters.length" class="text-xs text-amber-700">{{ t('booking.noMastersForSelection') }}</p>
               </div>
             </div>
           </div>
@@ -815,7 +841,18 @@ onBeforeUnmount(() => {
           </div>
           <div class="space-y-3">
             <p v-if="!auth.isAuth" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestHint') }}</p>
-            <BaseInput v-if="!auth.isAuth" v-model="guestName" :theme="isTor ? 'dark' : 'light'" :label="t('booking.guestName')" :placeholder="t('booking.guestNamePlaceholder')" />
+            <div
+              v-if="auth.isAuth"
+              class="space-y-2 rounded-2xl p-4 text-sm"
+              :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200 bg-sand-50/50'"
+            >
+              <p class="font-semibold">{{ t('common.myProfile') }}</p>
+              <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestFirstName') }}:</span> <span class="font-semibold">{{ bookingContact.firstName || '—' }}</span></p>
+              <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestLastName') }}:</span> <span class="font-semibold">{{ bookingContact.lastName || '—' }}</span></p>
+              <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestPhone') }}:</span> <span class="font-semibold">{{ bookingContact.phone || '—' }}</span></p>
+            </div>
+            <BaseInput v-if="!auth.isAuth" v-model="guestFirstName" :theme="isTor ? 'dark' : 'light'" :label="t('booking.guestFirstName')" :placeholder="t('booking.guestFirstNamePlaceholder')" />
+            <BaseInput v-if="!auth.isAuth" v-model="guestLastName" :theme="isTor ? 'dark' : 'light'" :label="t('booking.guestLastName')" :placeholder="t('booking.guestLastNamePlaceholder')" />
             <BaseInput v-if="!auth.isAuth" v-model="guestPhone" :theme="isTor ? 'dark' : 'light'" type="tel" :label="t('booking.guestPhone')" :placeholder="t('booking.guestPhonePlaceholder')" />
             <BaseInput v-model="comment" :theme="isTor ? 'dark' : 'light'" :label="t('booking.commentLabel')" :placeholder="t('booking.commentPlaceholder')" />
           </div>

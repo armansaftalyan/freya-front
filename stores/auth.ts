@@ -10,9 +10,18 @@ export const useAuthStore = defineStore('authStore', () => {
 
   const isAuth = computed(() => Boolean(token.value && user.value))
 
+  const normalizeUser = (payload: User): User => ({
+    ...payload,
+    name: payload.name || `${payload.first_name || ''} ${payload.last_name || ''}`.trim(),
+  })
+
   const setAuth = (payload: AuthResponse) => {
     token.value = payload.token
-    user.value = payload.user
+    user.value = normalizeUser(payload.user)
+  }
+
+  const setUser = (payload: User) => {
+    user.value = normalizeUser(payload)
   }
 
   const clearAuth = () => {
@@ -66,7 +75,7 @@ export const useAuthStore = defineStore('authStore', () => {
     fetchMePromise = (async () => {
       try {
         const response = await api.get<ApiItemResponse<User>>('/auth/me')
-        user.value = response.data
+        user.value = normalizeUser(response.data)
       }
       catch {
         clearAuth()
@@ -104,6 +113,7 @@ export const useAuthStore = defineStore('authStore', () => {
     register,
     fetchMe,
     logout,
+    setUser,
     clearAuth,
   }
 })

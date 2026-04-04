@@ -14,8 +14,29 @@ useSeoMeta({
 })
 
 const auth = useAuthStore()
-const form = reactive({ name: '', email: '', phone: '', password: '' })
+const form = reactive<{ first_name: string; last_name: string; email: string; phone: string; gender: '' | 'female' | 'male'; birth_date: string; password: string; password_confirmation: string }>({
+  first_name: '',
+  last_name: '',
+  email: '',
+  phone: '',
+  gender: '',
+  birth_date: '',
+  password: '',
+  password_confirmation: '',
+})
 const toast = useToast()
+const genderOptions = computed(() => [
+  { value: 'female', label: t('auth.genderFemale') },
+  { value: 'male', label: t('auth.genderMale') },
+])
+
+if (auth.token && !auth.user) {
+  await auth.fetchMe()
+}
+
+if (auth.isAuth) {
+  await navigateTo(localePath(authAppointmentsPath.value))
+}
 
 const normalizePhone = (value: string) => {
   const digits = (value || '').replace(/\D+/g, '')
@@ -25,10 +46,10 @@ const normalizePhone = (value: string) => {
 const isPhoneValid = (value: string) => /^\+[1-9]\d{7,14}$/.test(value)
 
 const validate = () => {
-  if (!form.name.trim()) {
+  if (!form.first_name.trim() || !form.last_name.trim()) {
     return t('common.nameRequired')
   }
-  if (form.name.trim().length < 2) {
+  if (form.first_name.trim().length < 2 || form.last_name.trim().length < 2) {
     return t('common.nameShort')
   }
 
@@ -52,6 +73,12 @@ const validate = () => {
   if (form.password.length < 8) {
     return t('common.passwordShort')
   }
+  if (!form.password_confirmation.trim()) {
+    return t('common.passwordConfirmationRequired')
+  }
+  if (form.password !== form.password_confirmation) {
+    return t('common.passwordMismatch')
+  }
 
   return ''
 }
@@ -68,6 +95,9 @@ const submit = async () => {
     await auth.register({
       ...form,
       phone: normalizedPhone || undefined,
+      gender: form.gender || undefined,
+      birth_date: form.birth_date || undefined,
+      password_confirmation: form.password_confirmation,
     })
     await navigateTo(localePath(authAppointmentsPath.value))
   }
@@ -85,10 +115,14 @@ const submit = async () => {
         <h1 class="text-3xl sm:text-4xl">{{ t('auth.registerTitle') }}</h1>
         <p class="mt-2 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('auth.createText') }}</p>
         <form class="mt-6 space-y-4" @submit.prevent="submit">
-          <BaseInput v-model="form.name" :theme="isTor ? 'dark' : 'light'" :label="t('auth.name')" required />
+          <BaseInput v-model="form.first_name" :theme="isTor ? 'dark' : 'light'" :label="t('auth.firstName')" required />
+          <BaseInput v-model="form.last_name" :theme="isTor ? 'dark' : 'light'" :label="t('auth.lastName')" required />
           <BaseInput v-model="form.email" type="email" :theme="isTor ? 'dark' : 'light'" :label="t('auth.email')" required />
           <BaseInput v-model="form.phone" type="tel" :theme="isTor ? 'dark' : 'light'" :label="t('auth.phone')" />
+          <BaseSelect v-model="form.gender" :theme="isTor ? 'dark' : 'light'" :label="t('auth.gender')" :options="genderOptions" :placeholder="t('auth.genderPlaceholder')" />
+          <BaseInput v-model="form.birth_date" type="date" :theme="isTor ? 'dark' : 'light'" :label="t('common.birthDate')" />
           <BaseInput v-model="form.password" type="password" :theme="isTor ? 'dark' : 'light'" :label="t('auth.password')" required />
+          <BaseInput v-model="form.password_confirmation" type="password" :theme="isTor ? 'dark' : 'light'" :label="t('auth.passwordConfirmation')" required />
           <BaseButton type="submit" :theme="isTor ? 'tor' : 'default'" :disabled="auth.loading" block>
             {{ auth.loading ? `${t('auth.createAccount')}...` : t('auth.createAccount') }}
           </BaseButton>

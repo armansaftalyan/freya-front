@@ -39,6 +39,8 @@ export interface ProductOrder {
   status: string
   customer_user_id: number | null
   customer_name: string
+  customer_first_name?: string
+  customer_last_name?: string
   customer_phone: string
   customer_email: string | null
   delivery_type: 'pickup' | 'courier'

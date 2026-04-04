@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ServicesIndexPage from '~/pages/services/index.vue'
+import AllPagesPage from '~/pages/all-pages.vue'
 
 definePageMeta({
   layout: 'tor',
@@ -7,5 +7,5 @@ definePageMeta({
 </script>
 
 <template>
-  <ServicesIndexPage />
+  <AllPagesPage />
 </template>

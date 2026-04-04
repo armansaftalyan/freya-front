@@ -39,6 +39,8 @@ export default defineEventHandler(async (event) => {
   const locales = ['hy', 'ru', 'en'] as const
 
   const staticRoutes = [
+    '/all-pages',
+    '/tor/all-pages',
     '/services',
     '/products',
     '/masters',

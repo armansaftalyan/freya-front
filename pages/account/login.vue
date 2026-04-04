@@ -3,7 +3,7 @@ import Card from "~/components/base/Card.vue";
 
 const { t } = useLocale()
 const { localePath } = useLocalizedPath()
-const { isTor, authRegisterPath, authAppointmentsPath } = useBrandContext()
+const { isTor, authRegisterPath, authForgotPasswordPath, authAppointmentsPath } = useBrandContext()
 const route = useRoute()
 useLocalizedSeo(() => route.path)
 
@@ -14,15 +14,39 @@ useSeoMeta({
 })
 
 const auth = useAuthStore()
-const form = reactive({ email: '', password: '' })
+const form = reactive({ login: '', password: '' })
 const toast = useToast()
 
+if (auth.token && !auth.user) {
+  await auth.fetchMe()
+}
+
+if (auth.isAuth) {
+  await navigateTo(localePath(authAppointmentsPath.value))
+}
+
+const normalizePhone = (value: string) => {
+  const digits = (value || '').replace(/\D+/g, '')
+  return digits ? `+${digits}` : ''
+}
+
+const isPhoneLike = (value: string) => /[\d()+\-\s]/.test(value)
+
 const validate = () => {
-  if (!form.email.trim()) {
-    return t('common.emailRequired')
+  const login = form.login.trim()
+  if (!login) {
+    return t('common.loginRequired')
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-    return t('common.emailInvalid')
+
+  if (login.includes('@')) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(login)) {
+      return t('common.emailInvalid')
+    }
+  } else if (isPhoneLike(login)) {
+    const normalized = normalizePhone(login)
+    if (!/^\+[1-9]\d{7,14}$/.test(normalized)) {
+      return t('common.phoneInvalid')
+    }
   }
 
   if (!form.password.trim()) {
@@ -40,7 +64,10 @@ const submit = async () => {
   }
 
   try {
-    await auth.login(form)
+    await auth.login({
+      login: form.login.trim(),
+      password: form.password,
+    })
     await navigateTo(localePath(authAppointmentsPath.value))
   }
   catch (error: any) {
@@ -57,8 +84,11 @@ const submit = async () => {
         <h1 class="text-3xl sm:text-4xl">{{ t('auth.loginTitle') }}</h1>
         <p class="mt-2 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('auth.continueText') }}</p>
         <form class="mt-6 space-y-4" @submit.prevent="submit">
-          <BaseInput v-model="form.email" type="email" :theme="isTor ? 'dark' : 'light'" :label="t('auth.email')" required />
+          <BaseInput v-model="form.login" :theme="isTor ? 'dark' : 'light'" :label="t('auth.loginField')" required />
           <BaseInput v-model="form.password" type="password" :theme="isTor ? 'dark' : 'light'" :label="t('auth.password')" required />
+          <div class="flex justify-end">
+            <NuxtLink :to="localePath(authForgotPasswordPath)" :class="isTor ? 'text-[#d79a49] text-sm underline' : 'text-sand-700 text-sm underline'">{{ t('auth.forgotPassword') }}</NuxtLink>
+          </div>
           <BaseButton type="submit" :theme="isTor ? 'tor' : 'default'" :disabled="auth.loading" block>
             {{ auth.loading ? `${t('auth.login')}...` : t('auth.login') }}
           </BaseButton>

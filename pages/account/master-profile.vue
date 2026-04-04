@@ -2,6 +2,7 @@
 import type { ApiItemResponse } from '~/types/api'
 import type { Master } from '~/types/master'
 import Card from '~/components/base/Card.vue'
+import AccountNav from '~/components/account/AccountNav.vue'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -10,7 +11,7 @@ const api = useApi()
 const toast = useToast()
 const { t } = useLocale()
 const { localePath } = useLocalizedPath()
-const { isTor, bookingPath, authAppointmentsPath } = useBrandContext()
+const { isTor, authAppointmentsPath } = useBrandContext()
 const { masterAvatarPlaceholder, onMasterAvatarError } = useMasterAvatar()
 const config = useRuntimeConfig()
 const localizedPath = (target: string) => localePath(target) as string
@@ -237,10 +238,7 @@ const removePortfolioItem = async (index: number) => {
           <h1 class="text-3xl sm:text-5xl">{{ t('account.masterProfile') }}</h1>
           <p class="mt-2 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('account.masterProfileSeoDescription') }}</p>
         </div>
-        <div class="flex flex-wrap gap-2">
-          <NuxtLink :to="localizedPath(authAppointmentsPath)"><BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('nav.myAppointments') }}</BaseButton></NuxtLink>
-          <NuxtLink :to="localizedPath(bookingPath)"><BaseButton :theme="isTor ? 'tor' : 'default'">{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
-        </div>
+        <AccountNav show-master-profile />
       </div>
 
       <Card v-if="loading" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100' : ''">

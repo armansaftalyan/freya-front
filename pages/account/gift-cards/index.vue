@@ -3,6 +3,7 @@ import { storeToRefs } from 'pinia'
 import Card from '~/components/base/Card.vue'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 import type { GiftCard } from '~/types/gift-card'
+import AccountNav from '~/components/account/AccountNav.vue'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -10,7 +11,8 @@ const { t } = useLocale()
 const { formatYerevanDateTime } = useDateTime()
 const { formatAmd } = useCurrency()
 const { localePath } = useLocalizedPath()
-const { isTor, authAppointmentsPath, authGiftCardsPath, authGiftCardScanBasePath } = useBrandContext()
+const auth = useAuthStore()
+const { isTor, authGiftCardsPath, authGiftCardScanBasePath } = useBrandContext()
 const store = useGiftCardsStore()
 const { cards, loading } = storeToRefs(store)
 
@@ -48,7 +50,7 @@ await useAsyncData('my-gift-cards', async () => {
           <h1 class="text-3xl sm:text-5xl">{{ t('giftCards.listTitle') }}</h1>
           <p class="mt-2 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.listSubtitle') }}</p>
         </div>
-        <NuxtLink :to="localePath(authAppointmentsPath)"><BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('nav.myAppointments') }}</BaseButton></NuxtLink>
+        <AccountNav :show-master-profile="Boolean(auth.user?.roles?.includes('master'))" />
       </div>
 
       <div v-if="loading" class="grid gap-4">

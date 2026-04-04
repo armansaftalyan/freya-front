@@ -44,7 +44,8 @@ const syncCartProducts = async () => {
 }
 
 const form = reactive({
-  customer_name: '',
+  customer_first_name: '',
+  customer_last_name: '',
   customer_phone: '',
   customer_email: '',
   delivery_type: 'courier' as 'pickup' | 'courier',
@@ -141,8 +142,12 @@ watch(
   (user) => {
     if (!user) return
 
-    if (!form.customer_name.trim()) {
-      form.customer_name = user.name || ''
+    if (!form.customer_first_name.trim()) {
+      form.customer_first_name = user.first_name || ''
+    }
+
+    if (!form.customer_last_name.trim()) {
+      form.customer_last_name = user.last_name || ''
     }
 
     if (!form.customer_phone.trim()) {
@@ -180,7 +185,8 @@ const submit = async () => {
         product_id: item.product.id,
         quantity: Math.max(1, Number(item.quantity || 1)),
       })),
-      customer_name: form.customer_name.trim(),
+      customer_first_name: form.customer_first_name.trim(),
+      customer_last_name: form.customer_last_name.trim(),
       customer_phone: form.customer_phone.trim(),
       customer_email: form.customer_email.trim() || undefined,
       delivery_type: form.delivery_type,
@@ -210,7 +216,8 @@ const submit = async () => {
     }
 
     cart.clear()
-    form.customer_name = ''
+    form.customer_first_name = ''
+    form.customer_last_name = ''
     form.customer_phone = ''
     form.customer_email = ''
     form.delivery_type = 'courier'
@@ -376,7 +383,8 @@ const submit = async () => {
           </div>
 
           <div class="mt-5 grid gap-4">
-            <BaseInput v-model="form.customer_name" :label="t('productsPage.customerName')" :theme="isTor ? 'dark' : 'light'" />
+            <BaseInput v-model="form.customer_first_name" :label="t('productsPage.customerFirstName')" :theme="isTor ? 'dark' : 'light'" />
+            <BaseInput v-model="form.customer_last_name" :label="t('productsPage.customerLastName')" :theme="isTor ? 'dark' : 'light'" />
             <BaseInput v-model="form.customer_phone" type="tel" :label="t('productsPage.customerPhone')" :theme="isTor ? 'dark' : 'light'" />
             <BaseInput v-model="form.customer_email" type="email" :label="t('productsPage.customerEmail')" :theme="isTor ? 'dark' : 'light'" />
 

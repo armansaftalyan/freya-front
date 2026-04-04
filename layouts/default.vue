@@ -2,11 +2,12 @@
 import SharedLanguageSwitcher from '~/components/shared/LanguageSwitcher.vue'
 import SharedCartBadge from '~/components/shared/CartBadge.vue'
 import SharedToastStack from "~/components/shared/ToastStack.vue";
+import PaymentMethodIcons from '~/components/layout/PaymentMethodIcons.vue'
 
 const auth = useAuthStore()
 const { t, locale, locales } = useLocale()
 const route = useRoute()
-const { authLoginPath, authAppointmentsPath, contactsPath, privacyPolicyPath } = useBrandContext()
+const { authLoginPath, authProfilePath, contactsPath, legalPath, privacyPolicyPath } = useBrandContext()
 const { salonName, telephone, email, address, sameAs, siteUrl, logoUrl, defaultImageUrl } = useSiteMeta()
 const isMobileMenuOpen = ref(false)
 const { localePath } = useLocalizedPath()
@@ -23,6 +24,16 @@ const privacyPolicyLabel = computed(() => {
   if (locale.value === 'ru') return 'Политика конфиденциальности'
   if (locale.value === 'en') return 'Privacy Policy'
   return 'Գաղտնիության քաղաքականություն'
+})
+const legalLabel = computed(() => {
+  if (locale.value === 'ru') return 'Условия и политики'
+  if (locale.value === 'en') return 'Terms and Policies'
+  return 'Պայմաններ և քաղաքականություններ'
+})
+const allPagesLabel = computed(() => {
+  if (locale.value === 'ru') return 'Карта сайта'
+  if (locale.value === 'en') return 'All Pages'
+  return 'Կայքի քարտեզ'
 })
 const navLinkClass = computed(() => isArmenian.value
   ? 'whitespace-nowrap text-[13px] font-medium tracking-[-0.01em] text-sand-900 transition hover:text-sand-600 xl:text-[14px]'
@@ -140,7 +151,7 @@ useHead(() => ({
             <BaseButton size="sm">{{ bookingCta }}</BaseButton>
           </NuxtLink>
           <SharedCartBadge />
-          <NuxtLink :to="localePath(auth.isAuth ? authAppointmentsPath : authLoginPath)">
+          <NuxtLink :to="localePath(auth.isAuth ? authProfilePath : authLoginPath)">
             <BaseButton variant="secondary" size="sm">{{ auth.isAuth ? t('nav.myProfile') : t('nav.login') }}</BaseButton>
           </NuxtLink>
         </div>
@@ -192,7 +203,7 @@ useHead(() => ({
                   {{ t('nav.cart') }}
                 </BaseButton>
               </NuxtLink>
-              <NuxtLink :to="localePath(auth.isAuth ? authAppointmentsPath : authLoginPath)" class="flex-1">
+              <NuxtLink :to="localePath(auth.isAuth ? authProfilePath : authLoginPath)" class="flex-1">
                 <BaseButton variant="secondary" size="sm" block>
                   {{ auth.isAuth ? t('nav.myProfile') : t('nav.login') }}
                 </BaseButton>
@@ -209,18 +220,15 @@ useHead(() => ({
 
     <footer class="border-t border-sand-200 py-8">
       <div class="container-shell flex flex-col gap-4 text-sm text-[var(--muted)]">
-        <div class="flex flex-wrap items-center gap-2">
-          <img src="/payments/visa.svg" alt="Visa" class="h-8 w-auto rounded-lg border border-sand-200 bg-white p-1">
-          <img src="/payments/mastercard.svg" alt="Mastercard" class="h-8 w-auto rounded-lg border border-sand-200 bg-white p-1">
-          <img src="/payments/arca.svg" alt="ArCa" class="h-8 w-auto rounded-lg border border-sand-200 bg-white p-1">
-          <img src="/payments/idram.svg" alt="Idram" class="h-8 w-auto rounded-lg border border-sand-200 bg-white p-1">
-        </div>
+        <PaymentMethodIcons />
 
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p>© {{ new Date().getFullYear() }} Freya Beauty Salon</p>
         <div class="flex gap-4">
           <NuxtLink :to="localePath(contactsPath)" class="hover:text-sand-800">{{ t('nav.contacts') }}</NuxtLink>
+          <NuxtLink :to="localePath(legalPath)" class="hover:text-sand-800">{{ legalLabel }}</NuxtLink>
           <NuxtLink :to="localePath(privacyPolicyPath)" class="hover:text-sand-800">{{ privacyPolicyLabel }}</NuxtLink>
+          <NuxtLink :to="localePath('/all-pages')" class="hover:text-sand-800">{{ allPagesLabel }}</NuxtLink>
         </div>
         </div>
       </div>

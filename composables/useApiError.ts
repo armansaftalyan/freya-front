@@ -7,6 +7,10 @@ const fieldErrorKeyMap: Record<string, string> = {
   email: 'common.emailInvalid',
   password: 'common.passwordRequired',
   name: 'common.nameRequired',
+  first_name: 'common.nameRequired',
+  last_name: 'common.nameRequired',
+  customer_first_name: 'common.nameRequired',
+  customer_last_name: 'common.nameRequired',
   phone: 'common.phoneInvalid',
   category_id: 'booking.errors.category',
   service_id: 'booking.errors.service',
@@ -15,7 +19,8 @@ const fieldErrorKeyMap: Record<string, string> = {
   start_at: 'booking.errors.slot',
   date: 'booking.errors.date',
   comment: 'booking.errors.comment',
-  guest_name: 'booking.errors.guestName',
+  guest_first_name: 'booking.errors.guestFirstName',
+  guest_last_name: 'booking.errors.guestLastName',
   guest_phone: 'booking.errors.guestPhone',
 }
 

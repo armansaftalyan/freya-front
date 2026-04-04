@@ -2,18 +2,19 @@
 const { locale } = useLocale()
 const route = useRoute()
 const { siteUrl } = useSiteMeta()
+const { brand, isTor } = useBrandContext()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
 
 useSeoMeta({
-  title: 'Freya - Terms and Policies',
-  description: 'Privacy, personal data processing, cancellation/refund, delivery terms and payment details.',
+  title: () => `${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya'} - Terms and Policies`,
+  description: () => `Privacy, personal data processing, cancellation/refund, delivery terms and payment details for ${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon'}.`,
   robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
-  ogTitle: 'Freya - Terms and Policies',
-  ogDescription: 'Privacy, personal data processing, cancellation/refund, delivery terms and payment details.',
+  ogTitle: () => `${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya'} - Terms and Policies`,
+  ogDescription: () => `Privacy, personal data processing, cancellation/refund, delivery terms and payment details for ${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon'}.`,
   ogUrl: () => canonicalUrl.value,
   twitterCard: 'summary_large_image',
-  twitterTitle: 'Freya - Terms and Policies',
-  twitterDescription: 'Privacy, personal data processing, cancellation/refund, delivery terms and payment details.',
+  twitterTitle: () => `${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya'} - Terms and Policies`,
+  twitterDescription: () => `Privacy, personal data processing, cancellation/refund, delivery terms and payment details for ${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon'}.`,
 })
 
 const content = computed(() => {
@@ -221,24 +222,37 @@ useStructuredData(() => ({
 </script>
 
 <template>
-  <section class="section-gap">
+  <section :class="isTor ? 'section-gap text-stone-100' : 'section-gap'">
     <div class="container-shell mx-auto max-w-4xl space-y-6">
       <div class="space-y-2">
-        <h1 class="text-3xl leading-tight sm:text-5xl">{{ content.title }}</h1>
-        <p class="text-sm text-[var(--muted)]">{{ content.updatedAt }}</p>
+        <p v-if="isTor" class="text-xs uppercase tracking-[0.22em] text-[#c58a3a]">Tor Barbershop</p>
+        <h1 class="text-3xl leading-tight sm:text-5xl" :class="isTor ? 'text-stone-100' : ''">{{ content.title }}</h1>
+        <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ content.updatedAt }}</p>
       </div>
 
-      <div class="rounded-3xl border border-sand-200 bg-white p-5 shadow-soft sm:p-6">
-        <p class="text-sm text-sand-700">
+      <div
+        class="rounded-3xl p-5 sm:p-6"
+        :class="isTor
+          ? 'border border-white/10 bg-white/[0.04] shadow-[0_18px_50px_rgba(0,0,0,0.28)]'
+          : 'border border-sand-200 bg-white shadow-soft'"
+      >
+        <p class="text-sm" :class="isTor ? 'text-stone-300' : 'text-sand-700'">
           Visa, Mastercard, ArCa և Idram վճարային համակարգերի սպասարկում։
-          <span class="text-[var(--muted)]">(Լոգոները ներկայացված են ֆութերում)</span>
+          <span :class="isTor ? 'text-stone-500' : 'text-[var(--muted)]'">(Լոգոները ներկայացված են ֆութերում)</span>
         </p>
       </div>
 
-      <article v-for="section in content.sections" :key="section.title" class="rounded-3xl border border-sand-200 bg-white p-5 shadow-soft sm:p-6">
-        <h2 class="text-xl font-semibold text-sand-900">{{ section.title }}</h2>
+      <article
+        v-for="section in content.sections"
+        :key="section.title"
+        class="rounded-3xl p-5 sm:p-6"
+        :class="isTor
+          ? 'border border-white/10 bg-white/[0.04] shadow-[0_18px_50px_rgba(0,0,0,0.28)]'
+          : 'border border-sand-200 bg-white shadow-soft'"
+      >
+        <h2 class="text-xl font-semibold" :class="isTor ? 'text-stone-100' : 'text-sand-900'">{{ section.title }}</h2>
         <div class="mt-3 space-y-2">
-          <p v-for="line in section.body" :key="line" class="text-sm leading-6 text-sand-700">
+          <p v-for="line in section.body" :key="line" class="text-sm leading-6" :class="isTor ? 'text-stone-300' : 'text-sand-700'">
             {{ line }}
           </p>
         </div>
