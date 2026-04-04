@@ -16,11 +16,14 @@ const { isTor, brand, authGiftCardScanBasePath } = useBrandContext()
 
 const form = reactive({
   amount: '10000',
-  recipient_name: '',
+  recipient_first_name: '',
+  recipient_last_name: '',
   recipient_email: '',
   recipient_phone: '',
-  sender_name: '',
+  sender_first_name: '',
+  sender_last_name: '',
   sender_email: '',
+  sender_phone: '',
   message: '',
 })
 
@@ -148,6 +151,15 @@ const applyAmountPreset = (amount: number) => {
   form.amount = String(amount)
 }
 
+const normalizePhone = (value: string) => {
+  const digits = (value || '').replace(/\D+/g, '')
+  return digits ? `+${digits}` : ''
+}
+
+const buildFullName = (firstName: string, lastName: string) => {
+  return [firstName.trim(), lastName.trim()].filter(Boolean).join(' ')
+}
+
 watch(isTor, (torMode) => {
   if (torMode && selectedTheme.value === 'rose')
     selectedTheme.value = 'gold'
@@ -200,8 +212,23 @@ const submit = async () => {
     return
   }
 
-  if (!form.recipient_email.trim() && !form.recipient_phone.trim()) {
+  if (!form.recipient_first_name.trim() || !form.recipient_last_name.trim()) {
+    toast.push({ type: 'error', title: t('giftCards.recipientNameRequiredError') })
+    return
+  }
+
+  if (!form.sender_first_name.trim() || !form.sender_last_name.trim()) {
+    toast.push({ type: 'error', title: t('giftCards.senderNameRequiredError') })
+    return
+  }
+
+  if (!form.recipient_phone.trim()) {
     toast.push({ type: 'error', title: t('giftCards.recipientRequiredError') })
+    return
+  }
+
+  if (!form.sender_phone.trim()) {
+    toast.push({ type: 'error', title: t('giftCards.senderPhoneRequiredError') })
     return
   }
 
@@ -216,11 +243,12 @@ const submit = async () => {
       meta: {
         brand: brand.value,
       },
-      recipient_name: form.recipient_name.trim() || undefined,
+      recipient_name: buildFullName(form.recipient_first_name, form.recipient_last_name) || undefined,
       recipient_email: form.recipient_email.trim() || undefined,
-      recipient_phone: form.recipient_phone.trim() || undefined,
-      sender_name: form.sender_name.trim() || undefined,
+      recipient_phone: normalizePhone(form.recipient_phone) || undefined,
+      sender_name: buildFullName(form.sender_first_name, form.sender_last_name) || undefined,
       sender_email: form.sender_email.trim() || undefined,
+      sender_phone: normalizePhone(form.sender_phone) || undefined,
       message: form.message.trim() || undefined,
     })
 
@@ -326,11 +354,14 @@ const submit = async () => {
               </button>
             </div>
           </div>
-          <BaseInput v-model="form.recipient_name" :label="t('giftCards.recipientName')" :placeholder="t('giftCards.recipientNamePlaceholder')" :theme="isTor ? 'dark' : 'light'" />
+          <BaseInput v-model="form.recipient_first_name" :label="t('giftCards.recipientFirstName')" :placeholder="t('giftCards.recipientFirstNamePlaceholder')" :theme="isTor ? 'dark' : 'light'" />
+          <BaseInput v-model="form.recipient_last_name" :label="t('giftCards.recipientLastName')" :placeholder="t('giftCards.recipientLastNamePlaceholder')" :theme="isTor ? 'dark' : 'light'" />
           <BaseInput v-model="form.recipient_email" type="email" :label="t('giftCards.recipientEmail')" :placeholder="t('giftCards.recipientEmailPlaceholder')" :theme="isTor ? 'dark' : 'light'" />
           <BaseInput v-model="form.recipient_phone" type="tel" :label="t('giftCards.recipientPhone')" :placeholder="t('giftCards.recipientPhonePlaceholder')" :theme="isTor ? 'dark' : 'light'" />
-          <BaseInput v-model="form.sender_name" :label="t('giftCards.senderName')" :placeholder="t('giftCards.senderNamePlaceholder')" :theme="isTor ? 'dark' : 'light'" />
+          <BaseInput v-model="form.sender_first_name" :label="t('giftCards.senderFirstName')" :placeholder="t('giftCards.senderFirstNamePlaceholder')" :theme="isTor ? 'dark' : 'light'" />
+          <BaseInput v-model="form.sender_last_name" :label="t('giftCards.senderLastName')" :placeholder="t('giftCards.senderLastNamePlaceholder')" :theme="isTor ? 'dark' : 'light'" />
           <BaseInput v-model="form.sender_email" type="email" :label="t('giftCards.senderEmail')" :placeholder="t('giftCards.senderEmailPlaceholder')" :theme="isTor ? 'dark' : 'light'" />
+          <BaseInput v-model="form.sender_phone" type="tel" :label="t('giftCards.senderPhone')" :placeholder="t('giftCards.senderPhonePlaceholder')" :theme="isTor ? 'dark' : 'light'" />
 
           <label class="grid gap-1">
             <span class="text-sm" :class="isTor ? 'text-stone-300' : 'text-sand-700'">{{ t('giftCards.message') }}</span>
