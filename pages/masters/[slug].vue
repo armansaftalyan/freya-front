@@ -61,6 +61,7 @@ const masterTopSpecialties = computed(() =>
     .slice(0, 3)
     .filter(Boolean),
 )
+const masterPrimaryOffer = computed(() => masterTopSpecialties.value[0] || masterTopServices.value[0] || '')
 const masterKeyword = computed(() => {
   if (brand.value === 'tor') {
     if (locale.value === 'ru') return 'барбер и мужской мастер'
@@ -101,42 +102,41 @@ const seoDescription = computed(() => {
     return t('mastersPage.profileSeoDescription')
   }
 
-  const services = masterTopServices.value.join(', ')
-  const specialties = masterTopSpecialties.value.join(', ')
+  const primaryOffer = masterPrimaryOffer.value
 
   if (brand.value === 'tor') {
     if (locale.value === 'ru') {
-      return services
-        ? `${master.value.name} в Tor Barbershop, Ереван. Услуги: ${services}. Запись онлайн на мужские услуги и grooming.`
-        : `${master.value.name} в Tor Barbershop, Ереван. ${master.value.bio || 'Мужской мастер, barbershop и grooming услуги.'}`
+      return primaryOffer
+        ? `${master.value.name} в Tor Barbershop, Ереван. ${primaryOffer}, мужской grooming и онлайн-запись.`
+        : `${master.value.name} в Tor Barbershop, Ереван. Мужской мастер с онлайн-записью.`
     }
 
     if (locale.value === 'en') {
-      return services
-        ? `${master.value.name} at Tor Barbershop in Yerevan. Services: ${services}. Book online for barber, men nails, elos, and massage services.`
-        : `${master.value.name} at Tor Barbershop in Yerevan. ${master.value.bio || 'Men grooming specialist available for online booking.'}`
+      return primaryOffer
+        ? `${master.value.name} at Tor Barbershop in Yerevan. ${primaryOffer}, men grooming, and online booking.`
+        : `${master.value.name} at Tor Barbershop in Yerevan. Men grooming specialist with online booking.`
     }
 
-    return services
-      ? `${master.value.name}-ը Tor Barbershop-ում՝ Երևանում։ Ծառայություններ՝ ${services}։ Օնլայն ամրագրում տղամարդկանց ծառայությունների համար։`
-      : `${master.value.name}-ը Tor Barbershop-ում՝ Երևանում։ ${master.value.bio || 'Տղամարդկանց խնամքի մասնագետ օնլայն ամրագրմամբ։'}`
+    return primaryOffer
+      ? `${master.value.name}-ը Tor Barbershop-ում՝ Երևանում։ ${primaryOffer}, տղամարդկանց grooming և օնլայն ամրագրում։`
+      : `${master.value.name}-ը Tor Barbershop-ում՝ Երևանում։ Տղամարդկանց խնամքի մասնագետ օնլայն ամրագրմամբ։`
   }
 
   if (locale.value === 'ru') {
-    return services
-      ? `${master.value.name} в Freya Beauty Salon, Ереван. Услуги: ${services}. Запись онлайн на beauty-процедуры и услуги салона.`
-      : `${master.value.name} в Freya Beauty Salon, Ереван. ${master.value.bio || 'Мастер салона красоты, онлайн-запись на услуги Freya.'}`
+    return primaryOffer
+      ? `${master.value.name} в Freya Beauty Salon, Ереван. ${primaryOffer}, beauty-услуги и онлайн-запись.`
+      : `${master.value.name} в Freya Beauty Salon, Ереван. Мастер салона красоты с онлайн-записью.`
   }
 
   if (locale.value === 'en') {
-    return services
-      ? `${master.value.name} at Freya Beauty Salon in Yerevan. Services: ${services}. Book online for nails, cosmetology, massage, elos, and hair services.`
-      : `${master.value.name} at Freya Beauty Salon in Yerevan. ${master.value.bio || 'Beauty specialist available for online booking.'}`
+    return primaryOffer
+      ? `${master.value.name} at Freya Beauty Salon in Yerevan. ${primaryOffer}, beauty services, and online booking.`
+      : `${master.value.name} at Freya Beauty Salon in Yerevan. Beauty specialist with online booking.`
   }
 
-  return specialties
-    ? `${master.value.name}-ը Freya Beauty Salon-ում՝ Երևանում։ Մասնագիտացում՝ ${specialties}։ Օնլայն ամրագրում գեղեցկության ծառայությունների համար։`
-    : `${master.value.name}-ը Freya Beauty Salon-ում՝ Երևանում։ ${master.value.bio || 'Գեղեցկության մասնագետ օնլայն ամրագրմամբ։'}`
+  return primaryOffer
+    ? `${master.value.name}-ը Freya Beauty Salon-ում՝ Երևանում։ ${primaryOffer}, գեղեցկության ծառայություններ և օնլայն ամրագրում։`
+    : `${master.value.name}-ը Freya Beauty Salon-ում՝ Երևանում։ Գեղեցկության մասնագետ օնլայն ամրագրմամբ։`
 })
 const seoImage = computed(() =>
   master.value?.avatar
