@@ -12,7 +12,7 @@ const copy = computed(() => {
   if (brand.value === 'tor') {
     if (locale.value === 'ru') {
       return {
-        title: 'Tor Care',
+        title: 'Товары Tor Barbershop в Ереване',
         eyebrow: 'Tor Care',
         lead: 'Подборка мужских товаров для бороды, волос, кожи, ежедневного ухода и grooming-процедур.',
         back: 'Назад в Tor',
@@ -21,7 +21,7 @@ const copy = computed(() => {
 
     if (locale.value === 'en') {
       return {
-        title: 'Tor Care',
+        title: 'Tor Grooming Products in Yerevan',
         eyebrow: 'Tor Care',
         lead: 'Selected beard, hair, skin, and grooming products for the Tor side of the brand.',
         back: 'Back to Tor',
@@ -29,7 +29,7 @@ const copy = computed(() => {
     }
 
     return {
-      title: 'Tor Care',
+      title: 'Tor Barbershop ապրանքներ Երևանում',
       eyebrow: 'Tor Care',
       lead: 'Tor բրենդային ուղղության համար ընտրված մորուքի, մազերի, մաշկի և grooming խնամքի ապրանքներ։',
       back: 'Վերադառնալ Tor',

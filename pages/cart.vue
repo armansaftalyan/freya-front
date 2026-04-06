@@ -62,7 +62,13 @@ const payment = ref<ProductOrderPayment | null>(null)
 const idramFormRef = ref<HTMLFormElement | null>(null)
 
 usePageSeo({
-  title: () => `${isTor.value ? 'Tor' : 'Freya'} - ${t('cartPage.title')}`,
+  title: () => isTor.value
+    ? (locale.value === 'ru'
+        ? 'Корзина Tor Barbershop'
+        : locale.value === 'en'
+          ? 'Tor Barbershop Cart'
+          : 'Tor Barbershop զամբյուղ')
+    : `Freya - ${t('cartPage.title')}`,
   description: () => t('cartPage.seoDescription'),
 })
 
