@@ -19,13 +19,15 @@ const toast = useToast()
 const form = reactive({ email: '' })
 const sending = ref(false)
 
-if (auth.token && !auth.user) {
-  await auth.fetchMe()
-}
+onMounted(async () => {
+  if (auth.token && !auth.user) {
+    await auth.fetchMe()
+  }
 
-if (auth.isAuth) {
-  await navigateTo(localePath(authProfilePath.value))
-}
+  if (auth.isAuth) {
+    await navigateTo(localePath(authProfilePath.value))
+  }
+})
 
 const submit = async () => {
   sending.value = true

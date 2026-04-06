@@ -4,7 +4,8 @@ import FaqSection from '~/components/sections/FaqSection.vue'
 const { locale } = useLocale()
 const { siteUrl } = useSiteMeta()
 const { brand, isTor } = useBrandContext()
-const { canonicalUrl } = useLocalizedSeo(() => useRoute().path)
+const route = useRoute()
+const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const { faqCopy } = usePageFaqContent(brand.value, 'privacy-policy')
 
 useSeoMeta({

@@ -30,13 +30,15 @@ const genderOptions = computed(() => [
   { value: 'male', label: t('auth.genderMale') },
 ])
 
-if (auth.token && !auth.user) {
-  await auth.fetchMe()
-}
+onMounted(async () => {
+  if (auth.token && !auth.user) {
+    await auth.fetchMe()
+  }
 
-if (auth.isAuth) {
-  await navigateTo(localePath(authAppointmentsPath.value))
-}
+  if (auth.isAuth) {
+    await navigateTo(localePath(authAppointmentsPath.value))
+  }
+})
 
 const normalizePhone = (value: string) => {
   const digits = (value || '').replace(/\D+/g, '')
