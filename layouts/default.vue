@@ -38,6 +38,15 @@ const allPagesLabel = computed(() => {
 const navLinkClass = computed(() => isArmenian.value
   ? 'whitespace-nowrap text-[13px] font-medium tracking-[-0.01em] text-sand-900 transition hover:text-sand-600 xl:text-[14px]'
   : 'whitespace-nowrap text-[15px] font-medium text-sand-900 transition hover:text-sand-600 xl:text-base')
+const titleTemplate = (title?: string | null) => {
+  const baseTitle = 'Freya Beauty Salon'
+
+  if (!title) {
+    return baseTitle
+  }
+
+  return /\bFreya\b/i.test(title) ? title : `${title} | ${baseTitle}`
+}
 
 const links: Array<{ to: string; key: string; label?: string }> = [
   { to: '/services', key: 'nav.services' },
@@ -58,6 +67,7 @@ useHead(() => ({
   htmlAttrs: {
     lang: locale.value,
   },
+  titleTemplate,
   link: [
     { rel: 'canonical', href: canonicalUrl.value },
     ...alternateLinks.value,

@@ -71,6 +71,15 @@ const allPagesLabel = computed(() => {
   if (locale.value === 'en') return 'All Pages'
   return 'Կայքի քարտեզ'
 })
+const titleTemplate = (title?: string | null) => {
+  const baseTitle = 'Tor Barbershop'
+
+  if (!title) {
+    return baseTitle
+  }
+
+  return /\bTor\b/i.test(title) ? title : `${title} | ${baseTitle}`
+}
 
 watch(
   () => route.fullPath,
@@ -83,6 +92,7 @@ useHead(() => ({
   bodyAttrs: {
     class: 'tor-theme',
   },
+  titleTemplate,
   link: [
     { rel: 'canonical', href: canonicalUrl.value },
     ...alternates.value.map((item) => ({ rel: 'alternate', hreflang: item.locale, href: item.href })),

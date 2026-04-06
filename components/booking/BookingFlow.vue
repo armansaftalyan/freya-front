@@ -30,7 +30,10 @@ const { formatAmd } = useCurrency()
 const { formatYerevanDateTime, todayYerevanDate } = useDateTime()
 const { siteUrl } = useSiteMeta()
 const { isTor, brand, authAppointmentsPath } = useBrandContext()
+const route = useRoute()
+const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const { faqCopy } = usePageFaqContent(isTor.value ? 'tor' : 'freya', 'booking')
+const hasQueryParams = computed(() => Object.keys(route.query).length > 0)
 
 const bookingBrandName = computed(() => (isTor.value ? 'Tor' : 'Freya'))
 const bookingSeoCopy = computed(() => {
@@ -104,11 +107,13 @@ useSeoMeta({
   description: () => bookingSeoCopy.value.description,
   ogTitle: () => bookingSeoCopy.value.title,
   ogDescription: () => bookingSeoCopy.value.ogDescription,
-  robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+  ogUrl: () => canonicalUrl.value,
+  robots: () => hasQueryParams.value
+    ? 'noindex, nofollow'
+    : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
 })
 
 const auth = useAuthStore()
-const route = useRoute()
 const servicesStore = useServicesStore()
 const api = useApi()
 const toast = useToast()
@@ -277,14 +282,14 @@ useStructuredData(() => ({
   '@graph': [
     {
       '@type': 'WebPage',
-      url: `${siteUrl.value}${route.path}`,
+      url: canonicalUrl.value,
       name: bookingSeoCopy.value.title,
       description: bookingSeoCopy.value.description,
       isPartOf: {
-        '@id': `${siteUrl.value}#website`,
+        '@id': `${siteUrl.value}${isTor.value ? '/tor' : ''}#website`,
       },
       about: {
-        '@id': `${siteUrl.value}#salon`,
+        '@id': `${siteUrl.value}${isTor.value ? '/tor#barbershop' : '#salon'}`,
       },
     },
     {
@@ -302,7 +307,7 @@ useStructuredData(() => ({
       '@type': 'ReserveAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: `${siteUrl.value}${route.path}`,
+        urlTemplate: canonicalUrl.value,
         inLanguage: locale.value,
       },
       result: {
@@ -323,7 +328,7 @@ useStructuredData(() => ({
           '@type': 'ListItem',
           position: 2,
           name: t('nav.booking'),
-          item: `${siteUrl.value}${route.path}`,
+          item: canonicalUrl.value,
         },
       ],
     },
