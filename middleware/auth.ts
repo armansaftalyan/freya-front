@@ -7,6 +7,13 @@ export default defineNuxtRouteMiddleware(() => {
   }
 
   if (!auth.isAuth) {
+    if (import.meta.server) {
+      return abortNavigation(createError({
+        statusCode: 401,
+        statusMessage: 'Authentication required',
+      }))
+    }
+
     return navigateTo(localePath(authLoginPath.value))
   }
 })
