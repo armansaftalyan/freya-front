@@ -145,17 +145,44 @@ const seoImage = computed(() =>
   || defaultImageUrl.value,
 )
 const canonicalUrl = computed(() => `${siteUrl.value}${route.path}`)
+const assetPreconnectLinks = computed(() => {
+  const pageOrigin = siteUrl.value ? new URL(siteUrl.value).origin : ''
+  const origins = new Set<string>()
+
+  ;[master.value?.avatar, seoImage.value].forEach((value) => {
+    if (!value || value.startsWith('data:')) {
+      return
+    }
+
+    try {
+      const origin = new URL(value, siteUrl.value).origin
+
+      if (origin !== pageOrigin) {
+        origins.add(origin)
+      }
+    }
+    catch {
+      // Ignore malformed URLs.
+    }
+  })
+
+  return [...origins]
+})
 
 useSeoMeta({
   title: () => seoTitle.value,
   description: () => seoDescription.value,
   ogTitle: () => seoTitle.value,
   ogDescription: () => seoDescription.value,
+  ogType: 'profile',
+  ogUrl: () => canonicalUrl.value,
   ogImage: () => seoImage.value,
+  ogImageAlt: () => master.value?.name || seoTitle.value,
   twitterCard: 'summary_large_image',
   twitterTitle: () => seoTitle.value,
   twitterDescription: () => seoDescription.value,
   twitterImage: () => seoImage.value,
+  twitterImageAlt: () => master.value?.name || seoTitle.value,
 })
 
 useHead(() => ({
@@ -164,6 +191,17 @@ useHead(() => ({
       rel: 'canonical',
       href: canonicalUrl.value,
     },
+    ...assetPreconnectLinks.value.flatMap((origin) => ([
+      {
+        rel: 'preconnect',
+        href: origin,
+        crossorigin: '',
+      },
+      {
+        rel: 'dns-prefetch',
+        href: origin,
+      },
+    ])),
   ],
 }))
 
@@ -307,7 +345,11 @@ onBeforeUnmount(() => {
             :src="masterAvatarSrc(master.avatar, master.name)"
             :alt="master.name"
             class="h-80 w-full rounded-2xl object-cover"
-            loading="lazy"
+            width="720"
+            height="320"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
             @error="onMasterAvatarError($event, master.name)"
           >
           <h1 class="mt-4 text-3xl sm:text-4xl">{{ master.name }}</h1>
@@ -433,7 +475,10 @@ onBeforeUnmount(() => {
                     :src="image"
                     :alt="`${master.name} portfolio ${index + 1}`"
                     class="h-full w-full cursor-zoom-in object-cover transition duration-500 group-hover:scale-[1.03]"
+                    width="1000"
+                    height="1200"
                     loading="lazy"
+                    decoding="async"
                   >
                 </button>
                 <div
@@ -464,7 +509,10 @@ onBeforeUnmount(() => {
                   :src="certificate.image"
                   :alt="certificate.title"
                   class="h-40 w-full cursor-zoom-in object-cover"
+                  width="800"
+                  height="320"
                   loading="lazy"
+                  decoding="async"
                   @click="openCertificateLightbox(idx)"
                 >
                 <div class="p-4">
@@ -508,6 +556,8 @@ onBeforeUnmount(() => {
               :src="activeCertificate.image"
               :alt="activeCertificate.title"
               class="max-h-[75vh] w-full object-contain"
+              width="1200"
+              height="900"
             >
             <figcaption class="p-4">
               <p class="font-semibold text-sand-900">{{ activeCertificate.title }}</p>
@@ -558,6 +608,8 @@ onBeforeUnmount(() => {
               :src="activePortfolioImage"
               :alt="`${master?.name} portfolio ${portfolioLightboxIndex !== null ? portfolioLightboxIndex + 1 : ''}`"
               class="max-h-[78vh] w-full object-contain"
+              width="1200"
+              height="1440"
             >
             <figcaption
               class="flex items-center justify-between gap-3 p-4"

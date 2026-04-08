@@ -58,7 +58,10 @@ const filteredMasters = computed(() =>
               :src="masterAvatarSrc(master.avatar, master.name)"
               :alt="master.name"
               class="h-16 w-16 rounded-2xl object-cover"
+              width="64"
+              height="64"
               loading="lazy"
+              decoding="async"
               @error="onMasterAvatarError($event, master.name)"
             >
             <div>

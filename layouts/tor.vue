@@ -153,10 +153,10 @@ useHead(() => ({
       <div class="container-shell flex min-h-16 items-center justify-between gap-4 py-3">
         <div class="flex shrink-0 items-center gap-2">
           <NuxtLink :to="localePath('/tor')" class="inline-flex items-center gap-3">
-            <img src="/tor-logo.jpg" alt="Tor Barbershop" class="h-12 w-12 rounded-full border border-[#c58a3a]/40 object-cover shadow-[0_0_0_4px_rgba(197,138,58,0.08)]">
+            <img src="/tor-logo-96.jpg" alt="Tor Barbershop" width="48" height="48" decoding="async" class="h-12 w-12 rounded-full border border-[#c58a3a]/40 object-cover shadow-[0_0_0_4px_rgba(197,138,58,0.08)]">
           </NuxtLink>
           <NuxtLink :to="localePath('/')" class="inline-flex items-center rounded-full border border-white/10 bg-white/[0.06] p-1.5 transition hover:border-white/20 hover:bg-white/[0.1] lg:hidden">
-            <img src="/logo.svg" alt="Freya Beauty Salon" class="h-7 w-7 rounded-full bg-white object-cover p-0.5">
+            <img src="/logo.svg" alt="Freya Beauty Salon" width="28" height="28" decoding="async" class="h-7 w-7 rounded-full bg-white object-cover p-0.5">
           </NuxtLink>
         </div>
 
