@@ -9,6 +9,7 @@ const route = useRoute()
 const { t } = useLocale()
 const { localePath } = useLocalizedPath()
 const { isTor, authProfilePath, authAppointmentsPath, authGiftCardsPath, authMasterProfilePath } = useBrandContext()
+const auth = useAuthStore()
 
 const items = computed(() => {
   const links = []
@@ -47,5 +48,12 @@ const isActive = (target: string) => {
         {{ item.label }}
       </BaseButton>
     </NuxtLink>
+    <BaseButton
+      variant="secondary"
+      :theme="isTor ? 'tor' : 'default'"
+      @click="auth.logout"
+    >
+      {{ t('nav.logout') }}
+    </BaseButton>
   </div>
 </template>

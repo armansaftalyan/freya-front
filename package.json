@@ -4,6 +4,13 @@
   "private": true,
   "scripts": {
     "build": "nuxt build",
+    "build:mobile:web": "NUXT_PUBLIC_NATIVE_APP=true nuxt generate",
+    "cap:add:android": "npx cap add android",
+    "cap:add:ios": "npx cap add ios",
+    "cap:copy": "npx cap copy",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios",
+    "cap:sync": "npm run build:mobile:web && npx cap sync",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "pm2:logs": "PM2_HOME=.pm2 pm2 logs beauty-salon-web",
@@ -14,6 +21,10 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.0",
+    "@capacitor/cli": "^7.6.1",
+    "@capacitor/core": "^8.3.0",
+    "@capacitor/ios": "^8.3.0",
     "@pinia/nuxt": "^0.11.3",
     "@vueuse/nuxt": "^14.2.1",
     "date-fns": "^4.1.0",

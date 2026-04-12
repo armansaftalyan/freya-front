@@ -30,7 +30,7 @@ const copy = computed(() => {
         account: auth.isAuth ? 'Мой профиль' : 'Войти',
         cart: 'Корзина',
         services: 'Услуги',
-      care: 'Уход',
+      care: 'Товары',
       tagline: 'Точные стрижки, борода и уверенный уход.',
     }
   }
@@ -41,7 +41,7 @@ const copy = computed(() => {
         account: auth.isAuth ? 'My profile' : 'Log in',
         cart: 'Cart',
         services: 'Services',
-      care: 'Care',
+      care: 'Products',
       tagline: 'Craft cuts, beard work, sharp care.',
     }
   }
@@ -51,7 +51,7 @@ const copy = computed(() => {
     account: auth.isAuth ? 'Իմ էջը' : 'Մուտք',
     cart: 'Զամբյուղ',
     services: 'Ծառայություններ',
-    care: 'Խնամք',
+    care: 'Ապրանքներ',
     tagline: 'Ճշգրիտ սանրվածք, մորուք և վստահ խնամք։',
   }
 })
@@ -172,7 +172,7 @@ useHead(() => ({
         </nav>
 
         <div class="hidden items-center gap-1.5 lg:flex">
-          <SharedLanguageSwitcher theme="dark" />
+          <SharedLanguageSwitcher theme="dark" compact />
           <NuxtLink :to="localePath('/tor/booking')">
             <BaseButton size="sm" theme="tor">{{ locale === 'ru' ? 'Записаться' : locale === 'en' ? 'Book now' : 'Ամրագրել' }}</BaseButton>
           </NuxtLink>
@@ -218,7 +218,7 @@ useHead(() => ({
             </nav>
 
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <SharedLanguageSwitcher theme="dark" />
+              <SharedLanguageSwitcher theme="dark" compact />
               <NuxtLink :to="localePath('/tor/booking')" class="sm:flex-1">
                 <BaseButton size="sm" theme="tor" block>{{ locale === 'ru' ? 'Записаться' : locale === 'en' ? 'Book now' : 'Ամրագրել' }}</BaseButton>
               </NuxtLink>

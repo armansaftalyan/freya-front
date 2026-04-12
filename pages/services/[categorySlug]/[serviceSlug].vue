@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import type { ApiListResponse } from '~/types/api'
 import type { Category } from '~/types/category'
+import type { Master } from '~/types/master'
 import type { Service } from '~/types/service'
 import ServiceCatalogCard from '~/components/catalog/ServiceCatalogCard.vue'
+import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 
 const api = useApi()
 const { t, locale } = useLocale()
-const { formatAmd } = useCurrency()
+const { resolvePriceRange, formatPriceLabel } = useServicePricing()
 const route = useRoute()
 const config = useRuntimeConfig()
 const { localePath } = useLocalizedPath()
@@ -14,11 +16,18 @@ const { brand, isTor, bookingPath, servicesPath } = useBrandContext()
 
 const categorySlug = computed(() => String(route.params.categorySlug || '').trim())
 const serviceSlug = computed(() => String(route.params.serviceSlug || '').trim())
+const selectedMasterId = computed(() => {
+  const raw = typeof route.query.master_id === 'string' ? Number(route.query.master_id) : NaN
+  return Number.isInteger(raw) && raw > 0 ? raw : null
+})
 
-const { data } = await useAsyncData(() => `service-detail-${brand.value}-${categorySlug.value}-${serviceSlug.value}-${locale.value}`, async () => {
-  const [categoriesResponse, servicesResponse] = await Promise.all([
+const { data } = await useAsyncData(() => `service-detail-${brand.value}-${categorySlug.value}-${serviceSlug.value}-${locale.value}-${selectedMasterId.value ?? 'none'}`, async () => {
+  const [categoriesResponse, servicesResponse, selectedMasterResponse] = await Promise.all([
     api.get<ApiListResponse<Category>>('/categories', { brand: brand.value }, { skipErrorToast: true }),
     api.get<ApiListResponse<Service>>('/services', { brand: brand.value }, { skipErrorToast: true }),
+    selectedMasterId.value
+      ? api.get<{ data: Master }>(`/masters/${selectedMasterId.value}`, { brand: brand.value }, { skipErrorToast: true }).catch(() => null)
+      : Promise.resolve(null),
   ])
 
   const category = categoriesResponse.data.find((item) => item.slug === categorySlug.value) || null
@@ -37,12 +46,26 @@ const { data } = await useAsyncData(() => `service-detail-${brand.value}-${categ
     .filter((item) => item.category_id === category.id && item.id !== service.id)
     .slice(0, 6)
 
-  return { category, service, relatedServices }
+  return {
+    category,
+    service,
+    relatedServices,
+    selectedMaster: selectedMasterResponse?.data ?? null,
+  }
 })
 
 const category = computed(() => data.value?.category || null)
 const service = computed(() => data.value?.service || null)
 const relatedServices = computed(() => data.value?.relatedServices || [])
+const selectedMaster = computed(() => data.value?.selectedMaster || null)
+const currentPrice = computed(() => service.value ? resolvePriceRange(service.value, selectedMaster.value) : null)
+const keywordIntents = computed(() => useSeoIntentKeywords({
+  brand: brand.value,
+  kind: 'service-detail',
+  slug: service.value?.slug,
+  name: service.value?.name,
+  categorySlug: category.value?.slug,
+}))
 const pageCopy = computed(() => {
   if (brand.value === 'tor') {
     if (locale.value === 'ru') {
@@ -79,6 +102,75 @@ const pageCopy = computed(() => {
   }
 })
 
+const seoIntentCopy = computed(() => {
+  const serviceName = service.value?.name || t('nav.services')
+  const categoryName = category.value?.name || t('nav.services')
+
+  if (isTor.value) {
+    if (locale.value === 'ru') {
+      return {
+        title: `${serviceName} в Tor Barbershop`,
+        intro: [
+          `Эта страница должна быть релевантна запросам по услуге "${serviceName}" в Tor, ее цене, длительности и записи онлайн.`,
+          `Поиск вокруг ${serviceName} часто идет вместе с интентом барбера, barbershop yerevan, мужского grooming и выбора конкретной процедуры из категории ${categoryName}.`,
+        ],
+        intents: [serviceName, `${serviceName} цена`, `${serviceName} ереван`, `${serviceName} онлайн запись`, ...keywordIntents.value],
+      }
+    }
+
+    if (locale.value === 'en') {
+      return {
+        title: `${serviceName} at Tor Barbershop`,
+        intro: [
+          `This page should match searches for "${serviceName}" at Tor, including pricing, duration, and online booking intent.`,
+          `Demand around ${serviceName} often overlaps with barber discovery, barbershop yerevan, men’s grooming, and category intent around ${categoryName}.`,
+        ],
+        intents: [serviceName, `${serviceName} price`, `${serviceName} yerevan`, `${serviceName} booking`, ...keywordIntents.value],
+      }
+    }
+
+    return {
+      title: `${serviceName} Tor Barbershop-ում`,
+      intro: [
+        `Այս էջը պետք է համապատասխան լինի "${serviceName}" ծառայության, դրա գնի, տևողության և օնլայն ամրագրման որոնումներին Tor-ում։`,
+        `${serviceName}-ի intent-ը հաճախ կապվում է նաև barbershop yerevan, men grooming և ${categoryName} կատեգորիայի ավելի նեղ որոնումների հետ։`,
+      ],
+      intents: [serviceName, `${serviceName} price`, `${serviceName} yerevan`, `${serviceName} booking`, ...keywordIntents.value],
+    }
+  }
+
+  if (locale.value === 'ru') {
+    return {
+      title: `${serviceName} в Freya Beauty Salon`,
+      intro: [
+        `Эта страница должна ловить спрос по услуге "${serviceName}" в Freya, ее цене, длительности и записи онлайн в Ереване.`,
+        `Запросы вокруг ${serviceName} обычно пересекаются с beauty salon yerevan, salon krasoty yerevan и спросом внутри категории ${categoryName}.`,
+      ],
+      intents: [serviceName, `${serviceName} цена`, `${serviceName} ереван`, `${serviceName} онлайн запись`, ...keywordIntents.value],
+    }
+  }
+
+  if (locale.value === 'en') {
+    return {
+      title: `${serviceName} at Freya Beauty Salon`,
+      intro: [
+        `This page should capture demand for "${serviceName}" at Freya, along with price, duration, and online booking in Yerevan.`,
+        `Searches around ${serviceName} usually overlap with beauty salon yerevan, salon krasoty yerevan, and related intent inside the ${categoryName} category.`,
+      ],
+      intents: [serviceName, `${serviceName} price`, `${serviceName} yerevan`, `${serviceName} booking`, ...keywordIntents.value],
+    }
+  }
+
+  return {
+    title: `${serviceName} Freya Beauty Salon-ում`,
+    intro: [
+      `Այս էջը պետք է վերցնի "${serviceName}" ծառայության, դրա գնի, տևողության և օնլայն ամրագրման պահանջարկը Freya-ում։`,
+      `${serviceName}-ի շուրջ որոնումները սովորաբար հատվում են beauty salon yerevan, salon krasoty yerevan և ${categoryName} կատեգորիայի intent-ների հետ։`,
+    ],
+    intents: [serviceName, `${serviceName} price`, `${serviceName} yerevan`, `${serviceName} booking`, ...keywordIntents.value],
+  }
+})
+
 usePageSeo({
   title: () => service.value?.seo_title || `${service.value?.name || t('nav.services')} | ${brand.value === 'tor' ? 'Tor' : 'Freya'}`,
   description: () => service.value?.seo_description || service.value?.description || t('servicesPage.defaultDescription'),
@@ -106,7 +198,7 @@ useStructuredData(() => {
         offers: {
           '@type': 'Offer',
           priceCurrency: 'AMD',
-          price: service.value.price_from,
+          price: currentPrice.value?.priceFrom ?? service.value.price_from,
           url: `${config.public.siteUrl}${route.path}`,
         },
       },
@@ -166,14 +258,13 @@ useStructuredData(() => {
             <div class="rounded-3xl p-5" :class="isTor ? 'border border-white/10 bg-white/[0.04]' : 'border border-sand-200 bg-white'">
               <p class="text-xs uppercase tracking-[0.14em]" :class="isTor ? 'font-semibold text-[#c58a3a]' : 'text-sand-600'">{{ t('servicesPage.priceLabel') }}</p>
               <p class="mt-2 text-2xl" :class="isTor ? 'text-stone-100' : ''">
-                {{ formatAmd(service.price_from) }}
-                <span v-if="service.price_to">- {{ formatAmd(service.price_to) }}</span>
+                {{ formatPriceLabel(service, selectedMaster) }}
               </p>
             </div>
           </div>
 
           <NuxtLink
-            :to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } })"
+            :to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id), ...(selectedMaster ? { master_id: String(selectedMaster.id) } : {}) } })"
             class="inline-block"
           >
             <BaseButton size="lg" :theme="isTor ? 'tor' : 'default'">{{ pageCopy.primaryAction }}</BaseButton>
@@ -206,13 +297,21 @@ useStructuredData(() => {
             :description="item.description || t('servicesPage.defaultDescription')"
             :duration-minutes="item.duration_minutes"
             :duration-label="t('servicesPage.minutes')"
-            :price-label="formatAmd(item.price_from)"
+            :price-label="formatPriceLabel(item, selectedMaster)"
             :action-label="pageCopy.primaryAction"
-            :action-to="localePath({ path: bookingPath, query: { category_id: String(item.category_id), service_id: String(item.id) } }) as string"
-            :card-to="localePath(`${servicesPath}/${category?.slug}/${item.slug}`) as string"
+            :action-to="localePath({ path: bookingPath, query: { category_id: String(item.category_id), service_id: String(item.id), ...(selectedMaster ? { master_id: String(selectedMaster.id) } : {}) } }) as string"
+            :card-to="{ path: `${servicesPath}/${category?.slug}/${item.slug}`, query: selectedMaster ? { master_id: String(selectedMaster.id) } : undefined }"
           />
         </div>
       </div>
+
+      <SeoIntentSection
+        :section="'service-detail'"
+        :theme="isTor ? 'tor' : 'default'"
+        :title="seoIntentCopy.title"
+        :intro="seoIntentCopy.intro"
+        :intents="seoIntentCopy.intents"
+      />
     </div>
   </section>
 </template>

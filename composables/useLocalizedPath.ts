@@ -24,7 +24,9 @@ export const withLocalePath = (path: string, locale: SupportedLocale): string =>
 }
 
 export const useLocalizedPath = () => {
+  const config = useRuntimeConfig()
   const { locale } = useLocale()
+  const nativeApp = config.public.nativeApp === true || config.public.nativeApp === 'true'
 
   const localePath = (
     target: string | { path?: string, query?: Record<string, any>, hash?: string },
@@ -37,10 +39,21 @@ export const useLocalizedPath = () => {
         return target
       }
 
+      if (nativeApp) {
+        return stripLocalePrefix(target)
+      }
+
       return withLocalePath(target, targetLocale)
     }
 
     const path = target.path || '/'
+
+    if (nativeApp) {
+      return {
+        ...target,
+        path: stripLocalePrefix(path),
+      }
+    }
 
     return {
       ...target,

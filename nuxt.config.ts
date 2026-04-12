@@ -2,19 +2,44 @@ const apiBase = import.meta.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/a
 const siteUrl = import.meta.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 const googleAnalyticsId = import.meta.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_ID || ''
 const yandexMetricaId = import.meta.env.NUXT_PUBLIC_YANDEX_METRIKA_ID || ''
+const nativeApp = import.meta.env.NUXT_PUBLIC_NATIVE_APP === 'true'
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   ssr: true,
-  devtools: { enabled: true },
+  devtools: { enabled: false },
   modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', '@vueuse/nuxt'],
   css: ['~/assets/css/main.css'],
+  tailwindcss: {
+    viewer: false,
+  },
+  vite: {
+    server: {
+      watch: {
+        ignored: [
+          '**/.git/**',
+          '**/.nuxt/**',
+          '**/.output/**',
+          '**/dist/**',
+          '**/android/**',
+          '**/ios/**',
+        ],
+      },
+    },
+  },
+  routeRules: {
+    '/account': { prerender: false },
+    '/account/**': { prerender: false },
+    '/tor/account': { prerender: false },
+    '/tor/account/**': { prerender: false },
+  },
   runtimeConfig: {
     public: {
       apiBase,
       siteUrl,
       googleAnalyticsId,
       yandexMetricaId,
+      nativeApp,
     },
   },
   app: {
@@ -39,6 +64,8 @@ export default defineNuxtConfig({
   },
   hooks: {
     'pages:extend'(pages) {
+      if (nativeApp) return
+
       const cloneWithLocale = (page: any): any => ({
         ...page,
         name: page.name ? `${page.name}___locale` : undefined,

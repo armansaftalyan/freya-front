@@ -6,6 +6,7 @@ import type { Category } from '~/types/category'
 import type { Master } from '~/types/master'
 import type { Service } from '~/types/service'
 import type { Slot } from '~/types/slot'
+import type { User } from '~/types/user'
 import Card from '~/components/base/Card.vue'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 import SlotPicker from '~/components/booking/SlotPicker.vue'
@@ -27,6 +28,7 @@ interface BookingLine {
 
 const { t, locale } = useLocale()
 const { formatAmd } = useCurrency()
+const { formatPriceLabel } = useServicePricing()
 const { formatYerevanDateTime, todayYerevanDate } = useDateTime()
 const { siteUrl } = useSiteMeta()
 const { isTor, brand, authAppointmentsPath } = useBrandContext()
@@ -125,12 +127,17 @@ const nextLineId = ref(1)
 const creating = ref(false)
 const successCount = ref(0)
 const createdAppointments = ref<Appointment[]>([])
+const currentMasterProfile = ref<Master | null>(null)
+const clientLookupLoading = ref(false)
+const matchedClient = ref<User | null>(null)
+let clientLookupTimer: ReturnType<typeof setTimeout> | null = null
 
 const comment = ref('')
 const guestFirstName = ref('')
 const guestLastName = ref('')
 const guestPhone = ref('')
 const source = ref<'site' | 'phone' | 'instagram' | 'yandex_maps'>('site')
+const bookingForClient = ref(false)
 const mastersDebounceTimers = new Map<number, ReturnType<typeof setTimeout>>()
 const slotsDebounceTimers = new Map<number, ReturnType<typeof setTimeout>>()
 const mastersAbortControllers = new Map<number, AbortController>()
@@ -144,10 +151,30 @@ const bookingContact = computed(() => ({
   phone: auth.user?.phone || '',
 }))
 
+const canBookForClient = computed(() => {
+  const roles = auth.user?.roles || []
+  return roles.includes('master') || roles.includes('admin') || roles.includes('manager')
+})
+
+const isMasterUser = computed(() => {
+  const roles = auth.user?.roles || []
+  return roles.includes('master')
+})
+
+const shouldUseGuestContact = computed(() => !auth.isAuth || bookingForClient.value)
+const allowedMasterServiceIds = computed(() => new Set((currentMasterProfile.value?.services || []).map(item => item.id)))
+const isRestrictedToMasterServices = computed(() => isMasterUser.value && allowedMasterServiceIds.value.size > 0)
+
 const normalizePhone = (value: string) => {
   const digits = (value || '').replace(/\D+/g, '')
-  return digits ? `+${digits}` : ''
+  if (!digits) return ''
+  if (digits.startsWith('374')) return `+${digits}`
+  if (digits.startsWith('0') && digits.length <= 9) return `+374${digits.slice(1)}`
+  if (!digits.startsWith('0') && digits.length === 8) return `+374${digits}`
+  return `+${digits}`
 }
+
+const phoneDigitsCount = (value: string) => (value || '').replace(/\D+/g, '').length
 
 const isPhoneValid = (value: string) => /^\+[1-9]\d{7,14}$/.test(value)
 
@@ -174,6 +201,17 @@ const isAbortError = (error: any): boolean => {
 }
 
 const categoryById = computed<Map<number, Category>>(() => new Map(categories.value.map(category => [category.id, category])))
+const visibleCategories = computed(() => {
+  if (!isRestrictedToMasterServices.value) return categories.value
+
+  const allowedCategoryIds = new Set(
+    services.value
+      .filter(service => allowedMasterServiceIds.value.has(service.id))
+      .map(service => service.category_id),
+  )
+
+  return categories.value.filter(category => allowedCategoryIds.has(category.id))
+})
 
 const bookingGroupForCategory = (category?: Category | null): string | null => {
   if (!category) return null
@@ -204,18 +242,18 @@ const totalBookingGroups = computed(() => new Set(
 ).size)
 
 const defaultCategoryId = computed<number | null>(() => {
-  if (!categories.value.length) return null
-  return categories.value[0]?.id ?? null
+  if (!visibleCategories.value.length) return null
+  return visibleCategories.value[0]?.id ?? null
 })
 
 const createEmptyLine = (preset: Partial<Pick<BookingLine, 'categoryId' | 'masterId'>> & { serviceId?: number } = {}): BookingLine => ({
   id: nextLineId.value++,
   categoryId: preset.categoryId ?? defaultCategoryId.value,
   serviceIds: preset.serviceId ? [preset.serviceId] : [],
-  masterId: preset.masterId ?? null,
+  masterId: preset.masterId ?? currentMasterProfile.value?.id ?? null,
   date: '',
   slot: null,
-  masters: [],
+  masters: currentMasterProfile.value ? [currentMasterProfile.value] : [],
   mastersLoading: false,
   mastersResolved: false,
   slots: [],
@@ -244,11 +282,54 @@ const selectedServicesLabel = (line: BookingLine): string => {
 
 const selectedMaster = (line: BookingLine): Master | undefined => {
   return line.masters.find(item => item.id === line.masterId)
+    || (isMasterUser.value && currentMasterProfile.value?.id === line.masterId ? currentMasterProfile.value : undefined)
+}
+
+const servicePriceLabelForLine = (line: BookingLine, service: Service) => {
+  return formatPriceLabel(service, selectedMaster(line))
+}
+
+const hydrateMasterForLine = async (line: BookingLine, masterId: number) => {
+  const existing = line.masters.find(master => master.id === masterId)
+  if (existing?.services?.length) {
+    return existing
+  }
+
+  try {
+    const response = await api.get<ApiItemResponse<Master>>(`/masters/${masterId}`, { brand: brand.value }, { skipErrorToast: true })
+    const fullMaster = response.data
+    const index = line.masters.findIndex(master => master.id === masterId)
+    if (index >= 0) {
+      line.masters.splice(index, 1, fullMaster)
+    }
+    else {
+      line.masters.push(fullMaster)
+    }
+
+    return fullMaster
+  }
+  catch {
+    return existing
+  }
+}
+
+const selectMasterForLine = async (line: BookingLine, masterId: number | null) => {
+  line.masterId = masterId
+
+  if (masterId) {
+    await hydrateMasterForLine(line, masterId)
+  }
+
+  fetchSlotsForLine(line)
 }
 
 const servicesForLine = (line: BookingLine) => {
   if (!line.categoryId) return []
-  return services.value.filter(item => item.category_id === line.categoryId)
+  return services.value.filter((item) => {
+    if (item.category_id !== line.categoryId) return false
+    if (isRestrictedToMasterServices.value && !allowedMasterServiceIds.value.has(item.id)) return false
+    return true
+  })
 }
 
 const bookingGroupForService = (service: Service): string | null => {
@@ -344,12 +425,13 @@ const toggleServiceForLine = (line: BookingLine, service: Service) => {
 }
 
 const setLineCategory = async (line: BookingLine, categoryId: number) => {
+  if (!visibleCategories.value.some(category => category.id === categoryId)) return
   line.categoryId = categoryId
 
   // If no services are selected yet, category switch invalidates downstream selections.
   if (!line.serviceIds.length) {
     line.serviceIds = []
-    line.masterId = null
+    line.masterId = currentMasterProfile.value?.id ?? null
     line.slot = null
     line.masters = []
     line.mastersResolved = false
@@ -384,7 +466,16 @@ const fetchMastersForLineNow = async (line: BookingLine) => {
   line.slots = []
 
   if (!line.serviceIds.length) {
-    line.masterId = null
+    line.masterId = currentMasterProfile.value?.id ?? null
+    line.masters = currentMasterProfile.value ? [currentMasterProfile.value] : []
+    line.mastersResolved = Boolean(currentMasterProfile.value)
+    return
+  }
+
+  if (isMasterUser.value && currentMasterProfile.value) {
+    line.masters = [currentMasterProfile.value]
+    line.mastersResolved = true
+    line.masterId = currentMasterProfile.value.id
     return
   }
 
@@ -536,6 +627,9 @@ const validate = () => {
     const prefix = `${t('booking.lineTitle')} #${index + 1}: `
     if (!line.categoryId) return `${prefix}${t('booking.errors.category')}`
     if (!line.serviceIds.length) return `${prefix}${t('booking.errors.service')}`
+    if (isRestrictedToMasterServices.value && line.serviceIds.some(serviceId => !allowedMasterServiceIds.value.has(serviceId))) {
+      return `${prefix}${t('booking.errors.service')}`
+    }
     if (!line.date) return `${prefix}${t('booking.errors.date')}`
     if (line.date < minBookingDate.value) return `${prefix}${t('booking.errors.pastSlot')}`
     if (!line.slot) return `${prefix}${t('booking.errors.slot')}`
@@ -543,10 +637,10 @@ const validate = () => {
   }
 
   if (comment.value && comment.value.length > 2000) return t('booking.errors.comment')
-  if (!auth.isAuth && !guestFirstName.value.trim()) return t('booking.errors.guestFirstName')
-  if (!auth.isAuth && !guestLastName.value.trim()) return t('booking.errors.guestLastName')
-  if (!auth.isAuth && !guestPhone.value.trim()) return t('booking.errors.guestPhone')
-  if (!auth.isAuth && !isPhoneValid(normalizePhone(guestPhone.value))) return t('common.phoneInvalid')
+  if (shouldUseGuestContact.value && !guestFirstName.value.trim()) return t('booking.errors.guestFirstName')
+  if (shouldUseGuestContact.value && !guestLastName.value.trim()) return t('booking.errors.guestLastName')
+  if (shouldUseGuestContact.value && !guestPhone.value.trim()) return t('booking.errors.guestPhone')
+  if (shouldUseGuestContact.value && !isPhoneValid(normalizePhone(guestPhone.value))) return t('common.phoneInvalid')
 
   return ''
 }
@@ -572,9 +666,11 @@ const submit = async () => {
   createdAppointments.value = []
 
   try {
-    const fallbackFirstName = bookingContact.value.firstName || undefined
-    const fallbackLastName = bookingContact.value.lastName || undefined
-    const fallbackPhone = bookingContact.value.phone ? normalizePhone(bookingContact.value.phone) : undefined
+    const fallbackFirstName = !shouldUseGuestContact.value ? (bookingContact.value.firstName || undefined) : undefined
+    const fallbackLastName = !shouldUseGuestContact.value ? (bookingContact.value.lastName || undefined) : undefined
+    const fallbackPhone = !shouldUseGuestContact.value && bookingContact.value.phone
+      ? normalizePhone(bookingContact.value.phone)
+      : undefined
 
     const response = await api.post<any>(
       '/appointments',
@@ -586,7 +682,7 @@ const submit = async () => {
             master_id: line.masterId ?? undefined,
           })),
         })),
-        source: source.value,
+        source: bookingForClient.value ? 'phone' : source.value,
         comment: comment.value || undefined,
         guest_first_name: guestFirstName.value.trim() || fallbackFirstName,
         guest_last_name: guestLastName.value.trim() || fallbackLastName,
@@ -607,6 +703,7 @@ const submit = async () => {
     guestFirstName.value = ''
     guestLastName.value = ''
     guestPhone.value = ''
+    bookingForClient.value = isMasterUser.value ? true : false
   }
   catch (error: any) {
     const parsed = useApiError(error)
@@ -633,9 +730,24 @@ const bootstrapBookingFlow = async () => {
     return true
   }
 
+  if (isMasterUser.value) {
+    try {
+      const response = await api.get<ApiItemResponse<Master>>('/master/profile', undefined, { skipErrorToast: true })
+      currentMasterProfile.value = response.data
+    }
+    catch {
+      currentMasterProfile.value = null
+    }
+  }
+
   const categoryId = parsePositiveInt(route.query.category_id)
-  const serviceId = parsePositiveInt(route.query.service_id)
-  const masterId = parsePositiveInt(route.query.master_id)
+  const requestedServiceId = parsePositiveInt(route.query.service_id)
+  const serviceId = requestedServiceId && (!isRestrictedToMasterServices.value || allowedMasterServiceIds.value.has(requestedServiceId))
+    ? requestedServiceId
+    : null
+  const masterId = isMasterUser.value
+    ? currentMasterProfile.value?.id ?? null
+    : parsePositiveInt(route.query.master_id)
 
   const line = createEmptyLine({ categoryId: categoryId ?? defaultCategoryId.value ?? undefined, serviceId: serviceId ?? undefined, masterId: masterId ?? undefined })
   lines.value = [line]
@@ -650,7 +762,89 @@ const bootstrapBookingFlow = async () => {
 
 await bootstrapBookingFlow()
 
+const extractMatchedUser = (payload: any): User | null => {
+  if (!payload) return null
+  if (Array.isArray(payload?.data)) return payload.data[0] || null
+  if (Array.isArray(payload)) return payload[0] || null
+  if (payload?.data && typeof payload.data === 'object') return payload.data as User
+  return null
+}
+
+const lookupClientByPhone = async (phone: string) => {
+  const normalizedPhone = normalizePhone(phone)
+  if (!normalizedPhone || !isPhoneValid(normalizedPhone)) {
+    matchedClient.value = null
+    return
+  }
+
+  clientLookupLoading.value = true
+  matchedClient.value = null
+
+  try {
+    const response = await api.get('/clients/search', { phone: normalizedPhone }, { skipErrorToast: true })
+    const user = extractMatchedUser(response)
+    if (user) {
+      matchedClient.value = user
+      guestFirstName.value = user.first_name || guestFirstName.value
+      guestLastName.value = user.last_name || guestLastName.value
+    }
+  }
+  catch (error: any) {
+    matchedClient.value = null
+  }
+
+  clientLookupLoading.value = false
+}
+
+watch(
+  () => canBookForClient.value,
+  (enabled) => {
+    if (!enabled) {
+      bookingForClient.value = false
+      return
+    }
+
+    if (isMasterUser.value) {
+      bookingForClient.value = true
+    }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => bookingForClient.value,
+  (enabled) => {
+    if (!enabled) {
+      matchedClient.value = null
+      clientLookupLoading.value = false
+    }
+  },
+)
+
+watch(
+  () => shouldUseGuestContact.value ? normalizePhone(guestPhone.value) : '',
+  (phone) => {
+    if (!(auth.isAuth && bookingForClient.value && canBookForClient.value)) return
+    if (clientLookupTimer) {
+      clearTimeout(clientLookupTimer)
+      clientLookupTimer = null
+    }
+    if (phoneDigitsCount(guestPhone.value) < 8) {
+      matchedClient.value = null
+      clientLookupLoading.value = false
+      return
+    }
+    clientLookupTimer = setTimeout(() => {
+      lookupClientByPhone(phone)
+    }, 350)
+  },
+)
+
 onBeforeUnmount(() => {
+  if (clientLookupTimer) {
+    clearTimeout(clientLookupTimer)
+    clientLookupTimer = null
+  }
   for (const line of lines.value) {
     clearLineNetworkState(line.id)
   }
@@ -715,7 +909,7 @@ onBeforeUnmount(() => {
                 <p class="text-sm" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ t('booking.chooseCategory') }}</p>
                 <div class="flex flex-wrap gap-2">
                   <button
-                    v-for="category in categories"
+                    v-for="category in visibleCategories"
                     :key="`${line.id}-${category.id}`"
                     type="button"
                     class="rounded-full border px-3 py-1.5 text-sm transition"
@@ -748,7 +942,7 @@ onBeforeUnmount(() => {
                     <div class="flex items-start justify-between gap-3">
                       <div>
                         <p class="font-semibold">{{ item.name }}</p>
-                        <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ item.duration_minutes }} {{ t('booking.minutesUnit') }} · {{ formatAmd(item.price_from) }}</p>
+                        <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ item.duration_minutes }} {{ t('booking.minutesUnit') }} · {{ servicePriceLabelForLine(line, item) }}</p>
                       </div>
                       <span
                         class="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full border text-base font-bold leading-none"
@@ -789,12 +983,13 @@ onBeforeUnmount(() => {
               </div>
               <div v-else class="grid gap-2">
                 <button
+                  v-if="!isMasterUser"
                   type="button"
                   class="w-full rounded-xl border px-3 py-2 text-left transition"
                   :class="line.masterId === null
                     ? (isTor ? 'border-[#d79a49] bg-white/[0.05]' : 'border-sand-900 bg-sand-50')
                     : (isTor ? 'border-white/10 bg-white/[0.03] hover:border-[#d79a49]/50' : 'border-sand-200 bg-white hover:border-sand-600')"
-                  @click="line.masterId = null; fetchSlotsForLine(line)"
+                  @click="selectMasterForLine(line, null)"
                 >
                   <p class="font-semibold">{{ t('booking.anyMaster') }}</p>
                 </button>
@@ -806,7 +1001,7 @@ onBeforeUnmount(() => {
                   :class="line.masterId === master.id
                     ? (isTor ? 'border-[#d79a49] bg-white/[0.05]' : 'border-sand-900 bg-sand-50')
                     : (isTor ? 'border-white/10 bg-white/[0.03] hover:border-[#d79a49]/50' : 'border-sand-200 bg-white hover:border-sand-600')"
-                  @click="line.masterId = master.id; fetchSlotsForLine(line)"
+                  @click="selectMasterForLine(line, master.id)"
                 >
                   <p class="font-semibold">{{ master.name }}</p>
                   <p class="line-clamp-1 text-xs" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ master.bio || t('booking.masterFallbackBio') }}</p>
@@ -845,20 +1040,50 @@ onBeforeUnmount(() => {
             </div>
           </div>
           <div class="space-y-3">
-            <p v-if="!auth.isAuth" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestHint') }}</p>
+            <div v-if="canBookForClient && !isMasterUser" class="space-y-3 rounded-2xl p-4" :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200 bg-sand-50/50'">
+              <p class="text-sm font-semibold">{{ t('booking.contactModeTitle') }}</p>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  class="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition"
+                  :class="!bookingForClient
+                    ? (isTor ? 'bg-[#d79a49] text-black' : 'bg-sand-900 text-white')
+                    : (isTor ? 'border border-white/10 bg-white/[0.03] text-stone-200' : 'border border-sand-200 bg-white text-sand-800')"
+                  @click="bookingForClient = false"
+                >
+                  {{ t('booking.bookForSelf') }}
+                </button>
+                <button
+                  type="button"
+                  class="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition"
+                  :class="bookingForClient
+                    ? (isTor ? 'bg-[#d79a49] text-black' : 'bg-sand-900 text-white')
+                    : (isTor ? 'border border-white/10 bg-white/[0.03] text-stone-200' : 'border border-sand-200 bg-white text-sand-800')"
+                  @click="bookingForClient = true"
+                >
+                  {{ t('booking.bookForClient') }}
+                </button>
+              </div>
+              <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ bookingForClient ? t('booking.clientBookingHint') : t('booking.selfBookingHint') }}</p>
+            </div>
+            <p v-else-if="!auth.isAuth" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestHint') }}</p>
             <div
-              v-if="auth.isAuth"
+              v-if="auth.isAuth && !bookingForClient && !isMasterUser"
               class="space-y-2 rounded-2xl p-4 text-sm"
               :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200 bg-sand-50/50'"
             >
-              <p class="font-semibold">{{ t('common.myProfile') }}</p>
+              <p class="font-semibold">{{ t('nav.myProfile') }}</p>
               <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestFirstName') }}:</span> <span class="font-semibold">{{ bookingContact.firstName || '—' }}</span></p>
               <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestLastName') }}:</span> <span class="font-semibold">{{ bookingContact.lastName || '—' }}</span></p>
               <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestPhone') }}:</span> <span class="font-semibold">{{ bookingContact.phone || '—' }}</span></p>
             </div>
-            <BaseInput v-if="!auth.isAuth" v-model="guestFirstName" :theme="isTor ? 'dark' : 'light'" :label="t('booking.guestFirstName')" :placeholder="t('booking.guestFirstNamePlaceholder')" />
-            <BaseInput v-if="!auth.isAuth" v-model="guestLastName" :theme="isTor ? 'dark' : 'light'" :label="t('booking.guestLastName')" :placeholder="t('booking.guestLastNamePlaceholder')" />
-            <BaseInput v-if="!auth.isAuth" v-model="guestPhone" :theme="isTor ? 'dark' : 'light'" type="tel" :label="t('booking.guestPhone')" :placeholder="t('booking.guestPhonePlaceholder')" />
+            <BaseInput v-if="shouldUseGuestContact" v-model="guestFirstName" :theme="isTor ? 'dark' : 'light'" :label="t('booking.guestFirstName')" :placeholder="t('booking.guestFirstNamePlaceholder')" />
+            <BaseInput v-if="shouldUseGuestContact" v-model="guestLastName" :theme="isTor ? 'dark' : 'light'" :label="t('booking.guestLastName')" :placeholder="t('booking.guestLastNamePlaceholder')" />
+            <BaseInput v-if="shouldUseGuestContact" v-model="guestPhone" :theme="isTor ? 'dark' : 'light'" type="tel" :label="t('booking.guestPhone')" :placeholder="t('booking.guestPhonePlaceholder')" />
+            <p v-if="bookingForClient && clientLookupLoading" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.clientLookupLoading') }}</p>
+            <p v-else-if="bookingForClient && matchedClient" class="text-sm" :class="isTor ? 'text-emerald-300' : 'text-emerald-700'">{{ t('booking.clientFound') }}: {{ matchedClient.first_name }} {{ matchedClient.last_name }}</p>
+            <p v-else-if="bookingForClient && normalizePhone(guestPhone)" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.clientNotFound') }}</p>
+            <p v-if="isMasterUser && currentMasterProfile" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.masterOnlyServicesHint') }}</p>
             <BaseInput v-model="comment" :theme="isTor ? 'dark' : 'light'" :label="t('booking.commentLabel')" :placeholder="t('booking.commentPlaceholder')" />
           </div>
         </div>

@@ -4,8 +4,8 @@ import Card from "~/components/base/Card.vue";
 
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
-const { formatAmd } = useCurrency()
 const { brand, bookingPath, rootPath } = useBrandContext()
+const { formatPriceLabel } = useServicePricing()
 const servicesStore = useServicesStore()
 const { categories, services } = storeToRefs(servicesStore)
 
@@ -58,8 +58,7 @@ const grouped = computed(() =>
               </div>
               <div class="mt-auto flex items-end justify-between gap-3 pt-6">
                 <p class="text-base font-semibold text-sand-700">
-                  {{ formatAmd(service.price_from) }}
-                  <span v-if="service.price_to && service.price_to !== service.price_from" class="text-[var(--muted)]">- {{ formatAmd(service.price_to) }}</span>
+                  {{ formatPriceLabel(service) }}
                 </p>
                 <NuxtLink :to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } })" class="inline-block">
                   <BaseButton size="sm">{{ t('nav.bookNow') }}</BaseButton>

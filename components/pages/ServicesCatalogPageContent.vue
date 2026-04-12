@@ -39,7 +39,7 @@ const props = withDefaults(defineProps<{
 })
 
 const { localePath } = useLocalizedPath()
-const { formatAmd } = useCurrency()
+const { formatPriceLabel } = useServicePricing()
 const isTor = computed(() => props.theme === 'tor')
 
 const detailPathFor = (categorySlug: string, service: Service) =>
@@ -124,7 +124,7 @@ const detailPathFor = (categorySlug: string, service: Service) =>
               :description="service.description || defaultDescription"
               :duration-minutes="service.duration_minutes"
               :duration-label="durationLabel"
-              :price-label="`${formatAmd(service.price_from)}${service.price_to && service.price_to !== service.price_from ? ` - ${formatAmd(service.price_to)}` : ''}`"
+              :price-label="formatPriceLabel(service)"
               :action-label="actionLabel"
               :action-to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } }) as string"
               :card-to="detailPathFor(entry.category.slug, service)"

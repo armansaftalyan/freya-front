@@ -23,12 +23,42 @@ npm run build
 npm run preview
 ```
 
+## Capacitor (iOS / Android)
+Install dependencies once:
+```bash
+npm i
+```
+
+Create native projects:
+```bash
+npm run cap:add:android
+npm run cap:add:ios
+```
+
+Build and sync web assets into native shells:
+```bash
+npm run cap:sync
+```
+
+Open native IDE projects:
+```bash
+npm run cap:open:android
+npm run cap:open:ios
+```
+
+Optional: if you want Capacitor to wrap an already deployed SSR site instead of a generated local bundle, set:
+```env
+CAPACITOR_SERVER_URL=https://your-frontend-domain
+```
+Then `npx cap sync` will keep the native shell pointed at that URL.
+
 ## Environment
 Copy `.env.example` to `.env` and set values:
 
 ```env
 NUXT_PUBLIC_API_BASE=https://your-api-domain/api
 NUXT_PUBLIC_SITE_URL=https://your-frontend-domain
+CAPACITOR_SERVER_URL=
 ```
 
 ## Project structure

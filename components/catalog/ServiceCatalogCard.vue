@@ -11,7 +11,7 @@ const props = withDefaults(defineProps<{
   actionTo: RouteLocationRaw
   theme?: 'default' | 'tor'
   eyebrow?: string
-  cardTo?: string
+  cardTo?: RouteLocationRaw
 }>(), {
   description: '',
   theme: 'default',

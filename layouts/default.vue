@@ -35,9 +35,7 @@ const allPagesLabel = computed(() => {
   if (locale.value === 'en') return 'All Pages'
   return 'Կայքի քարտեզ'
 })
-const navLinkClass = computed(() => isArmenian.value
-  ? 'whitespace-nowrap text-[13px] font-medium tracking-[-0.01em] text-sand-900 transition hover:text-sand-600 xl:text-[14px]'
-  : 'whitespace-nowrap text-[15px] font-medium text-sand-900 transition hover:text-sand-600 xl:text-base')
+const navLinkClass = computed(() => 'whitespace-nowrap text-[15px] font-medium text-sand-900 transition hover:text-sand-600 xl:text-base')
 const titleTemplate = (title?: string | null) => {
   const baseTitle = 'Freya Beauty Salon'
 

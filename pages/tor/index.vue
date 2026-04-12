@@ -16,10 +16,10 @@ const api = useApi()
 const route = useRoute()
 const { locale, t } = useLocale()
 const { localePath } = useLocalizedPath()
-const { formatAmd } = useCurrency()
 const { masterAvatarSrc, onMasterAvatarError } = useMasterAvatar()
 const { siteUrl } = useSiteMeta()
 const { bookingPath, productsPath, mastersPath, servicesPath } = useBrandContext()
+const { formatPriceLabel } = useServicePricing()
 const cart = useCartStore()
 const localizedPath = (target: string) => localePath(target) as string
 const { faqCopy } = usePageFaqContent('tor', 'home')
@@ -36,8 +36,8 @@ const copy = computed(() => {
       servicesLead: 'Стрижки, окантовка, борода и мужской уход. Чётко, быстро, без лишнего.',
       searchLead: 'Tor усиливает запросы по barbershop, мужским стрижкам, beard trim, мужскому маникюру, педикюру, мужской косметологии, эпиляции и grooming в Ереване.',
       teamLead: 'Барберы Tor, которые держат форму, темп и чистый результат.',
-      products: 'Уход дома',
-      productsLead: 'Масла, шампуни и ежедневный уход для волос и бороды.',
+      products: 'Товары',
+      productsLead: 'Масла, шампуни и grooming-продукты для волос, бороды и ежедневного ухода.',
       atmosphere: 'Атмосфера',
       atmosphereLead: 'Графит, металл, крепкий кофе и мастера, которые не делают лишнего.',
       statCuts: 'Стрижки',
@@ -67,8 +67,8 @@ const copy = computed(() => {
       servicesLead: 'Cuts, line-ups, beard shaping and male grooming with no extra noise.',
       searchLead: 'Tor is built for barbershop, men haircut, beard trim, men manicure, pedicure, men cosmetology, epilation, and broader grooming searches in Yerevan.',
       teamLead: 'Tor barbers focused on shape, pace and clean results.',
-      products: 'Home care',
-      productsLead: 'Oils, shampoos and daily care for hair and beard.',
+      products: 'Products',
+      productsLead: 'Oils, shampoos, and grooming products for hair, beard, and daily care.',
       atmosphere: 'Atmosphere',
       atmosphereLead: 'Graphite, steel, coffee and masters focused on precision.',
       statCuts: 'Cuts',
@@ -97,8 +97,8 @@ const copy = computed(() => {
     servicesLead: 'Սանրվածք, եզրագծում, մորուք և տղամարդկանց խնամք առանց ավելորդության։',
     searchLead: 'Tor-ը նախատեսված է barbershop, տղամարդկանց սանրվածք, beard trim, տղամարդկանց manicure, pedicure, տղամարդկանց cosmetology, epilation և grooming որոնումների համար Երևանում։',
     teamLead: 'Tor-ի բարբերները աշխատում են ձևի, տեմպի և մաքուր արդյունքի վրա։',
-    products: 'Տնային խնամք',
-    productsLead: 'Յուղեր, շամպուններ և ամենօրյա խնամք մազերի ու մորուքի համար։',
+    products: 'Ապրանքներ',
+    productsLead: 'Յուղեր, շամպուններ և grooming ապրանքներ մազերի, մորուքի և ամենօրյա խնամքի համար։',
     atmosphere: 'Մթնոլորտ',
     atmosphereLead: 'Գրաֆիտ, մետաղ, ուժեղ սուրճ և վարպետներ, որոնք աշխատում են հստակ։',
     statCuts: 'Սանրվածք',
@@ -286,7 +286,7 @@ useStructuredData(() => ({
               :description="service.description || ''"
               :duration-minutes="service.duration_minutes"
               :duration-label="t('servicesPage.minutes')"
-              :price-label="`${formatAmd(service.price_from)}${service.price_to && service.price_to !== service.price_from ? ` - ${formatAmd(service.price_to)}` : ''}`"
+              :price-label="formatPriceLabel(service)"
               :action-label="copy.bookCard"
               :action-to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } }) as string"
               :card-to="servicePath(service)"

@@ -211,6 +211,15 @@ const messages: Record<Locale, Dict> = {
       guestLastNamePlaceholder: 'Например, Иванова',
       guestPhone: 'Телефон для подтверждения',
       guestPhonePlaceholder: '+7 999 123-45-67',
+      contactModeTitle: 'Кого записываем',
+      bookForSelf: 'Свои данные',
+      bookForClient: 'Клиент по звонку',
+      selfBookingHint: 'Запись будет оформлена с данными вашего аккаунта.',
+      clientBookingHint: 'Укажите имя и телефон клиента, чтобы оформить запись по звонку.',
+      clientLookupLoading: 'Ищем клиента по номеру...',
+      clientFound: 'Клиент найден',
+      clientNotFound: 'Клиент не найден, запись будет создана как гостевая.',
+      masterOnlyServicesHint: 'В этом режиме доступны только услуги текущего мастера.',
       commentLabel: 'Комментарий (опционально)',
       commentPlaceholder: 'Ваши пожелания',
       chooseCategory: 'Выберите категорию',
@@ -248,6 +257,8 @@ const messages: Record<Locale, Dict> = {
       defaultDescription: 'Премиальная процедура от команды мастеров.',
       seoDescription: 'Каталог услуг салона с фильтром по категориям.',
       priceLabel: 'Стоимость',
+      priceFrom: 'от',
+      priceTo: 'до',
       whyThisService: 'Почему эта услуга',
       relatedServices: 'Похожие услуги',
     },
@@ -642,6 +653,15 @@ const messages: Record<Locale, Dict> = {
       guestLastNamePlaceholder: 'For example, Smith',
       guestPhone: 'Phone for confirmation',
       guestPhonePlaceholder: '+1 555 123 4567',
+      contactModeTitle: 'Booking for',
+      bookForSelf: 'My account',
+      bookForClient: 'Client by phone',
+      selfBookingHint: 'The booking will use the contact details from your account.',
+      clientBookingHint: 'Enter the client name and phone to create a booking from a phone call.',
+      clientLookupLoading: 'Looking up client by phone...',
+      clientFound: 'Client found',
+      clientNotFound: 'Client was not found, the booking will be created as guest.',
+      masterOnlyServicesHint: 'Only services assigned to the current master are available in this mode.',
       commentLabel: 'Comment (optional)',
       commentPlaceholder: 'Your preferences',
       chooseCategory: 'Choose category',
@@ -679,6 +699,8 @@ const messages: Record<Locale, Dict> = {
       defaultDescription: 'Premium treatment from our team of experts.',
       seoDescription: 'Salon service catalog with category filters.',
       priceLabel: 'Price',
+      priceFrom: 'from',
+      priceTo: 'to',
       whyThisService: 'Why this service',
       relatedServices: 'Related services',
     },
@@ -751,7 +773,7 @@ const messages: Record<Locale, Dict> = {
         badge: 'Premium Beauty Experience',
         title: 'Beauty that feels effortless.',
         subtitle: 'Personalized beauty rituals, expert masters, and online booking in two clicks.',
-        searchLead: 'Freya Beauty Salon is a beauty salon in Yerevan at 21 Azatutyan with online booking, masters, and premium care services.',
+        searchLead: 'Freya Beauty Salon is located at 21 Azatutyan in Yerevan with online booking, expert masters, and premium care services.',
       },
       services: {
         title: 'Services',
@@ -1073,6 +1095,15 @@ const messages: Record<Locale, Dict> = {
       guestLastNamePlaceholder: 'Օրինակ՝ Հովհաննիսյան',
       guestPhone: 'Հեռախոս հաստատման համար',
       guestPhonePlaceholder: '+374 99 123456',
+      contactModeTitle: 'Ում համար է ամրագրումը',
+      bookForSelf: 'Իմ տվյալներով',
+      bookForClient: 'Հաճախորդի զանգով',
+      selfBookingHint: 'Ամրագրումը կկազմակերպվի ձեր հաշվի կոնտակտային տվյալներով։',
+      clientBookingHint: 'Նշեք հաճախորդի անունն ու հեռախոսահամարը, որպեսզի ձևակերպեք ամրագրումը զանգով։',
+      clientLookupLoading: 'Փնտրում ենք հաճախորդին հեռախոսահամարով...',
+      clientFound: 'Հաճախորդը գտնվեց',
+      clientNotFound: 'Հաճախորդը չի գտնվել, ամրագրումը կստեղծվի որպես հյուր։',
+      masterOnlyServicesHint: 'Այս ռեժիմում հասանելի են միայն ընթացիկ վարպետի ծառայությունները։',
       commentLabel: 'Մեկնաբանություն (ըստ ցանկության)',
       commentPlaceholder: 'Ձեր ցանկությունները',
       chooseCategory: 'Ընտրեք կատեգորիան',
@@ -1110,6 +1141,8 @@ const messages: Record<Locale, Dict> = {
       defaultDescription: 'Պրեմիում ծառայություն մեր վարպետների թիմից։',
       seoDescription: 'Սրահի ծառայությունների կատալոգ՝ կատեգորիաների ֆիլտրով։',
       priceLabel: 'Գին',
+      priceFrom: 'սկսած',
+      priceTo: 'մինչև',
       whyThisService: 'Ինչու ընտրել այս ծառայությունը',
       relatedServices: 'Նմանատիպ ծառայություններ',
     },
@@ -1182,7 +1215,7 @@ const messages: Record<Locale, Dict> = {
         badge: 'Պրեմիում գեղեցկության փորձ',
         title: 'Գեղեցկություն՝ առանց ավելորդ ջանքի։',
         subtitle: 'Անհատական beauty-ծրագրեր, ուժեղ վարպետների թիմ և օնլայն գրանցում երկու քլիքով։',
-        searchLead: 'Freya Beauty Salon-ը գեղեցկության սրահ է Երևանում, Ազատության 21 հասցեում։ Եթե որոնում եք beauty salon կամ gexeckutyan srah, այստեղ կգտնեք ծառայություններ, վարպետներ և օնլայն գրանցում։',
+        searchLead: 'Freya Beauty Salon-ը գտնվում է Երևանում՝ Ազատության 21 հասցեում, օնլայն գրանցմամբ, փորձառու վարպետներով և խնամքի ծառայություններով։',
       },
       services: {
         title: 'Ծառայություններ',
@@ -1313,9 +1346,17 @@ const getByPath = (obj: Dict, path: string): string | undefined => {
 }
 
 export const useLocale = () => {
+  const config = useRuntimeConfig()
   const route = useRoute()
   const localeCookie = useCookie<Locale>('app_locale', { sameSite: 'lax', default: () => 'hy' })
-  const locale = computed<Locale>(() => extractLocaleFromPath(route.path) || normalizeLocale(localeCookie.value))
+  const nativeApp = computed(() => config.public.nativeApp === true || config.public.nativeApp === 'true')
+  const locale = computed<Locale>(() => {
+    if (nativeApp.value) {
+      return normalizeLocale(localeCookie.value)
+    }
+
+    return extractLocaleFromPath(route.path) || normalizeLocale(localeCookie.value)
+  })
 
   if (localeCookie.value !== locale.value) {
     localeCookie.value = locale.value
@@ -1324,7 +1365,7 @@ export const useLocale = () => {
   const setLocale = async (value: Locale) => {
     if (locale.value === value) return
     localeCookie.value = value
-    const target = withLocalePath(route.fullPath, value)
+    const target = nativeApp.value ? stripLocalePrefix(route.fullPath) : withLocalePath(route.fullPath, value)
     await navigateTo(target)
   }
 

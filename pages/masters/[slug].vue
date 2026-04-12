@@ -4,13 +4,13 @@ import type { Master } from '~/types/master'
 import Card from "~/components/base/Card.vue";
 
 const { t, locale } = useLocale()
-const { formatAmd } = useCurrency()
 const api = useApi()
 const route = useRoute()
 const { siteUrl, defaultImageUrl } = useSiteMeta()
 const { localePath } = useLocalizedPath()
 const { isTor, brand, bookingPath, mastersPath } = useBrandContext()
 const { masterAvatarSrc, masterAvatarPlaceholder, onMasterAvatarError } = useMasterAvatar()
+const { formatPriceLabel } = useServicePricing()
 const loadingLabel = computed(() => t('common.loading'))
 const closeLabel = computed(() => t('common.close'))
 const previousLabel = computed(() => t('common.previous'))
@@ -425,8 +425,7 @@ onBeforeUnmount(() => {
                 </div>
                 <p class="mt-1 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ service.duration_minutes }} {{ t('servicesPage.minutes') }}</p>
                 <p class="mt-1 text-sm font-semibold" :class="isTor ? 'text-[#d79a49]' : 'text-sand-700'">
-                  {{ formatAmd(service.price_from) }}
-                  <span v-if="service.price_to && service.price_to !== service.price_from" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">- {{ formatAmd(service.price_to) }}</span>
+                  {{ formatPriceLabel(service) }}
                 </p>
               </NuxtLink>
             </div>

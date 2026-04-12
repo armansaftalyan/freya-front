@@ -23,6 +23,19 @@ useSeoMeta({
 const auth = useAuthStore()
 const appointmentsStore = useAppointmentsStore()
 const { appointments, loading } = storeToRefs(appointmentsStore)
+const visibleAppointments = computed(() => {
+  const roles = auth.user?.roles || []
+  const isMaster = roles.includes('master')
+
+  if (!isMaster) {
+    return appointments.value
+  }
+
+  return appointments.value.filter((item) =>
+    (item.status === 'pending' || item.status === 'confirmed')
+    && item.master?.user_id === auth.user?.id,
+  )
+})
 
 await useAsyncData('my-appointments', async () => {
   await appointmentsStore.fetchMine()
@@ -46,12 +59,12 @@ await useAsyncData('my-appointments', async () => {
         <SkeletonBlock v-for="idx in 3" :key="idx" :theme="isTor ? 'dark' : 'light'" class="h-32" />
       </div>
 
-      <div v-else-if="!appointments.length" class="rounded-3xl p-6 text-sm" :class="isTor ? 'border border-dashed border-white/10 bg-white/[0.03] text-stone-300' : 'border border-dashed border-sand-300 bg-white text-sand-700'">
+      <div v-else-if="!visibleAppointments.length" class="rounded-3xl p-6 text-sm" :class="isTor ? 'border border-dashed border-white/10 bg-white/[0.03] text-stone-300' : 'border border-dashed border-sand-300 bg-white text-sand-700'">
         {{ t('nav.myAppointments') }}: 0
       </div>
 
       <div v-else class="grid gap-4">
-        <Card v-for="item in appointments" :key="item.id" class="fade-in" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
+        <Card v-for="item in visibleAppointments" :key="item.id" class="fade-in" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
           <div class="flex flex-wrap items-start justify-between gap-4">
             <div class="space-y-2 text-sm">
               <p class="text-lg font-semibold">#{{ item.id }} · {{ item.service?.name }}</p>

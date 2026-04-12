@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ApiListResponse } from '~/types/api'
 import type { Product, ProductCategory } from '~/types/product'
+import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 
 const api = useApi()
 const route = useRoute()
@@ -45,9 +46,85 @@ const { data } = await useAsyncData(() => `product-${brand.value}-${categorySlug
 const category = computed(() => data.value?.category || null)
 const product = computed(() => data.value?.product || null)
 const relatedProducts = computed(() => data.value?.relatedProducts || [])
+const keywordIntents = computed(() => useSeoIntentKeywords({
+  brand: brand.value,
+  kind: 'product-detail',
+  slug: product.value?.slug,
+  name: product.value?.name,
+  categorySlug: category.value?.slug,
+}))
 const cartQuantity = computed(() => product.value ? cart.getItemQuantity(product.value.id) : 0)
 const selectedQuantity = computed(() => cartQuantity.value || Math.max(1, Number(quantity.value || 1)))
 const orderTotal = computed(() => (product.value?.price || 0) * selectedQuantity.value)
+
+const seoIntentCopy = computed(() => {
+  const productName = product.value?.name || t('nav.products')
+  const categoryName = category.value?.name || t('nav.products')
+
+  if (isTor.value) {
+    if (locale.value === 'ru') {
+      return {
+        title: `${productName} в Tor Barbershop`,
+        intro: [
+          `Эта карточка товара должна быть релевантна поискам по "${productName}", его цене, назначению и покупке в Tor.`,
+          `Запросы вокруг ${productName} часто связаны с уходом за бородой, волосами, стайлингом и более широкой категорией ${categoryName}.`,
+        ],
+        intents: [productName, `${productName} цена`, `${productName} купить`, `${productName} yerevan`, ...keywordIntents.value],
+      }
+    }
+
+    if (locale.value === 'en') {
+      return {
+        title: `${productName} at Tor Barbershop`,
+        intro: [
+          `This product card should match searches around "${productName}", its price, use case, and buying path at Tor.`,
+          `Demand around ${productName} usually overlaps with beard care, hair styling, grooming retail intent, and the wider ${categoryName} category.`,
+        ],
+        intents: [productName, `${productName} price`, `${productName} buy`, `${productName} yerevan`, ...keywordIntents.value],
+      }
+    }
+
+    return {
+      title: `${productName} Tor Barbershop-ում`,
+      intro: [
+        `Այս ապրանքի քարտը պետք է համապատասխանի "${productName}" անվան, գնի, նշանակության և Tor-ում գնման որոնումներին։`,
+        `${productName}-ի intent-ը հաճախ կապվում է beard care, hair styling, men grooming products և ${categoryName} ավելի լայն կատեգորիայի հետ։`,
+      ],
+      intents: [productName, `${productName} price`, `${productName} buy`, `${productName} yerevan`, ...keywordIntents.value],
+    }
+  }
+
+  if (locale.value === 'ru') {
+    return {
+      title: `${productName} в Freya Beauty Salon`,
+      intro: [
+        `Эта карточка товара должна усиливать поиски по "${productName}", его цене, эффекту, объему и покупке в Freya.`,
+        `Запросы вокруг ${productName} часто пересекаются с beauty products, hair care, skin care и более широкой категорией ${categoryName}.`,
+      ],
+      intents: [productName, `${productName} цена`, `${productName} купить`, `${productName} ереван`, ...keywordIntents.value],
+    }
+  }
+
+  if (locale.value === 'en') {
+    return {
+      title: `${productName} at Freya Beauty Salon`,
+      intro: [
+        `This product card should strengthen searches around "${productName}", its price, effect, size, and buying path at Freya.`,
+        `Demand around ${productName} often overlaps with beauty products, hair care, skin care, and the wider ${categoryName} category.`,
+      ],
+      intents: [productName, `${productName} price`, `${productName} buy`, `${productName} yerevan`, ...keywordIntents.value],
+    }
+  }
+
+  return {
+    title: `${productName} Freya Beauty Salon-ում`,
+    intro: [
+      `Այս ապրանքի քարտը պետք է ուժեղացնի "${productName}" ապրանքի, դրա գնի, ազդեցության, ծավալի և Freya-ում գնման որոնումները։`,
+      `${productName}-ի շուրջ intent-ը հաճախ հատվում է beauty products, hair care, skin care և ${categoryName} ավելի լայն կատեգորիայի հետ։`,
+    ],
+    intents: [productName, `${productName} price`, `${productName} buy`, `${productName} yerevan`, ...keywordIntents.value],
+  }
+})
 
 usePageSeo({
   title: () => product.value?.seo_title || `${product.value?.name || t('nav.products')} | Freya`,
@@ -274,6 +351,14 @@ const buyNow = async () => {
           </NuxtLink>
         </div>
       </div>
+
+      <SeoIntentSection
+        :section="'product-detail'"
+        :theme="isTor ? 'tor' : 'default'"
+        :title="seoIntentCopy.title"
+        :intro="seoIntentCopy.intro"
+        :intents="seoIntentCopy.intents"
+      />
     </div>
   </section>
 </template>
