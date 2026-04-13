@@ -35,6 +35,15 @@ const allPagesLabel = computed(() => {
   if (locale.value === 'en') return 'All Pages'
   return 'Կայքի քարտեզ'
 })
+const siteNavigationItems = computed(() => [
+  { name: t('nav.home'), url: `${siteUrl.value}${withLocalePath('/', locale.value)}` },
+  { name: t('nav.services'), url: `${siteUrl.value}${withLocalePath('/services', locale.value)}` },
+  { name: t('nav.products'), url: `${siteUrl.value}${withLocalePath('/products', locale.value)}` },
+  { name: t('nav.masters'), url: `${siteUrl.value}${withLocalePath('/masters', locale.value)}` },
+  { name: t('nav.giftCards'), url: `${siteUrl.value}${withLocalePath('/gift-cards/buy', locale.value)}` },
+  { name: t('nav.booking'), url: `${siteUrl.value}${withLocalePath('/booking', locale.value)}` },
+  { name: t('nav.contacts'), url: `${siteUrl.value}${withLocalePath(contactsPath.value, locale.value)}` },
+])
 const navLinkClass = computed(() => 'whitespace-nowrap text-[15px] font-medium text-sand-900 transition hover:text-sand-600 xl:text-base')
 const titleTemplate = (title?: string | null) => {
   const baseTitle = 'Freya Beauty Salon'
@@ -121,6 +130,12 @@ useHead(() => ({
               '@id': `${siteUrl.value}#salon`,
             },
           },
+          ...siteNavigationItems.value.map((item, index) => ({
+            '@type': 'SiteNavigationElement',
+            '@id': `${siteUrl.value}#nav-${index + 1}`,
+            name: item.name,
+            url: item.url,
+          })),
         ],
       }),
     },

@@ -55,6 +55,15 @@ const services = computed(() => data.value?.services || [])
 const suggestions = computed(() => data.value?.suggestions || [])
 const categories = computed(() => data.value?.categories || [])
 const selectedMaster = computed(() => data.value?.selectedMaster || null)
+const servicesCollectionLabel = computed(() => {
+  if (brand.value !== 'tor') {
+    return t('nav.services')
+  }
+
+  if (locale.value === 'ru') return 'Услуги Tor'
+  if (locale.value === 'en') return 'Tor Services'
+  return 'Tor ծառայություններ'
+})
 const suggestionCategoryNameById = computed(() => new Map(categories.value.map((item) => [item.id, item.name])))
 const keywordIntents = computed(() => useSeoIntentKeywords({
   brand: brand.value,
@@ -212,7 +221,7 @@ useStructuredData(() => {
         {
           '@type': 'ListItem',
           position: 1,
-          name: brand.value === 'tor' ? 'Tor Services' : t('nav.services'),
+          name: servicesCollectionLabel.value,
           item: `${config.public.siteUrl}${servicesPath.value}`,
         },
         {

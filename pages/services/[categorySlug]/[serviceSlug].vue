@@ -59,6 +59,15 @@ const service = computed(() => data.value?.service || null)
 const relatedServices = computed(() => data.value?.relatedServices || [])
 const selectedMaster = computed(() => data.value?.selectedMaster || null)
 const currentPrice = computed(() => service.value ? resolvePriceRange(service.value, selectedMaster.value) : null)
+const servicesCollectionLabel = computed(() => {
+  if (brand.value !== 'tor') {
+    return t('nav.services')
+  }
+
+  if (locale.value === 'ru') return 'Услуги Tor'
+  if (locale.value === 'en') return 'Tor Services'
+  return 'Tor ծառայություններ'
+})
 const keywordIntents = computed(() => useSeoIntentKeywords({
   brand: brand.value,
   kind: 'service-detail',
@@ -208,7 +217,7 @@ useStructuredData(() => {
           {
             '@type': 'ListItem',
             position: 1,
-            name: brand.value === 'tor' ? 'Tor Services' : t('nav.services'),
+            name: servicesCollectionLabel.value,
             item: `${config.public.siteUrl}${servicesPath.value}`,
           },
           {

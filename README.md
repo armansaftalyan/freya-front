@@ -100,6 +100,14 @@ CAPACITOR_SERVER_URL=
 - per-page title/meta/OG via `useSeoMeta`
 - `robots.txt` in `public/robots.txt`
 - sitemap at `/sitemap.xml`
+- Yandex Market feed at `/yandex-market.yml`
+- Google Merchant feed at `/google-merchant.xml`
+
+## Feed submission
+- Yandex Business / Yandex Market: submit `https://your-frontend-domain/yandex-market.yml`
+- Google Merchant Center: submit `https://your-frontend-domain/google-merchant.xml`
+- Both feeds depend on `NUXT_PUBLIC_API_BASE` and `NUXT_PUBLIC_SITE_URL`
+- Product links in feeds currently point to the default Armenian (`/hy`) storefront URLs
 
 ## Deploy on VPS (Node + PM2)
 ```bash

@@ -127,7 +127,7 @@ const seoIntentCopy = computed(() => {
 })
 
 usePageSeo({
-  title: () => product.value?.seo_title || `${product.value?.name || t('nav.products')} | Freya`,
+  title: () => product.value?.seo_title || `${product.value?.name || t('nav.products')} | ${isTor.value ? 'Tor' : 'Freya'}`,
   description: () => product.value?.seo_description || product.value?.description || t('productsPage.defaultDescription'),
   image: () => product.value?.image_url || undefined,
 })
@@ -150,10 +150,10 @@ useStructuredData(() => {
           '@type': 'Offer',
           priceCurrency: 'AMD',
           price: product.value.price,
-          availability: 'https://schema.org/InStock',
+          availability: product.value.stock_qty === 0 ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
           url: `${siteUrl.value}${route.path}`,
           seller: {
-            '@id': `${siteUrl.value}#salon`,
+            '@id': isTor.value ? `${siteUrl.value}/tor#barbershop` : `${siteUrl.value}#salon`,
           },
         },
       },

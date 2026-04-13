@@ -10,11 +10,20 @@ export const useServicesCatalogPage = async (options?: {
 }) => {
   const api = useApi()
   const route = useRoute()
-  const { locale } = useLocale()
+  const { locale, t } = useLocale()
   const { siteUrl } = useSiteMeta()
   const brandContext = useBrandContext()
 
   const brand = computed<'freya' | 'tor'>(() => options?.brand || brandContext.brand.value)
+  const servicesCollectionLabel = computed(() => {
+    if (brand.value !== 'tor') {
+      return t('nav.services')
+    }
+
+    if (locale.value === 'ru') return 'Услуги Tor'
+    if (locale.value === 'en') return 'Tor Services'
+    return 'Tor ծառայություններ'
+  })
   const mode = options?.mode || 'store'
   const servicesStore = useServicesStore()
   const { categories: storeCategories, services: storeServices, loading } = storeToRefs(servicesStore)
@@ -72,6 +81,7 @@ export const useServicesCatalogPage = async (options?: {
       {
         '@type': 'CollectionPage',
         url: `${siteUrl.value}${route.path}`,
+        name: servicesCollectionLabel.value,
         mainEntity: {
           '@type': 'ItemList',
           itemListElement: services.value.map((service, index) => ({
@@ -81,6 +91,23 @@ export const useServicesCatalogPage = async (options?: {
             name: service.name,
           })),
         },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: t('nav.home'),
+            item: siteUrl.value,
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: servicesCollectionLabel.value,
+            item: `${siteUrl.value}${route.path}`,
+          },
+        ],
       },
     ],
   }))

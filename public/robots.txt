@@ -2,3 +2,6 @@ User-agent: *
 Disallow: /*?
 
 Sitemap: https://freyabeauty.am/sitemap.xml
+# Product feeds
+# https://freyabeauty.am/yandex-market.yml
+# https://freyabeauty.am/google-merchant.xml

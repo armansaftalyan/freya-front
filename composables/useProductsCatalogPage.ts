@@ -7,12 +7,21 @@ export const useProductsCatalogPage = async (options?: {
 }) => {
   const api = useApi()
   const route = useRoute()
-  const { locale } = useLocale()
+  const { locale, t } = useLocale()
   const { siteUrl } = useSiteMeta()
   const { productsPath } = useBrandContext()
 
   const brandContext = useBrandContext()
   const brand = computed<'freya' | 'tor'>(() => options?.brand || brandContext.brand.value)
+  const productsCollectionLabel = computed(() => {
+    if (brand.value !== 'tor') {
+      return t('nav.products')
+    }
+
+    if (locale.value === 'ru') return 'Товары Tor'
+    if (locale.value === 'en') return 'Tor Products'
+    return 'Tor ապրանքներ'
+  })
 
   const { data } = await useAsyncData(options?.cacheKey || (() => `products-page-${brand.value}-${locale.value}`), async () => {
     const [categoriesResponse, productsResponse] = await Promise.all([
@@ -44,6 +53,7 @@ export const useProductsCatalogPage = async (options?: {
       {
         '@type': 'CollectionPage',
         url: `${siteUrl.value}${route.path}`,
+        name: productsCollectionLabel.value,
         mainEntity: {
           '@type': 'ItemList',
           itemListElement: products.value.map((product, index) => ({
@@ -60,13 +70,13 @@ export const useProductsCatalogPage = async (options?: {
           {
             '@type': 'ListItem',
             position: 1,
-            name: 'Home',
+            name: t('nav.home'),
             item: siteUrl.value,
           },
           {
             '@type': 'ListItem',
             position: 2,
-            name: 'Products',
+            name: productsCollectionLabel.value,
             item: `${siteUrl.value}${route.path}`,
           },
         ],

@@ -71,6 +71,15 @@ const allPagesLabel = computed(() => {
   if (locale.value === 'en') return 'All Pages'
   return 'Կայքի քարտեզ'
 })
+const siteNavigationItems = computed(() => [
+  { name: locale.value === 'ru' ? 'Tor' : locale.value === 'en' ? 'Tor' : 'Tor', url: `${siteUrl.value}${localePath('/tor')}` },
+  { name: copy.value.services, url: `${siteUrl.value}${localePath('/tor/services')}` },
+  { name: copy.value.care, url: `${siteUrl.value}${localePath('/tor/products')}` },
+  { name: locale.value === 'ru' ? 'Мастера' : locale.value === 'en' ? 'Masters' : 'Մասնագետներ', url: `${siteUrl.value}${localePath(mastersPath.value)}` },
+  { name: locale.value === 'ru' ? 'Подарочные карты' : locale.value === 'en' ? 'Gift Cards' : 'Նվեր քարտեր', url: `${siteUrl.value}${localePath(giftCardsPath.value)}` },
+  { name: locale.value === 'ru' ? 'Записаться' : locale.value === 'en' ? 'Book now' : 'Ամրագրել', url: `${siteUrl.value}${localePath('/tor/booking')}` },
+  { name: locale.value === 'ru' ? 'Контакты' : locale.value === 'en' ? 'Contacts' : 'Կոնտակտներ', url: `${siteUrl.value}${localePath(contactsPath.value)}` },
+])
 const titleTemplate = (title?: string | null) => {
   const baseTitle = 'Tor Barbershop'
 
@@ -138,6 +147,12 @@ useHead(() => ({
               '@id': `${siteUrl.value}/tor#barbershop`,
             },
           },
+          ...siteNavigationItems.value.map((item, index) => ({
+            '@type': 'SiteNavigationElement',
+            '@id': `${siteUrl.value}/tor#nav-${index + 1}`,
+            name: item.name,
+            url: item.url,
+          })),
         ],
       }),
     },

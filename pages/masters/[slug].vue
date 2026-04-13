@@ -62,6 +62,17 @@ const masterTopSpecialties = computed(() =>
     .filter(Boolean),
 )
 const masterPrimaryOffer = computed(() => masterTopSpecialties.value[0] || masterTopServices.value[0] || '')
+const masterOfferCatalogName = computed(() => {
+  if (brand.value === 'tor') {
+    if (locale.value === 'ru') return 'Услуги мастера Tor'
+    if (locale.value === 'en') return 'Tor Master Services'
+    return 'Tor վարպետի ծառայություններ'
+  }
+
+  if (locale.value === 'ru') return 'Услуги мастера Freya'
+  if (locale.value === 'en') return 'Freya Master Services'
+  return 'Freya վարպետի ծառայություններ'
+})
 const masterKeyword = computed(() => {
   if (brand.value === 'tor') {
     if (locale.value === 'ru') return 'барбер и мужской мастер'
@@ -215,6 +226,7 @@ useStructuredData(() => {
     '@graph': [
       {
         '@type': 'Person',
+        '@id': canonicalUrl.value,
         name: master.value.name,
         description: seoDescription.value,
         image: seoImage.value || undefined,
@@ -228,8 +240,44 @@ useStructuredData(() => {
           name: masterKeyword.value,
         },
         worksFor: {
-          '@id': `${siteUrl.value}#salon`,
+          '@id': brand.value === 'tor' ? `${siteUrl.value}/tor#barbershop` : `${siteUrl.value}#salon`,
         },
+        makesOffer: (master.value.services || []).slice(0, 12).map((service) => ({
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: service.name,
+            category: service.category_name || undefined,
+          },
+          priceCurrency: 'AMD',
+          lowPrice: service.price_from || service.price,
+          highPrice: service.price_to || service.price_from || service.price,
+          availability: 'https://schema.org/InStock',
+          url: `${siteUrl.value}${bookingPath.value}`,
+        })),
+        hasOfferCatalog: (master.value.services || []).length
+          ? {
+              '@type': 'OfferCatalog',
+              name: masterOfferCatalogName.value,
+              itemListElement: (master.value.services || []).slice(0, 12).map((service, index) => ({
+                '@type': 'ListItem',
+                position: index + 1,
+                item: {
+                  '@type': 'Offer',
+                  itemOffered: {
+                    '@type': 'Service',
+                    name: service.name,
+                    category: service.category_name || undefined,
+                  },
+                  priceCurrency: 'AMD',
+                  lowPrice: service.price_from || service.price,
+                  highPrice: service.price_to || service.price_from || service.price,
+                  availability: 'https://schema.org/InStock',
+                  url: `${siteUrl.value}${bookingPath.value}`,
+                },
+              })),
+            }
+          : undefined,
       },
       {
         '@type': 'BreadcrumbList',
