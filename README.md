@@ -106,8 +106,10 @@ CAPACITOR_SERVER_URL=
 ## Feed submission
 - Yandex Business / Yandex Market: submit `https://your-frontend-domain/yandex-market.yml`
 - Google Merchant Center: submit `https://your-frontend-domain/google-merchant.xml`
+- Localized Yandex feeds: `https://your-frontend-domain/hy/yandex-market.yml`, `https://your-frontend-domain/ru/yandex-market.yml`, `https://your-frontend-domain/en/yandex-market.yml`
+- Localized Google feeds: `https://your-frontend-domain/hy/google-merchant.xml`, `https://your-frontend-domain/ru/google-merchant.xml`, `https://your-frontend-domain/en/google-merchant.xml`
 - Both feeds depend on `NUXT_PUBLIC_API_BASE` and `NUXT_PUBLIC_SITE_URL`
-- Product links in feeds currently point to the default Armenian (`/hy`) storefront URLs
+- Root feed URLs use Armenian (`hy`) as the default storefront locale
 
 ## Deploy on VPS (Node + PM2)
 ```bash

@@ -1,6 +1,14 @@
-import { feedXml, getFeedMeta, loadFeedCatalogByLocale } from '../utils/catalogFeeds'
+import { createError, getRouterParam } from 'h3'
+import { feedXml, getFeedMeta, loadFeedCatalogByLocale, type FeedLocale } from '../../utils/catalogFeeds'
+
+const isFeedLocale = (value: string): value is FeedLocale => value === 'hy' || value === 'ru' || value === 'en'
 
 export default defineEventHandler(async (event) => {
+  const localeParam = String(getRouterParam(event, 'locale') || '').trim()
+  if (!isFeedLocale(localeParam)) {
+    throw createError({ statusCode: 404, statusMessage: 'Feed locale not found' })
+  }
+
   const config = useRuntimeConfig(event)
   const siteUrl = String(config.public.siteUrl || '').replace(/\/+$/, '')
   const apiBase = String(config.public.apiBase || '').replace(/\/+$/, '')
@@ -9,11 +17,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, statusMessage: 'Feed config is incomplete' })
   }
 
-  const locale = 'hy'
-  const items = await loadFeedCatalogByLocale(apiBase, siteUrl, locale)
+  const items = await loadFeedCatalogByLocale(apiBase, siteUrl, localeParam)
   const generatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ')
   const escape = feedXml.escape
-  const meta = getFeedMeta(locale)
+  const meta = getFeedMeta(localeParam)
 
   const categories = Array.from(new Map(
     items.map(item => [item.categoryExternalId, { id: item.categoryExternalId, name: item.categoryName }]),
