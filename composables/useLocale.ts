@@ -308,6 +308,8 @@ const messages: Record<Locale, Dict> = {
       priceLabel: 'Цена',
       brandLabel: 'Бренд',
       volumeLabel: 'Объем',
+      ingredientsLabel: 'Состав',
+      usageLabel: 'Способ применения',
     },
     cartPage: {
       title: 'Корзина',
@@ -750,6 +752,8 @@ const messages: Record<Locale, Dict> = {
       priceLabel: 'Price',
       brandLabel: 'Brand',
       volumeLabel: 'Volume',
+      ingredientsLabel: 'Ingredients',
+      usageLabel: 'How to use',
     },
     cartPage: {
       title: 'Cart',
@@ -1192,6 +1196,8 @@ const messages: Record<Locale, Dict> = {
       priceLabel: 'Գին',
       brandLabel: 'Բրենդ',
       volumeLabel: 'Ծավալ',
+      ingredientsLabel: 'Բաղադրություն',
+      usageLabel: 'Օգտագործման եղանակ',
     },
     cartPage: {
       title: 'Զամբյուղ',

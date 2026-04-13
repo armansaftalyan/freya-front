@@ -35,12 +35,6 @@ const { data } = await useAsyncData(() => `product-category-${brand.value}-${cat
 
 const category = computed(() => data.value?.category || null)
 const products = computed(() => data.value?.products || [])
-const keywordIntents = computed(() => useSeoIntentKeywords({
-  brand: brand.value,
-  kind: 'product-category',
-  slug: category.value?.slug,
-  name: category.value?.name,
-}))
 const productPath = (categorySlugValue: string, productSlugValue: string) => localizedPath(`${productsPath.value}/${categorySlugValue}/${productSlugValue}`)
 const productQuantity = (productId: number) => cart.getItemQuantity(productId)
 const addToCart = (product: Product) => cart.addItem(product, 1)
@@ -54,10 +48,10 @@ const seoIntentCopy = computed(() => {
       return {
         title: `${categoryName} Tor Barbershop`,
         intro: [
-          `Эта категория товаров Tor должна усиливать спрос вокруг "${categoryName}", мужских grooming-продуктов и поиска товаров для бороды, волос и стайлинга.`,
-          `Здесь важны запросы по ${categoryName}, цене, брендам, задачам ухода и покупке товаров в Yerevan.`,
+          `Категория ${categoryName} в Tor должна усиливать спрос по товарам этой группы и по покупке мужского ухода в Ереване.`,
+          `Здесь нужны только точные запросы по самой категории, брендам внутри нее, цене и покупке, без посторонних общих ключей.`,
         ],
-        intents: [categoryName, `${categoryName} цена`, `${categoryName} купить`, `${categoryName} yerevan`, ...keywordIntents.value],
+        intents: [categoryName, `${categoryName} цена`, `${categoryName} купить`, `${categoryName} Tor`, `${categoryName} Ереван`, `товары ${categoryName}`],
       }
     }
 
@@ -65,20 +59,20 @@ const seoIntentCopy = computed(() => {
       return {
         title: `${categoryName} at Tor Barbershop`,
         intro: [
-          `This Tor product category should support demand around "${categoryName}", men’s grooming products, and beard, hair, or styling retail intent.`,
-          `The page is useful for queries around ${categoryName}, pricing, brands, care needs, and buying products in Yerevan.`,
+          `The ${categoryName} category at Tor should support searches for this product group and product purchases in Yerevan.`,
+          `Only category-level keywords are useful here: exact category name, brands inside it, pricing, and buying intent.`,
         ],
-        intents: [categoryName, `${categoryName} price`, `${categoryName} buy`, `${categoryName} yerevan`, ...keywordIntents.value],
+        intents: [categoryName, `${categoryName} price`, `${categoryName} buy`, `${categoryName} Tor`, `${categoryName} Yerevan`, `${categoryName} products`],
       }
     }
 
     return {
       title: `${categoryName} Tor Barbershop-ում`,
       intro: [
-        `Tor-ի այս ապրանքային կատեգորիան պետք է ուժեղացնի "${categoryName}" intent-ը, տղամարդկանց grooming ապրանքների պահանջարկը և մորուքի, մազերի կամ ստայլինգի խնամքի որոնումները։`,
-        `Այստեղ կարևոր են ${categoryName}-ի, գնի, բրենդների, խնամքի նպատակի և Երևանում գնման որոնումները։`,
+        `Tor-ի ${categoryName} ապրանքային կատեգորիան պետք է ուժեղացնի այս կոնկրետ խմբի ապրանքների որոնումները և Երևանում գնման պահանջարկը։`,
+        `Այստեղ կարևոր են միայն ${categoryName}-ի, գնի, բրենդների և գնման հետ կապված նպատակային հարցումները։`,
       ],
-      intents: [categoryName, `${categoryName} price`, `${categoryName} buy`, `${categoryName} yerevan`, ...keywordIntents.value],
+      intents: [categoryName, `${categoryName} գին`, `${categoryName} գնել`, `${categoryName} Tor`, `${categoryName} Երևան`, `${categoryName} ապրանքներ`],
     }
   }
 
@@ -86,10 +80,10 @@ const seoIntentCopy = computed(() => {
     return {
       title: `${categoryName} в Freya Beauty Salon`,
       intro: [
-        `Эта категория товаров Freya должна поддерживать спрос вокруг "${categoryName}", домашнего ухода и beauty-продуктов для волос, лица, тела и ногтей.`,
-        `По ней стоит усиливать запросы о ${categoryName}, цене, объеме, эффекте и покупке beauty products в Ереване.`,
+        `Категория ${categoryName} в Freya должна поддерживать спрос по этой группе товаров и по покупке home care в Ереване.`,
+        `Для нее полезны только точные запросы по категории, цене, брендам и покупке, без лишнего SEO-шума.`,
       ],
-      intents: [categoryName, `${categoryName} цена`, `${categoryName} купить`, `${categoryName} ереван`, ...keywordIntents.value],
+      intents: [categoryName, `${categoryName} цена`, `${categoryName} купить`, `${categoryName} Freya`, `${categoryName} Ереван`, `товары ${categoryName}`],
     }
   }
 
@@ -97,20 +91,20 @@ const seoIntentCopy = computed(() => {
     return {
       title: `${categoryName} at Freya Beauty Salon`,
       intro: [
-        `This Freya product category should support demand around "${categoryName}", home care, and beauty products for hair, face, body, and nails.`,
-        `It is useful for searches around ${categoryName}, pricing, size, effect, and buying beauty products in Yerevan.`,
+        `The ${categoryName} category at Freya should support searches for this product group and home care purchases in Yerevan.`,
+        `Relevant intent here is limited to the category name, pricing, brands, and buying path.`,
       ],
-      intents: [categoryName, `${categoryName} price`, `${categoryName} buy`, `${categoryName} yerevan`, ...keywordIntents.value],
+      intents: [categoryName, `${categoryName} price`, `${categoryName} buy`, `${categoryName} Freya`, `${categoryName} Yerevan`, `${categoryName} products`],
     }
   }
 
   return {
     title: `${categoryName} Freya Beauty Salon-ում`,
     intro: [
-      `Freya-ի այս ապրանքային կատեգորիան պետք է ուժեղացնի "${categoryName}" intent-ը, տնային խնամքի և beauty products պահանջարկը մազերի, դեմքի, մարմնի և եղունգների համար։`,
-      `Այստեղ օգտակար են ${categoryName}-ի, գնի, ծավալի, արդյունքի և Երևանում beauty products գնելու որոնումները։`,
+      `Freya-ի ${categoryName} ապրանքային կատեգորիան պետք է ուժեղացնի այս խմբի ապրանքների և տնային խնամքի գնման որոնումները Երևանում։`,
+      `Այս էջում պետք է մնան միայն կատեգորիայի, գնի, բրենդների և գնման ուղու հետ կապված թիրախային intent-ները։`,
     ],
-    intents: [categoryName, `${categoryName} price`, `${categoryName} buy`, `${categoryName} yerevan`, ...keywordIntents.value],
+    intents: [categoryName, `${categoryName} գին`, `${categoryName} գնել`, `${categoryName} Freya`, `${categoryName} Երևան`, `${categoryName} ապրանքներ`],
   }
 })
 

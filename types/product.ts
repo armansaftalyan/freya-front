@@ -28,6 +28,8 @@ export interface Product {
   image_url: string | null
   gallery: any[]
   volume_label: string | null
+  ingredients: string | null
+  usage: string | null
   price: number
   compare_at_price: number | null
   stock_qty: number | null

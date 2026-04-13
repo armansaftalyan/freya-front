@@ -46,13 +46,6 @@ const { data } = await useAsyncData(() => `product-${brand.value}-${categorySlug
 const category = computed(() => data.value?.category || null)
 const product = computed(() => data.value?.product || null)
 const relatedProducts = computed(() => data.value?.relatedProducts || [])
-const keywordIntents = computed(() => useSeoIntentKeywords({
-  brand: brand.value,
-  kind: 'product-detail',
-  slug: product.value?.slug,
-  name: product.value?.name,
-  categorySlug: category.value?.slug,
-}))
 const cartQuantity = computed(() => product.value ? cart.getItemQuantity(product.value.id) : 0)
 const selectedQuantity = computed(() => cartQuantity.value || Math.max(1, Number(quantity.value || 1)))
 const orderTotal = computed(() => (product.value?.price || 0) * selectedQuantity.value)
@@ -60,16 +53,17 @@ const orderTotal = computed(() => (product.value?.price || 0) * selectedQuantity
 const seoIntentCopy = computed(() => {
   const productName = product.value?.name || t('nav.products')
   const categoryName = category.value?.name || t('nav.products')
+  const brandName = product.value?.brand || (isTor.value ? 'Tor' : 'Freya')
 
   if (isTor.value) {
     if (locale.value === 'ru') {
       return {
         title: `${productName} в Tor Barbershop`,
         intro: [
-          `Эта карточка товара должна быть релевантна поискам по "${productName}", его цене, назначению и покупке в Tor.`,
-          `Запросы вокруг ${productName} часто связаны с уходом за бородой, волосами, стайлингом и более широкой категорией ${categoryName}.`,
+          `${productName} относится к категории ${categoryName} и подходит для поисков по цене, назначению и покупке мужского ухода в Tor.`,
+          `Здесь логично усиливать только коммерчески релевантные запросы вокруг самого товара, бренда ${brandName}, объема и доставки по Еревану.`,
         ],
-        intents: [productName, `${productName} цена`, `${productName} купить`, `${productName} yerevan`, ...keywordIntents.value],
+        intents: [productName, `${brandName} ${productName}`, `${productName} цена`, `${productName} купить`, `${categoryName} купить`, `${productName} Ереван`],
       }
     }
 
@@ -77,20 +71,20 @@ const seoIntentCopy = computed(() => {
       return {
         title: `${productName} at Tor Barbershop`,
         intro: [
-          `This product card should match searches around "${productName}", its price, use case, and buying path at Tor.`,
-          `Demand around ${productName} usually overlaps with beard care, hair styling, grooming retail intent, and the wider ${categoryName} category.`,
+          `${productName} belongs to ${categoryName} and should support searches around its use case, pricing, and purchase path at Tor.`,
+          `The relevant SEO intent here is limited to the product itself, the ${brandName} brand, size, and delivery in Yerevan.`,
         ],
-        intents: [productName, `${productName} price`, `${productName} buy`, `${productName} yerevan`, ...keywordIntents.value],
+        intents: [productName, `${brandName} ${productName}`, `${productName} price`, `${productName} buy`, `${categoryName} products`, `${productName} Yerevan`],
       }
     }
 
     return {
       title: `${productName} Tor Barbershop-ում`,
       intro: [
-        `Այս ապրանքի քարտը պետք է համապատասխանի "${productName}" անվան, գնի, նշանակության և Tor-ում գնման որոնումներին։`,
-        `${productName}-ի intent-ը հաճախ կապվում է beard care, hair styling, men grooming products և ${categoryName} ավելի լայն կատեգորիայի հետ։`,
+        `${productName}-ը պատկանում է ${categoryName} կատեգորիային և պետք է համապատասխանի ապրանքի գնի, նշանակության և Tor-ում գնման որոնումներին։`,
+        `Այստեղ պետք է ուժեղացնել միայն տվյալ ապրանքի, ${brandName} բրենդի, ծավալի և Երևանով առաքման հետ կապված հարցումները։`,
       ],
-      intents: [productName, `${productName} price`, `${productName} buy`, `${productName} yerevan`, ...keywordIntents.value],
+      intents: [productName, `${brandName} ${productName}`, `${productName} գին`, `${productName} գնել`, `${categoryName} ապրանքներ`, `${productName} Երևան`],
     }
   }
 
@@ -98,10 +92,10 @@ const seoIntentCopy = computed(() => {
     return {
       title: `${productName} в Freya Beauty Salon`,
       intro: [
-        `Эта карточка товара должна усиливать поиски по "${productName}", его цене, эффекту, объему и покупке в Freya.`,
-        `Запросы вокруг ${productName} часто пересекаются с beauty products, hair care, skin care и более широкой категорией ${categoryName}.`,
+        `${productName} относится к категории ${categoryName} и должен усиливать поиски по цене, объему, эффекту и покупке в Freya.`,
+        `Для этой карточки важны только целевые запросы вокруг самого товара, бренда ${brandName} и доставки по Еревану, без лишних общих beauty-ключей.`,
       ],
-      intents: [productName, `${productName} цена`, `${productName} купить`, `${productName} ереван`, ...keywordIntents.value],
+      intents: [productName, `${brandName} ${productName}`, `${productName} цена`, `${productName} купить`, `${categoryName} купить`, `${productName} Ереван`],
     }
   }
 
@@ -109,20 +103,20 @@ const seoIntentCopy = computed(() => {
     return {
       title: `${productName} at Freya Beauty Salon`,
       intro: [
-        `This product card should strengthen searches around "${productName}", its price, effect, size, and buying path at Freya.`,
-        `Demand around ${productName} often overlaps with beauty products, hair care, skin care, and the wider ${categoryName} category.`,
+        `${productName} belongs to ${categoryName} and should support searches around price, size, effect, and buying path at Freya.`,
+        `This section should stay focused on the exact product, the ${brandName} brand, and Yerevan delivery instead of broad beauty keywords.`,
       ],
-      intents: [productName, `${productName} price`, `${productName} buy`, `${productName} yerevan`, ...keywordIntents.value],
+      intents: [productName, `${brandName} ${productName}`, `${productName} price`, `${productName} buy`, `${categoryName} products`, `${productName} Yerevan`],
     }
   }
 
   return {
     title: `${productName} Freya Beauty Salon-ում`,
     intro: [
-      `Այս ապրանքի քարտը պետք է ուժեղացնի "${productName}" ապրանքի, դրա գնի, ազդեցության, ծավալի և Freya-ում գնման որոնումները։`,
-      `${productName}-ի շուրջ intent-ը հաճախ հատվում է beauty products, hair care, skin care և ${categoryName} ավելի լայն կատեգորիայի հետ։`,
+      `${productName}-ը պատկանում է ${categoryName} կատեգորիային և պետք է ուժեղացնի ապրանքի գնի, ազդեցության, ծավալի և Freya-ում գնման որոնումները։`,
+      `Այս SEO բաժինը պետք է մնա հենց ապրանքի, ${brandName} բրենդի և Երևանում առաքման հետ կապված նպատակային հարցումների շրջանակում։`,
     ],
-    intents: [productName, `${productName} price`, `${productName} buy`, `${productName} yerevan`, ...keywordIntents.value],
+    intents: [productName, `${brandName} ${productName}`, `${productName} գին`, `${productName} գնել`, `${categoryName} ապրանքներ`, `${productName} Երևան`],
   }
 })
 
@@ -330,6 +324,28 @@ const buyNow = async () => {
               {{ t('cartPage.checkoutButton') }}
             </BaseButton>
           </div>
+        </div>
+      </div>
+
+      <div
+        v-if="product && (product.ingredients || product.usage)"
+        class="grid gap-4 lg:grid-cols-2"
+      >
+        <div
+          v-if="product.ingredients"
+          class="rounded-[2rem] p-6"
+          :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200 bg-white'"
+        >
+          <p class="text-xs uppercase tracking-[0.14em]" :class="isTor ? 'text-[#c58a3a]' : 'text-sand-600'">{{ t('productsPage.ingredientsLabel') }}</p>
+          <p class="mt-3 whitespace-pre-line text-base leading-7" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ product.ingredients }}</p>
+        </div>
+        <div
+          v-if="product.usage"
+          class="rounded-[2rem] p-6"
+          :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200 bg-white'"
+        >
+          <p class="text-xs uppercase tracking-[0.14em]" :class="isTor ? 'text-[#c58a3a]' : 'text-sand-600'">{{ t('productsPage.usageLabel') }}</p>
+          <p class="mt-3 whitespace-pre-line text-base leading-7" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ product.usage }}</p>
         </div>
       </div>
 
