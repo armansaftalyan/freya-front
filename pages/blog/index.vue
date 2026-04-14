@@ -7,9 +7,10 @@ const api = useApi()
 const route = useRoute()
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
-const { brand, isTor, blogPath } = useBrandContext()
+const { brand, isTor, blogPath, rootPath } = useBrandContext()
 const pageTitle = computed(() => brand.value === 'tor' ? t('blog.pageTitleTor') : t('blog.pageTitleFreya'))
 const pageDescription = computed(() => brand.value === 'tor' ? t('blog.pageDescriptionTor') : t('blog.pageDescriptionFreya'))
+const brandHomeLabel = computed(() => brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon')
 
 const { data: articles } = await useAsyncData(
   () => `blog-list-${brand.value}-${locale.value}`,
@@ -41,10 +42,25 @@ useStructuredData(() => ({
         {
           '@type': 'ListItem',
           position: 1,
+          name: brandHomeLabel.value,
+          item: `${siteUrl}${localePath(rootPath.value || '/')}`,
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
           name: t('blog.guides'),
           item: `${siteUrl}${route.path}`,
         },
       ],
+    },
+    {
+      '@type': 'ItemList',
+      itemListElement: (articles.value || []).map((article, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        url: `${siteUrl}${localePath(`${blogPath.value}/${article.slug}`)}`,
+        name: article.title,
+      })),
     },
   ],
 }))

@@ -49,6 +49,7 @@ const moreLabel = computed(() => {
 })
 const siteNavigationItems = computed(() => [
   { name: t('nav.home'), url: `${siteUrl.value}${withLocalePath('/', locale.value)}` },
+  { name: blogLabel.value, url: `${siteUrl.value}${withLocalePath('/blog', locale.value)}` },
   { name: t('nav.services'), url: `${siteUrl.value}${withLocalePath('/services', locale.value)}` },
   { name: t('nav.products'), url: `${siteUrl.value}${withLocalePath('/products', locale.value)}` },
   { name: t('nav.masters'), url: `${siteUrl.value}${withLocalePath('/masters', locale.value)}` },

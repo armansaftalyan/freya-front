@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { ApiListResponse } from '~/types/api'
+import type { BlogArticleCard } from '~/types/blog'
 import type { Category } from '~/types/category'
 import type { Master } from '~/types/master'
 import type { Product, ProductCategory } from '~/types/product'
 import type { Service } from '~/types/service'
 
 type BrandCatalog = {
+  articles: BlogArticleCard[]
   categories: Category[]
   services: Service[]
   masters: Master[]
@@ -29,6 +31,7 @@ const { localePath } = useLocalizedPath()
 const api = useApi()
 const route = useRoute()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
+const { brand, rootPath } = useBrandContext()
 
 const copy = computed(() => {
   if (locale.value === 'ru') {
@@ -42,6 +45,8 @@ const copy = computed(() => {
       productCategories: 'Категории товаров',
       products: 'Все товары',
       masters: 'Все мастера',
+      blog: 'Блог',
+      blogArticles: 'Статьи блога',
       freya: 'Freya Beauty Salon',
       tor: 'Tor Barbershop',
       contacts: 'Контакты',
@@ -63,6 +68,8 @@ const copy = computed(() => {
       productCategories: 'Product categories',
       products: 'All products',
       masters: 'All masters',
+      blog: 'Blog',
+      blogArticles: 'Blog articles',
       freya: 'Freya Beauty Salon',
       tor: 'Tor Barbershop',
       contacts: 'Contacts',
@@ -83,6 +90,8 @@ const copy = computed(() => {
     productCategories: 'Ապրանքների կատեգորիաներ',
     products: 'Բոլոր ապրանքները',
     masters: 'Բոլոր վարպետները',
+    blog: 'Բլոգ',
+    blogArticles: 'Բլոգի հոդվածներ',
     freya: 'Freya Beauty Salon',
     tor: 'Tor Barbershop',
     contacts: 'Կոնտակտներ',
@@ -100,7 +109,8 @@ usePageSeo({
 
 const { data } = await useAsyncData(`all-pages-${locale.value}`, async () => {
   const fetchBrandCatalog = async (brand: 'freya' | 'tor'): Promise<BrandCatalog> => {
-    const [categoriesResponse, servicesResponse, mastersResponse, productCategoriesResponse, productsResponse] = await Promise.all([
+    const [articlesResponse, categoriesResponse, servicesResponse, mastersResponse, productCategoriesResponse, productsResponse] = await Promise.all([
+      api.get<ApiListResponse<BlogArticleCard>>('/blog', { brand, limit: 100 }, { skipErrorToast: true }),
       api.get<ApiListResponse<Category>>('/categories', { brand }, { skipErrorToast: true }),
       api.get<ApiListResponse<Service>>('/services', { brand }, { skipErrorToast: true }),
       api.get<ApiListResponse<Master>>('/masters', { brand }, { skipErrorToast: true }),
@@ -109,6 +119,7 @@ const { data } = await useAsyncData(`all-pages-${locale.value}`, async () => {
     ])
 
     return {
+      articles: articlesResponse.data,
       categories: categoriesResponse.data.filter((item) => item.is_active !== false),
       services: servicesResponse.data.filter((item) => item.is_active !== false),
       masters: mastersResponse.data.filter((item) => item.is_active !== false && Boolean(item.slug || item.id)),
@@ -126,6 +137,7 @@ const { data } = await useAsyncData(`all-pages-${locale.value}`, async () => {
 }, {
   default: () => ({
     freya: {
+      articles: [],
       categories: [],
       services: [],
       masters: [],
@@ -133,6 +145,7 @@ const { data } = await useAsyncData(`all-pages-${locale.value}`, async () => {
       products: [],
     },
     tor: {
+      articles: [],
       categories: [],
       services: [],
       masters: [],
@@ -150,6 +163,7 @@ const staticSections = computed<Record<'freya' | 'tor', SitemapSection>>(() => (
     links: [
       { title: 'Freya Beauty Salon', to: '/' },
       { title: copy.value.allPages, to: '/all-pages' },
+      { title: copy.value.blog, to: '/blog' },
       { title: copy.value.serviceCategories, to: '/services' },
       { title: copy.value.productCategories, to: '/products' },
       { title: copy.value.masters, to: '/masters' },
@@ -164,6 +178,7 @@ const staticSections = computed<Record<'freya' | 'tor', SitemapSection>>(() => (
     links: [
       { title: 'Tor Barbershop', to: '/tor' },
       { title: copy.value.allPages, to: '/tor/all-pages' },
+      { title: copy.value.blog, to: '/tor/blog' },
       { title: copy.value.serviceCategories, to: '/tor/services' },
       { title: copy.value.productCategories, to: '/tor/products' },
       { title: copy.value.masters, to: '/tor/masters' },
@@ -180,6 +195,7 @@ const buildBrandSections = (brand: 'freya' | 'tor'): SitemapSection[] => {
   const baseServicesPath = brand === 'tor' ? '/tor/services' : '/services'
   const baseProductsPath = brand === 'tor' ? '/tor/products' : '/products'
   const baseMastersPath = brand === 'tor' ? '/tor/masters' : '/masters'
+  const baseBlogPath = brand === 'tor' ? '/tor/blog' : '/blog'
 
   const categoryById = new Map(catalog.categories.map((item) => [item.id, item]))
   const productCategoryById = new Map(catalog.productCategories.map((item) => [item.id, item]))
@@ -240,11 +256,20 @@ const buildBrandSections = (brand: 'freya' | 'tor'): SitemapSection[] => {
         description: master.bio,
       })),
     },
+    {
+      title: copy.value.blogArticles,
+      links: catalog.articles.map((article) => ({
+        title: article.title,
+        to: `${baseBlogPath}/${article.slug}`,
+        description: article.excerpt,
+      })),
+    },
   ].filter((section) => section.links.length > 0)
 }
 
 const freyaSections = computed(() => buildBrandSections('freya'))
 const torSections = computed(() => buildBrandSections('tor'))
+const brandHomeLabel = computed(() => brand.value === 'tor' ? copy.value.tor : copy.value.freya)
 
 useStructuredData(() => ({
   '@context': 'https://schema.org',
@@ -261,8 +286,10 @@ useStructuredData(() => ({
         {
           '@type': 'ListItem',
           position: 1,
-          name: copy.value.freya,
-          item: localePath('/'),
+          name: brandHomeLabel.value,
+          item: canonicalUrl.value.startsWith('http')
+            ? `${new URL(canonicalUrl.value).origin}${localePath(rootPath.value || '/')}`
+            : localePath(rootPath.value || '/'),
         },
         {
           '@type': 'ListItem',

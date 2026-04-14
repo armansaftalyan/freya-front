@@ -32,6 +32,11 @@ type SitemapMaster = {
   is_active?: boolean
 }
 
+type SitemapBlogArticle = {
+  slug: string
+  is_published?: boolean
+}
+
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
   const siteUrl = String(config.public.siteUrl || '').replace(/\/+$/, '')
@@ -41,6 +46,8 @@ export default defineEventHandler(async (event) => {
   const staticRoutes = [
     '/all-pages',
     '/tor/all-pages',
+    '/blog',
+    '/tor/blog',
     '/services',
     '/products',
     '/masters',
@@ -74,22 +81,26 @@ export default defineEventHandler(async (event) => {
     try {
       const [
         freyaCategoriesResponse,
+        freyaBlogArticlesResponse,
         freyaServicesResponse,
         freyaMastersResponse,
         freyaProductCategoriesResponse,
         freyaProductsResponse,
         torCategoriesResponse,
+        torBlogArticlesResponse,
         torServicesResponse,
         torMastersResponse,
         torProductCategoriesResponse,
         torProductsResponse,
       ] = await Promise.all([
         $fetch<ApiListResponse<SitemapCategory>>(`${apiBase}/categories`, { query: { brand: 'freya' } }),
+        $fetch<ApiListResponse<SitemapBlogArticle>>(`${apiBase}/blog`, { query: { brand: 'freya', limit: 100 } }),
         $fetch<ApiListResponse<SitemapService>>(`${apiBase}/services`, { query: { brand: 'freya' } }),
         $fetch<ApiListResponse<SitemapMaster>>(`${apiBase}/masters`, { query: { brand: 'freya' } }),
         $fetch<ApiListResponse<SitemapProductCategory>>(`${apiBase}/product-categories`, { query: { brand: 'freya' } }),
         $fetch<ApiListResponse<SitemapProduct>>(`${apiBase}/products`, { query: { brand: 'freya' } }),
         $fetch<ApiListResponse<SitemapCategory>>(`${apiBase}/categories`, { query: { brand: 'tor' } }),
+        $fetch<ApiListResponse<SitemapBlogArticle>>(`${apiBase}/blog`, { query: { brand: 'tor', limit: 100 } }),
         $fetch<ApiListResponse<SitemapService>>(`${apiBase}/services`, { query: { brand: 'tor' } }),
         $fetch<ApiListResponse<SitemapMaster>>(`${apiBase}/masters`, { query: { brand: 'tor' } }),
         $fetch<ApiListResponse<SitemapProductCategory>>(`${apiBase}/product-categories`, { query: { brand: 'tor' } }),
@@ -118,6 +129,14 @@ export default defineEventHandler(async (event) => {
 
       addServiceRoutes(freyaCategoriesResponse, freyaServicesResponse, '/services')
       addServiceRoutes(torCategoriesResponse, torServicesResponse, '/tor/services')
+
+      for (const article of (freyaBlogArticlesResponse.data || []).filter(article => article.is_published !== false)) {
+        addLocalizedRoute(`/blog/${article.slug}`)
+      }
+
+      for (const article of (torBlogArticlesResponse.data || []).filter(article => article.is_published !== false)) {
+        addLocalizedRoute(`/tor/blog/${article.slug}`)
+      }
 
       for (const master of (freyaMastersResponse.data || []).filter(master => master.is_active !== false && master.slug)) {
         addLocalizedRoute(`/masters/${master.slug}`)

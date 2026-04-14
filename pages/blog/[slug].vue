@@ -8,10 +8,11 @@ const route = useRoute()
 const config = useRuntimeConfig()
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
-const { brand, isTor, blogPath, servicesPath } = useBrandContext()
+const { brand, isTor, blogPath, servicesPath, rootPath } = useBrandContext()
 
 const slug = computed(() => String(route.params.slug || '').trim())
 const isArmenianLocale = computed(() => locale.value === 'hy')
+const brandHomeLabel = computed(() => brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon')
 
 const { data } = await useAsyncData(
   () => `blog-article-${brand.value}-${slug.value}-${locale.value}`,
@@ -88,12 +89,18 @@ useStructuredData(() => {
           {
             '@type': 'ListItem',
             position: 1,
+            name: brandHomeLabel.value,
+            item: `${config.public.siteUrl}${localePath(rootPath.value || '/')}`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
             name: t('blog.guides'),
             item: `${config.public.siteUrl}${localePath(blogPath.value)}`,
           },
           {
             '@type': 'ListItem',
-            position: 2,
+            position: 3,
             name: article.value.title,
             item: `${config.public.siteUrl}${route.path}`,
           },

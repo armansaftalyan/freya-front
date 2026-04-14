@@ -85,6 +85,7 @@ const moreLabel = computed(() => {
 })
 const siteNavigationItems = computed(() => [
   { name: locale.value === 'ru' ? 'Tor' : locale.value === 'en' ? 'Tor' : 'Tor', url: `${siteUrl.value}${localePath('/tor')}` },
+  { name: blogLabel.value, url: `${siteUrl.value}${localePath('/tor/blog')}` },
   { name: copy.value.services, url: `${siteUrl.value}${localePath('/tor/services')}` },
   { name: copy.value.care, url: `${siteUrl.value}${localePath('/tor/products')}` },
   { name: locale.value === 'ru' ? 'Мастера' : locale.value === 'en' ? 'Masters' : 'Մասնագետներ', url: `${siteUrl.value}${localePath(mastersPath.value)}` },
