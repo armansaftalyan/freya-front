@@ -54,6 +54,7 @@ const copy = computed(() => {
       legal: 'Условия и политики',
       allPages: 'HTML-карта сайта',
       giftCards: 'Подарочные карты',
+      booking: 'Онлайн-запись',
     }
   }
 
@@ -77,6 +78,7 @@ const copy = computed(() => {
       legal: 'Terms and Policies',
       allPages: 'HTML Sitemap',
       giftCards: 'Gift Cards',
+      booking: 'Online Booking',
     }
   }
 
@@ -99,6 +101,7 @@ const copy = computed(() => {
     legal: 'Պայմաններ և քաղաքականություններ',
     allPages: 'HTML կայքի քարտեզ',
     giftCards: 'Նվեր քարտեր',
+    booking: 'Օնլայն գրանցում',
   }
 })
 
@@ -167,6 +170,7 @@ const staticSections = computed<Record<'freya' | 'tor', SitemapSection>>(() => (
       { title: copy.value.serviceCategories, to: '/services' },
       { title: copy.value.productCategories, to: '/products' },
       { title: copy.value.masters, to: '/masters' },
+      { title: copy.value.booking, to: '/booking' },
       { title: copy.value.contacts, to: '/contacts' },
       { title: copy.value.legal, to: '/legal' },
       { title: copy.value.privacyPolicy, to: '/privacy-policy' },
@@ -182,6 +186,7 @@ const staticSections = computed<Record<'freya' | 'tor', SitemapSection>>(() => (
       { title: copy.value.serviceCategories, to: '/tor/services' },
       { title: copy.value.productCategories, to: '/tor/products' },
       { title: copy.value.masters, to: '/tor/masters' },
+      { title: copy.value.booking, to: '/tor/booking' },
       { title: copy.value.contacts, to: '/tor/contacts' },
       { title: copy.value.legal, to: '/tor/legal' },
       { title: copy.value.privacyPolicy, to: '/tor/privacy-policy' },
