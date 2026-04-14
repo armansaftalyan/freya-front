@@ -3,6 +3,7 @@ import type { ApiItemResponse } from '~/types/api'
 import type { Master } from '~/types/master'
 import Card from '~/components/base/Card.vue'
 import AccountNav from '~/components/account/AccountNav.vue'
+import { useNoindexSeoMeta } from '~/composables/useNoindexSeoMeta'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -15,13 +16,10 @@ const { isTor, authAppointmentsPath } = useBrandContext()
 const { masterAvatarPlaceholder, onMasterAvatarError } = useMasterAvatar()
 const config = useRuntimeConfig()
 const localizedPath = (target: string) => localePath(target) as string
-const route = useRoute()
-useLocalizedSeo(() => route.path)
 
-useSeoMeta({
+useNoindexSeoMeta({
   title: () => t('account.masterProfile'),
   description: () => t('account.masterProfileSeoDescription'),
-  robots: 'noindex, nofollow',
 })
 
 await auth.fetchMe()

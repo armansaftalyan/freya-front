@@ -4,6 +4,7 @@ import Card from "~/components/base/Card.vue";
 import SkeletonBlock from "~/components/shared/SkeletonBlock.vue";
 import BadgeStatus from "~/components/base/BadgeStatus.vue";
 import AccountNav from '~/components/account/AccountNav.vue'
+import { useNoindexSeoMeta } from '~/composables/useNoindexSeoMeta'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -11,13 +12,10 @@ const { t } = useLocale()
 const { formatYerevanDateTime } = useDateTime()
 const { localePath } = useLocalizedPath()
 const { isTor } = useBrandContext()
-const route = useRoute()
-useLocalizedSeo(() => route.path)
 
-useSeoMeta({
+useNoindexSeoMeta({
   title: () => t('nav.myAppointments'),
   description: () => t('account.appointmentsSeoDescription'),
-  robots: 'noindex, nofollow',
 })
 
 const auth = useAuthStore()

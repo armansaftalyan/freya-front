@@ -5,13 +5,14 @@ import FaqSection from "~/components/sections/FaqSection.vue";
 import SkeletonBlock from "~/components/shared/SkeletonBlock.vue";
 
 const { t, locale } = useLocale()
-const { siteUrl } = useSiteMeta()
+const { siteUrl, defaultImageUrl } = useSiteMeta()
 const { localePath } = useLocalizedPath()
 const { isTor, brand, bookingPath, mastersPath } = useBrandContext()
 const { masterAvatarSrc, onMasterAvatarError } = useMasterAvatar()
 const route = useRoute()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const { faqCopy } = usePageFaqContent(isTor.value ? 'tor' : 'freya', 'masters')
+const brandOgImage = computed(() => brand.value === 'tor' ? `${siteUrl.value}/tor-logo.jpg` : defaultImageUrl.value)
 
 const seoCopy = computed(() => {
   if (brand.value === 'tor') {
@@ -60,10 +61,13 @@ useSeoMeta({
   description: () => seoCopy.value.description,
   ogTitle: () => seoCopy.value.title,
   ogDescription: () => seoCopy.value.description,
+  ogType: 'website',
   ogUrl: () => canonicalUrl.value,
+  ogImage: () => brandOgImage.value,
   twitterCard: 'summary_large_image',
   twitterTitle: () => seoCopy.value.title,
   twitterDescription: () => seoCopy.value.description,
+  twitterImage: () => brandOgImage.value,
 })
 const mastersStore = useMastersStore()
 const { masters, loading } = storeToRefs(mastersStore)

@@ -6,9 +6,10 @@ import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
 const route = useRoute()
-const { siteUrl } = useSiteMeta()
+const { siteUrl, defaultImageUrl } = useSiteMeta()
 const { brand, isTor, bookingPath } = useBrandContext()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
+const brandOgImage = computed(() => brand.value === 'tor' ? `${siteUrl.value}/tor-logo.jpg` : defaultImageUrl.value)
 
 const copy = computed(() => {
   if (brand.value === 'tor') {
@@ -98,10 +99,13 @@ useSeoMeta({
   description: () => copy.value.description,
   ogTitle: () => `${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya'} - ${copy.value.title}`,
   ogDescription: () => copy.value.description,
+  ogType: 'website',
   ogUrl: () => canonicalUrl.value,
+  ogImage: () => brandOgImage.value,
   twitterCard: 'summary_large_image',
   twitterTitle: () => `${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya'} - ${copy.value.title}`,
   twitterDescription: () => copy.value.description,
+  twitterImage: () => brandOgImage.value,
 })
 
 useStructuredData(() => ({

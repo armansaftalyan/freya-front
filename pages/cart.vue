@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ApiItemResponse } from '~/types/api'
 import type { Product, ProductOrder, ProductOrderPayment, ProductOrderQuote } from '~/types/product'
+import { useNoindexSeoMeta } from '~/composables/useNoindexSeoMeta'
 
 const api = useApi()
 const toast = useToast()
@@ -61,7 +62,7 @@ const createdOrder = ref<ProductOrder | null>(null)
 const payment = ref<ProductOrderPayment | null>(null)
 const idramFormRef = ref<HTMLFormElement | null>(null)
 
-usePageSeo({
+useNoindexSeoMeta({
   title: () => isTor.value
     ? (locale.value === 'ru'
         ? 'Корзина Tor Barbershop'
@@ -70,10 +71,6 @@ usePageSeo({
           : 'Tor Barbershop զամբյուղ')
     : `Freya - ${t('cartPage.title')}`,
   description: () => t('cartPage.seoDescription'),
-})
-
-useSeoMeta({
-  robots: 'noindex, nofollow',
 })
 
 useStructuredData(() => ({

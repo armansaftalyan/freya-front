@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import Card from "~/components/base/Card.vue";
+import { useNoindexSeoMeta } from '~/composables/useNoindexSeoMeta'
 
 const { t } = useLocale()
 const { localePath } = useLocalizedPath()
 const { isTor, authRegisterPath, authForgotPasswordPath, authAppointmentsPath } = useBrandContext()
-const route = useRoute()
-useLocalizedSeo(() => route.path)
 
-useSeoMeta({
+useNoindexSeoMeta({
   title: () => t('auth.loginTitle'),
   description: () => t('account.loginSeoDescription'),
-  robots: 'noindex, nofollow',
 })
 
 const auth = useAuthStore()

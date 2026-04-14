@@ -1,6 +1,10 @@
 type SeoInput = {
   title: string | (() => string)
   description: string | (() => string)
+  ogTitle?: string | (() => string)
+  ogDescription?: string | (() => string)
+  twitterTitle?: string | (() => string)
+  twitterDescription?: string | (() => string)
   image?: string | (() => string | undefined)
   noindex?: boolean | (() => boolean)
 }
@@ -15,18 +19,32 @@ export const usePageSeo = (input: SeoInput) => {
     return value || defaultImageUrl.value
   })
   const noindex = computed(() => typeof input.noindex === 'function' ? input.noindex() : Boolean(input.noindex))
+  const title = computed(() => typeof input.title === 'function' ? input.title() : input.title)
+  const description = computed(() => typeof input.description === 'function' ? input.description() : input.description)
+  const ogTitle = computed(() => input.ogTitle
+    ? (typeof input.ogTitle === 'function' ? input.ogTitle() : input.ogTitle)
+    : title.value)
+  const ogDescription = computed(() => input.ogDescription
+    ? (typeof input.ogDescription === 'function' ? input.ogDescription() : input.ogDescription)
+    : description.value)
+  const twitterTitle = computed(() => input.twitterTitle
+    ? (typeof input.twitterTitle === 'function' ? input.twitterTitle() : input.twitterTitle)
+    : ogTitle.value)
+  const twitterDescription = computed(() => input.twitterDescription
+    ? (typeof input.twitterDescription === 'function' ? input.twitterDescription() : input.twitterDescription)
+    : ogDescription.value)
 
   useSeoMeta({
-    title: () => typeof input.title === 'function' ? input.title() : input.title,
-    description: () => typeof input.description === 'function' ? input.description() : input.description,
-    ogTitle: () => typeof input.title === 'function' ? input.title() : input.title,
-    ogDescription: () => typeof input.description === 'function' ? input.description() : input.description,
+    title: () => title.value,
+    description: () => description.value,
+    ogTitle: () => ogTitle.value,
+    ogDescription: () => ogDescription.value,
     ogType: 'website',
     ogUrl: () => canonicalUrl.value,
     ogImage: () => imageUrl.value,
     twitterCard: 'summary_large_image',
-    twitterTitle: () => typeof input.title === 'function' ? input.title() : input.title,
-    twitterDescription: () => typeof input.description === 'function' ? input.description() : input.description,
+    twitterTitle: () => twitterTitle.value,
+    twitterDescription: () => twitterDescription.value,
     twitterImage: () => imageUrl.value,
     robots: () => noindex.value
       ? 'noindex, nofollow'

@@ -32,15 +32,15 @@ onMounted(() => {
 })
 
 useSeoMeta({
-  title: 'Freya Beauty Salon',
+  title: () => t('homePage.seoTitle'),
   description: () => t('homePage.seoDescription'),
-  ogTitle: 'Freya Beauty Salon',
+  ogTitle: () => t('homePage.seoTitle'),
   ogDescription: () => t('homePage.ogDescription'),
   ogType: 'website',
   ogUrl: () => canonicalUrl.value,
   ogImage: () => defaultImageUrl.value,
   twitterCard: 'summary_large_image',
-  twitterTitle: 'Freya Beauty Salon',
+  twitterTitle: () => t('homePage.seoTitle'),
   twitterDescription: () => t('homePage.ogDescription'),
   twitterImage: () => defaultImageUrl.value,
 })

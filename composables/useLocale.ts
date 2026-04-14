@@ -352,6 +352,7 @@ const messages: Record<Locale, Dict> = {
       addedTitle: 'Товар добавлен в корзину',
     },
     homePage: {
+      seoTitle: 'Freya Beauty Salon в Ереване | Салон красоты и онлайн-запись',
       seoDescription: 'Freya Beauty Salon в Ереване: салон красоты с онлайн-записью, услугами, мастерами и свободными слотами.',
       ogDescription: 'Запишитесь онлайн: услуги, мастера и быстрый выбор времени.',
       hero: {
@@ -821,6 +822,7 @@ const messages: Record<Locale, Dict> = {
       addedTitle: 'Item added to cart',
     },
     homePage: {
+      seoTitle: 'Freya Beauty Salon in Yerevan | Beauty Salon and Online Booking',
       seoDescription: 'Freya Beauty Salon in Yerevan with online booking, beauty services, masters, and available appointment slots.',
       ogDescription: 'Book online: services, masters, and instant appointment slots.',
       hero: {
@@ -1290,6 +1292,7 @@ const messages: Record<Locale, Dict> = {
       addedTitle: 'Ապրանքը ավելացվեց զամբյուղ',
     },
     homePage: {
+      seoTitle: 'Freya Beauty Salon Երևանում | Գեղեցկության սրահ և օնլայն գրանցում',
       seoDescription: 'Freya Beauty Salon-ը գեղեցկության սրահ է Երևանում՝ օնլայն գրանցմամբ, ծառայություններով, վարպետներով և ազատ ժամերով։',
       ogDescription: 'Գրանցվեք օնլայն՝ ծառայություններ, վարպետներ և արագ ժամի ընտրություն։',
       hero: {

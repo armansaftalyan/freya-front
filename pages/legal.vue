@@ -1,9 +1,10 @@
 <script setup lang="ts">
 const { locale } = useLocale()
 const route = useRoute()
-const { siteUrl } = useSiteMeta()
+const { siteUrl, defaultImageUrl } = useSiteMeta()
 const { brand, isTor } = useBrandContext()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
+const brandOgImage = computed(() => brand.value === 'tor' ? `${siteUrl.value}/tor-logo.jpg` : defaultImageUrl.value)
 
 useSeoMeta({
   title: () => `${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya'} - Terms and Policies`,
@@ -11,10 +12,13 @@ useSeoMeta({
   robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
   ogTitle: () => `${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya'} - Terms and Policies`,
   ogDescription: () => `Privacy, personal data processing, cancellation/refund, delivery terms and payment details for ${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon'}.`,
+  ogType: 'website',
   ogUrl: () => canonicalUrl.value,
+  ogImage: () => brandOgImage.value,
   twitterCard: 'summary_large_image',
   twitterTitle: () => `${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya'} - Terms and Policies`,
   twitterDescription: () => `Privacy, personal data processing, cancellation/refund, delivery terms and payment details for ${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon'}.`,
+  twitterImage: () => brandOgImage.value,
 })
 
 const content = computed(() => {

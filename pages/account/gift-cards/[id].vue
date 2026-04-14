@@ -2,6 +2,7 @@
 import Card from '~/components/base/Card.vue'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 import type { GiftCard } from '~/types/gift-card'
+import { useNoindexSeoMeta } from '~/composables/useNoindexSeoMeta'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -13,10 +14,9 @@ const { formatAmd } = useCurrency()
 const { isTor, authGiftCardsPath, authGiftCardScanBasePath } = useBrandContext()
 const store = useGiftCardsStore()
 
-useSeoMeta({
+useNoindexSeoMeta({
   title: () => t('giftCards.transactionsTitle'),
   description: () => t('giftCards.backToList'),
-  robots: 'noindex, nofollow',
 })
 
 const card = ref<GiftCard | null>(null)

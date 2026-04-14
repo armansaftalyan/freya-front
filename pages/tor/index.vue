@@ -28,6 +28,9 @@ const copy = computed(() => {
   if (locale.value === 'ru') {
     return {
       title: 'Tor Barbershop',
+      seoTitle: 'Tor Barbershop в Ереване | Мужские стрижки и барбершоп',
+      ogDescription: 'Запишитесь онлайн в Tor: мужские стрижки, борода, grooming и быстрый выбор времени в Ереване.',
+      twitterDescription: 'Запишитесь онлайн в Tor: мужские стрижки, борода, grooming и быстрый выбор времени в Ереване.',
       subtitle: 'Мужские стрижки, борода и уход без салонной сладости.',
       eyebrow: 'Точная мужская подача',
       primary: 'Записаться',
@@ -59,6 +62,9 @@ const copy = computed(() => {
   if (locale.value === 'en') {
     return {
       title: 'Tor Barbershop',
+      seoTitle: 'Tor Barbershop in Yerevan | Men Haircuts and Grooming',
+      ogDescription: 'Book Tor online for men haircuts, beard work, grooming, and fast slot selection in Yerevan.',
+      twitterDescription: 'Book Tor online for men haircuts, beard work, grooming, and fast slot selection in Yerevan.',
       subtitle: 'Cuts, beard work and grooming with a harder edge.',
       eyebrow: 'Precision Grooming',
       primary: 'Book now',
@@ -89,6 +95,9 @@ const copy = computed(() => {
 
   return {
     title: 'Tor Barbershop',
+    seoTitle: 'Tor Barbershop Երևանում | Տղամարդկանց սանրվածք և grooming',
+    ogDescription: 'Ամրագրեք Tor-ում օնլայն՝ տղամարդկանց սանրվածք, մորուք, grooming և արագ ժամի ընտրություն Երևանում։',
+    twitterDescription: 'Ամրագրեք Tor-ում օնլայն՝ տղամարդկանց սանրվածք, մորուք, grooming և արագ ժամի ընտրություն Երևանում։',
     subtitle: 'Տղամարդկանց սանրվածք, մորուք և խնամք ավելի կոշտ ոճով։',
     eyebrow: 'Ճշգրիտ խնամք',
     primary: 'Ամրագրել',
@@ -178,9 +187,21 @@ const bookingUrl = computed(() => {
   })
 })
 
-usePageSeo({
-  title: () => copy.value.title,
+const { canonicalUrl } = useLocalizedSeo(() => route.path)
+const torOgImage = computed(() => `${siteUrl.value}/tor-logo.jpg`)
+
+useSeoMeta({
+  title: () => copy.value.seoTitle,
   description: () => copy.value.seoDescription,
+  ogTitle: () => copy.value.seoTitle,
+  ogDescription: () => copy.value.ogDescription,
+  ogType: 'website',
+  ogUrl: () => canonicalUrl.value,
+  ogImage: () => torOgImage.value,
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => copy.value.seoTitle,
+  twitterDescription: () => copy.value.twitterDescription,
+  twitterImage: () => torOgImage.value,
 })
 
 useStructuredData(() => ({

@@ -4,6 +4,7 @@ import type { ClientBalanceTransaction, ClientBalanceTransactionType } from '~/t
 import type { User } from '~/types/user'
 import Card from '~/components/base/Card.vue'
 import AccountNav from '~/components/account/AccountNav.vue'
+import { useNoindexSeoMeta } from '~/composables/useNoindexSeoMeta'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -16,13 +17,10 @@ const { formatAmd } = useCurrency()
 const { localePath } = useLocalizedPath()
 const { isTor, authMasterProfilePath } = useBrandContext()
 const config = useRuntimeConfig()
-const route = useRoute()
-useLocalizedSeo(() => route.path)
 
-useSeoMeta({
+useNoindexSeoMeta({
   title: () => t('nav.myProfile'),
   description: () => t('account.profileSeoDescription'),
-  robots: 'noindex, nofollow',
 })
 
 await auth.fetchMe()
