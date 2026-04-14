@@ -320,7 +320,7 @@ const buyNow = async () => {
               </div>
             </div>
 
-            <BaseButton :variant="isTor ? 'secondary' : 'primary'" @click="buyNow">
+            <BaseButton :variant="isTor ? 'primary' : 'primary'" :theme="isTor ? 'tor' : 'default'" @click="buyNow">
               {{ t('cartPage.checkoutButton') }}
             </BaseButton>
           </div>
