@@ -3,7 +3,7 @@ import Card from "~/components/base/Card.vue";
 
 const { t } = useLocale()
 const { localePath } = useLocalizedPath()
-const { isTor, authLoginPath, authAppointmentsPath } = useBrandContext()
+const { isTor, authLoginPath, authAppointmentsPath, legalPath, privacyPolicyPath } = useBrandContext()
 const route = useRoute()
 useLocalizedSeo(() => route.path)
 
@@ -128,6 +128,17 @@ const submit = async () => {
           <BaseButton type="submit" :theme="isTor ? 'tor' : 'default'" :disabled="auth.loading" block>
             {{ auth.loading ? `${t('auth.createAccount')}...` : t('auth.createAccount') }}
           </BaseButton>
+          <p class="text-xs leading-6" :class="isTor ? 'text-stone-500' : 'text-[var(--muted)]'">
+            {{ t('account.registerAgreementPrefix') }}
+            <NuxtLink :to="localePath(legalPath)" :class="isTor ? 'text-[#d79a49] underline' : 'text-sand-700 underline'">
+              {{ t('account.legalLinkLabel') }}
+            </NuxtLink>
+            {{ ` ${t('account.registerAgreementJoin')} ` }}
+            <NuxtLink :to="localePath(privacyPolicyPath)" :class="isTor ? 'text-[#d79a49] underline' : 'text-sand-700 underline'">
+              {{ t('account.privacyLinkLabel') }}
+            </NuxtLink>
+            .
+          </p>
         </form>
         <p class="mt-5 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">
           {{ t('auth.hasAccount') }}

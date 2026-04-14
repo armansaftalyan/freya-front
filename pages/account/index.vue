@@ -15,6 +15,7 @@ const { formatYerevanDateTime } = useDateTime()
 const { formatAmd } = useCurrency()
 const { localePath } = useLocalizedPath()
 const { isTor, authMasterProfilePath } = useBrandContext()
+const config = useRuntimeConfig()
 const route = useRoute()
 useLocalizedSeo(() => route.path)
 
@@ -42,6 +43,7 @@ const { data: balanceTransactions, pending: balanceTransactionsPending } = await
 )
 
 const saving = ref(false)
+const uploadingAvatar = ref(false)
 const form = reactive({
   first_name: auth.user?.first_name || '',
   last_name: auth.user?.last_name || '',
@@ -53,10 +55,76 @@ const form = reactive({
   password_confirmation: '',
 })
 
+const syncFormFromUser = (user?: User | null) => {
+  form.first_name = user?.first_name || ''
+  form.last_name = user?.last_name || ''
+  form.email = user?.email || ''
+  form.phone = user?.phone || ''
+  form.gender = user?.gender || ''
+  form.birth_date = user?.birth_date || ''
+}
+
+const backendBaseUrl = computed(() => String(config.public.apiBase || '').replace(/\/api\/?$/, ''))
+
+const resolveMediaUrl = (value: string | null | undefined) => {
+  if (!value) return null
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      const parsed = new URL(value)
+      const backend = backendBaseUrl.value ? new URL(backendBaseUrl.value) : null
+
+      if (
+        backend
+        && parsed.origin !== backend.origin
+        && (parsed.pathname.startsWith('/storage/') || parsed.pathname.startsWith('/users/'))
+      ) {
+        return `${backend.origin}${parsed.pathname}${parsed.search}`
+      }
+    }
+    catch {
+      return value
+    }
+
+    return value
+  }
+  if (value.startsWith('/')) {
+    return backendBaseUrl.value ? `${backendBaseUrl.value}${value}` : value
+  }
+
+  return backendBaseUrl.value ? `${backendBaseUrl.value}/${value.replace(/^\/+/, '')}` : value
+}
+
+const profileName = computed(() => [form.first_name, form.last_name].map(value => value.trim()).filter(Boolean).join(' ') || auth.user?.name || 'Profile')
+const avatarFallback = computed(() => `data:image/svg+xml;utf8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 720">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="${isTor.value ? '#1c1917' : '#f5ede1'}" />
+      <stop offset="100%" stop-color="${isTor.value ? '#0c0a09' : '#e7d5c2'}" />
+    </linearGradient>
+  </defs>
+  <rect width="720" height="720" fill="url(#bg)" />
+  <circle cx="360" cy="270" r="120" fill="${isTor.value ? '#d79a49' : '#8a6a45'}" fill-opacity="0.18" />
+  <circle cx="360" cy="250" r="88" fill="${isTor.value ? '#f5f5f4' : '#8a6a45'}" fill-opacity="0.9" />
+  <path d="M190 575c36-92 114-138 170-138s134 46 170 138" fill="${isTor.value ? '#f5f5f4' : '#8a6a45'}" fill-opacity="0.9" />
+</svg>
+`)}`)
+const avatarPreview = computed(() => resolveMediaUrl(auth.user?.avatar) || avatarFallback.value)
+
+const onAvatarError = (event: Event) => {
+  const target = event.target as HTMLImageElement | null
+  if (!target) return
+  target.src = avatarFallback.value
+}
+
 const genderOptions = computed(() => [
   { value: 'female', label: t('auth.genderFemale') },
   { value: 'male', label: t('auth.genderMale') },
 ])
+
+watch(() => auth.user, (user) => {
+  syncFormFromUser(user)
+}, { immediate: true })
 
 const transactionTitle = (type: ClientBalanceTransactionType) => {
   switch (type) {
@@ -89,6 +157,7 @@ const saveProfile = async () => {
     }, { skipErrorToast: true })
 
     auth.setUser(response.data)
+    syncFormFromUser(response.data)
     form.password = ''
     form.password_confirmation = ''
     toast.push({ type: 'success', title: t('account.profileSaved') })
@@ -99,6 +168,47 @@ const saveProfile = async () => {
   }
   finally {
     saving.value = false
+  }
+}
+
+const onAvatarChange = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+
+  if (!file) return
+
+  const body = new FormData()
+  body.append('avatar', file)
+
+  uploadingAvatar.value = true
+  try {
+    const response = await api.post<{ avatar: string, data: User }>('/auth/me/avatar', body, { skipErrorToast: true })
+    auth.setUser(response.data)
+    toast.push({ type: 'success', title: t('account.avatarUpdated') })
+  }
+  catch (error: any) {
+    const parsed = useApiError(error)
+    toast.push({ type: 'error', title: t('common.requestFailed'), description: parsed.message })
+  }
+  finally {
+    input.value = ''
+    uploadingAvatar.value = false
+  }
+}
+
+const removeAvatar = async () => {
+  uploadingAvatar.value = true
+  try {
+    const response = await api.delete<ApiItemResponse<User>>('/auth/me/avatar', undefined, { skipErrorToast: true })
+    auth.setUser(response.data)
+    toast.push({ type: 'success', title: t('account.avatarUpdated') })
+  }
+  catch (error: any) {
+    const parsed = useApiError(error)
+    toast.push({ type: 'error', title: t('common.requestFailed'), description: parsed.message })
+  }
+  finally {
+    uploadingAvatar.value = false
   }
 }
 </script>
@@ -114,8 +224,56 @@ const saveProfile = async () => {
         <AccountNav />
       </div>
 
-      <Card :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
-        <form class="space-y-6" @submit.prevent="saveProfile">
+      <div class="grid gap-6 xl:grid-cols-[340px,1fr]">
+        <Card :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
+          <img
+            :src="avatarPreview"
+            :alt="profileName"
+            class="h-80 w-full rounded-2xl object-cover"
+            @error="onAvatarError"
+          >
+          <div class="mt-4 space-y-3">
+            <div class="space-y-1">
+              <p
+                class="text-xs uppercase tracking-[0.2em]"
+                :class="isTor ? 'text-[#c58a3a]' : 'text-[var(--muted)]'"
+              >
+                {{ t('nav.myProfile') }}
+              </p>
+              <h2 class="text-2xl font-semibold" :class="isTor ? 'text-white' : 'text-sand-950'">{{ profileName }}</h2>
+              <p class="text-sm" :class="isTor ? 'text-stone-500' : 'text-[var(--muted)]'">{{ auth.user?.email }}</p>
+            </div>
+
+            <label class="block">
+              <span class="mb-2 block text-sm font-medium" :class="isTor ? 'text-stone-300' : 'text-sand-900'">{{ t('account.avatarLabel') }}</span>
+              <input
+                type="file"
+                accept="image/*"
+                class="block w-full text-sm"
+                :class="isTor ? 'text-stone-300 file:mr-4 file:rounded-full file:border-0 file:bg-[#d79a49] file:px-4 file:py-2 file:text-black' : 'text-sand-700 file:mr-4 file:rounded-full file:border-0 file:bg-sand-900 file:px-4 file:py-2 file:text-white'"
+                :disabled="uploadingAvatar"
+                @change="onAvatarChange"
+              >
+            </label>
+            <p class="text-xs" :class="isTor ? 'text-stone-500' : 'text-[var(--muted)]'">
+              {{ uploadingAvatar ? t('account.uploading') : t('account.avatarHint') }}
+            </p>
+            <BaseButton
+              v-if="auth.user?.avatar"
+              type="button"
+              variant="secondary"
+              size="sm"
+              :theme="isTor ? 'tor' : 'default'"
+              :disabled="uploadingAvatar"
+              @click="removeAvatar"
+            >
+              {{ t('account.removeAvatar') }}
+            </BaseButton>
+          </div>
+        </Card>
+
+        <Card :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
+          <form class="space-y-6" @submit.prevent="saveProfile">
           <div class="grid gap-6 md:grid-cols-2">
             <BaseInput v-model="form.first_name" :theme="isTor ? 'dark' : 'light'" :label="t('auth.firstName')" />
             <BaseInput v-model="form.last_name" :theme="isTor ? 'dark' : 'light'" :label="t('auth.lastName')" />
@@ -173,8 +331,9 @@ const saveProfile = async () => {
             <BaseButton type="submit" :theme="isTor ? 'tor' : 'default'" :disabled="saving">{{ saving ? t('account.saving') : t('account.saveProfile') }}</BaseButton>
             <BaseButton type="button" variant="secondary" :theme="isTor ? 'tor' : 'default'" @click="auth.logout">{{ t('nav.logout') }}</BaseButton>
           </div>
-        </form>
-      </Card>
+          </form>
+        </Card>
+      </div>
     </div>
   </section>
 </template>

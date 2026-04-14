@@ -10,9 +10,18 @@ export const useAuthStore = defineStore('authStore', () => {
 
   const isAuth = computed(() => Boolean(token.value && user.value))
 
+  const normalizeBirthDate = (value?: string | null) => {
+    if (!value) return null
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+
+    const match = String(value).match(/^(\d{4}-\d{2}-\d{2})/)
+    return match ? match[1] : value
+  }
+
   const normalizeUser = (payload: User): User => ({
     ...payload,
     name: payload.name || `${payload.first_name || ''} ${payload.last_name || ''}`.trim(),
+    birth_date: normalizeBirthDate(payload.birth_date),
   })
 
   const setAuth = (payload: AuthResponse) => {

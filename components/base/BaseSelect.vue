@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
   modelValue: string | number | null
   label?: string
   options: Array<{ label: string; value: string | number }>
@@ -8,7 +8,12 @@ defineProps<{
   error?: string
 }>()
 
-defineEmits<{ (e: 'update:modelValue', value: string): void }>()
+const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
+
+const proxyValue = computed({
+  get: () => String(props.modelValue ?? ''),
+  set: (value: string) => emit('update:modelValue', value),
+})
 </script>
 
 <template>
@@ -16,13 +21,12 @@ defineEmits<{ (e: 'update:modelValue', value: string): void }>()
     <span v-if="label" class="text-sm font-medium" :class="theme === 'dark' ? 'text-stone-300' : 'text-sand-900'">{{ label }}</span>
     <div class="relative">
       <select
+        v-model="proxyValue"
         class="w-full appearance-none rounded-2xl border bg-white px-4 py-3 pr-12 text-sm outline-none transition focus:border-sand-600"
         :class="[
           theme === 'dark' ? 'border-white/10 bg-white/[0.04] text-white focus:border-[#d79a49]' : '',
           error ? 'border-rose-300 focus:border-rose-500' : theme === 'dark' ? 'border-white/10' : 'border-sand-200',
         ]"
-        :value="modelValue ?? ''"
-        @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
       >
         <option value="">{{ placeholder || 'Select' }}</option>
         <option
