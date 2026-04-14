@@ -522,40 +522,55 @@ const copy = computed<SeoIntentCopy>(() => ({
 }))
 
 const isTorTheme = computed(() => props.theme === 'tor')
+const summaryLabel = computed(() => {
+  if (locale.value === 'ru') return 'О странице и поисковом контексте'
+  if (locale.value === 'hy') return 'Էջի և որոնողական համատեքստի մասին'
+  return 'About This Page and Search Context'
+})
 </script>
 
 <template>
   <section class="section-gap" :class="isTorTheme && props.bordered !== false ? 'border-t border-white/10' : ''">
     <div class="container-shell" :class="isTorTheme ? 'text-stone-100' : ''">
-      <div class="space-y-4">
-        <p class="text-xs font-semibold uppercase tracking-[0.22em]" :class="isTorTheme ? 'text-[#c58a3a]' : 'text-sand-600'">
-          SEO Intent
-        </p>
-        <h2 class="text-3xl leading-tight sm:text-5xl" :class="isTorTheme ? 'font-black uppercase tracking-[0.05em]' : ''">
-          {{ copy.title }}
-        </h2>
-        <p
-          v-for="paragraph in copy.intro"
-          :key="paragraph"
-          class="text-sm leading-7 sm:text-base"
-          :class="isTorTheme ? 'text-stone-300' : 'text-[var(--muted)]'"
+      <details
+        class="rounded-[28px] border p-5 sm:p-6"
+        :class="isTorTheme ? 'border-white/10 bg-white/[0.02]' : 'border-sand-200/80 bg-white/70'"
+      >
+        <summary
+          class="cursor-pointer list-none text-sm font-semibold tracking-[0.04em] flex items-center justify-between gap-4"
+          :class="isTorTheme ? 'text-[#e4b372]' : 'text-sand-700'"
         >
-          {{ paragraph }}
-        </p>
-      </div>
+          <span>{{ summaryLabel }}</span>
+          <span :class="isTorTheme ? 'text-stone-500' : 'text-sand-500'">+</span>
+        </summary>
 
-      <div class="mt-6 flex flex-wrap gap-2">
-        <span
-          v-for="intent in copy.intents"
-          :key="intent"
-          class="rounded-full border px-3 py-1.5 text-xs font-medium tracking-[0.02em]"
-          :class="isTorTheme
-            ? 'border-[#c58a3a]/25 bg-white/[0.03] text-stone-200'
-            : 'border-sand-200 bg-white text-sand-700'"
-        >
-          {{ intent }}
-        </span>
-      </div>
+        <div class="mt-5 space-y-4">
+          <h2 class="text-2xl leading-tight sm:text-3xl" :class="isTorTheme ? 'font-black uppercase tracking-[0.05em]' : ''">
+            {{ copy.title }}
+          </h2>
+          <p
+            v-for="paragraph in copy.intro"
+            :key="paragraph"
+            class="text-sm leading-7 sm:text-base"
+            :class="isTorTheme ? 'text-stone-300' : 'text-[var(--muted)]'"
+          >
+            {{ paragraph }}
+          </p>
+
+          <div class="flex flex-wrap gap-2">
+            <span
+              v-for="intent in copy.intents"
+              :key="intent"
+              class="rounded-full border px-3 py-1.5 text-xs font-medium tracking-[0.02em]"
+              :class="isTorTheme
+                ? 'border-[#c58a3a]/25 bg-white/[0.03] text-stone-200'
+                : 'border-sand-200 bg-white text-sand-700'"
+            >
+              {{ intent }}
+            </span>
+          </div>
+        </div>
+      </details>
     </div>
   </section>
 </template>

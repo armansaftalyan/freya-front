@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { ApiListResponse } from '~/types/api'
+import type { BlogArticleCard } from '~/types/blog'
 import type { Category } from '~/types/category'
 import type { Master } from '~/types/master'
 import type { Service } from '~/types/service'
 import ServiceCatalogCard from '~/components/catalog/ServiceCatalogCard.vue'
+import BlogArticleCardComponent from '~/components/blog/BlogArticleCard.vue'
 import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 
 const api = useApi()
@@ -12,7 +14,7 @@ const { resolvePriceRange, formatPriceLabel } = useServicePricing()
 const route = useRoute()
 const config = useRuntimeConfig()
 const { localePath } = useLocalizedPath()
-const { brand, isTor, bookingPath, servicesPath } = useBrandContext()
+const { brand, isTor, bookingPath, servicesPath, blogPath } = useBrandContext()
 
 const categorySlug = computed(() => String(route.params.categorySlug || '').trim())
 const serviceSlug = computed(() => String(route.params.serviceSlug || '').trim())
@@ -58,6 +60,15 @@ const category = computed(() => data.value?.category || null)
 const service = computed(() => data.value?.service || null)
 const relatedServices = computed(() => data.value?.relatedServices || [])
 const selectedMaster = computed(() => data.value?.selectedMaster || null)
+const { data: relatedArticles } = await useAsyncData(
+  () => `service-articles-${brand.value}-${serviceSlug.value}-${locale.value}`,
+  async () => {
+    if (!service.value?.id) return [] as BlogArticleCard[]
+    const response = await api.get<ApiListResponse<BlogArticleCard>>('/blog', { brand: brand.value, service_id: service.value.id, limit: 3 }, { skipErrorToast: true })
+    return response.data
+  },
+  { watch: [service] },
+)
 const currentPrice = computed(() => service.value ? resolvePriceRange(service.value, selectedMaster.value) : null)
 const servicesCollectionLabel = computed(() => {
   if (brand.value !== 'tor') {
@@ -321,6 +332,23 @@ useStructuredData(() => {
         :intro="seoIntentCopy.intro"
         :intents="seoIntentCopy.intents"
       />
+
+      <div v-if="relatedArticles?.length" class="space-y-5">
+        <div class="max-w-3xl space-y-2">
+          <h2 :class="isTor ? 'text-3xl font-black uppercase tracking-[0.05em]' : 'text-2xl sm:text-3xl'">{{ t('blog.serviceDetailTitle') }}</h2>
+          <p class="text-sm leading-7" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('blog.serviceDetailLead') }}</p>
+        </div>
+
+        <div class="grid gap-5 lg:grid-cols-3">
+          <BlogArticleCardComponent
+            v-for="article in relatedArticles"
+            :key="article.id"
+            :article="article"
+            :theme="isTor ? 'tor' : 'default'"
+            :to="localePath(`${blogPath}/${article.slug}`) as string"
+          />
+        </div>
+      </div>
     </div>
   </section>
 </template>

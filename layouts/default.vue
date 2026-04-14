@@ -7,9 +7,11 @@ import PaymentMethodIcons from '~/components/layout/PaymentMethodIcons.vue'
 const auth = useAuthStore()
 const { t, locale, locales } = useLocale()
 const route = useRoute()
-const { authLoginPath, authProfilePath, contactsPath, legalPath, privacyPolicyPath } = useBrandContext()
+const { authLoginPath, authProfilePath, contactsPath, legalPath, privacyPolicyPath, blogPath } = useBrandContext()
 const { salonName, telephone, email, address, sameAs, siteUrl, logoUrl, defaultImageUrl } = useSiteMeta()
 const isMobileMenuOpen = ref(false)
+const isMoreMenuOpen = ref(false)
+const moreMenuRef = ref<HTMLElement | null>(null)
 const { localePath } = useLocalizedPath()
 const localizedPath = computed(() => withLocalePath(stripLocalePrefix(route.path), normalizeLocale(locale.value)))
 const canonicalUrl = computed(() => `${siteUrl.value}${localizedPath.value}`)
@@ -34,6 +36,16 @@ const allPagesLabel = computed(() => {
   if (locale.value === 'ru') return 'Карта сайта'
   if (locale.value === 'en') return 'All Pages'
   return 'Կայքի քարտեզ'
+})
+const blogLabel = computed(() => {
+  if (locale.value === 'ru') return 'Блог'
+  if (locale.value === 'en') return 'Blog'
+  return 'Բլոգ'
+})
+const moreLabel = computed(() => {
+  if (locale.value === 'ru') return 'Еще'
+  if (locale.value === 'en') return 'More'
+  return 'Ավելին'
 })
 const siteNavigationItems = computed(() => [
   { name: t('nav.home'), url: `${siteUrl.value}${withLocalePath('/', locale.value)}` },
@@ -60,15 +72,35 @@ const links: Array<{ to: string; key: string; label?: string }> = [
   { to: '/products', key: 'nav.products' },
   { to: '/masters', key: 'nav.masters' },
   { to: '/gift-cards/buy', key: 'nav.giftCards' },
-  { to: '/tor', key: 'nav.products', label: 'TOR' },
 ]
 
 watch(
   () => route.fullPath,
   () => {
     isMobileMenuOpen.value = false
+    isMoreMenuOpen.value = false
   },
 )
+
+onMounted(() => {
+  const handlePointerDown = (event: PointerEvent) => {
+    if (!isMoreMenuOpen.value) return
+
+    const target = event.target as Node | null
+
+    if (target && moreMenuRef.value?.contains(target)) {
+      return
+    }
+
+    isMoreMenuOpen.value = false
+  }
+
+  document.addEventListener('pointerdown', handlePointerDown)
+
+  onBeforeUnmount(() => {
+    document.removeEventListener('pointerdown', handlePointerDown)
+  })
+})
 
 useHead(() => ({
   htmlAttrs: {
@@ -166,6 +198,45 @@ useHead(() => ({
           >
             {{ link.label || t(link.key) }}
           </NuxtLink>
+
+          <div ref="moreMenuRef" class="relative">
+            <button
+              type="button"
+              :class="navLinkClass"
+              class="inline-flex items-center gap-1"
+              @click="isMoreMenuOpen = !isMoreMenuOpen"
+            >
+              <span>{{ moreLabel }}</span>
+              <span class="text-xs">▾</span>
+            </button>
+
+            <div
+              v-if="isMoreMenuOpen"
+              class="absolute right-0 top-full z-50 mt-3 min-w-[180px] rounded-2xl border border-sand-200 bg-white p-2 shadow-soft"
+            >
+              <NuxtLink
+                :to="localePath('/tor')"
+                class="block rounded-xl px-4 py-3 text-sm font-medium text-sand-900 transition hover:bg-sand-50"
+                @click="isMoreMenuOpen = false"
+              >
+                TOR
+              </NuxtLink>
+              <NuxtLink
+                :to="localePath(blogPath)"
+                class="block rounded-xl px-4 py-3 text-sm font-medium text-sand-900 transition hover:bg-sand-50"
+                @click="isMoreMenuOpen = false"
+              >
+                {{ blogLabel }}
+              </NuxtLink>
+              <NuxtLink
+                :to="localePath(contactsPath)"
+                class="block rounded-xl px-4 py-3 text-sm font-medium text-sand-900 transition hover:bg-sand-50"
+                @click="isMoreMenuOpen = false"
+              >
+                {{ t('nav.contacts') }}
+              </NuxtLink>
+            </div>
+          </div>
         </nav>
 
         <div class="hidden shrink-0 items-center gap-2 lg:flex">
@@ -212,6 +283,18 @@ useHead(() => ({
               >
                 {{ link.label || t(link.key) }}
               </NuxtLink>
+              <NuxtLink
+                :to="localePath('/tor')"
+                class="rounded-xl bg-white px-4 py-3 text-sm font-medium text-sand-900 shadow-soft"
+              >
+                TOR
+              </NuxtLink>
+              <NuxtLink
+                :to="localePath(blogPath)"
+                class="rounded-xl bg-white px-4 py-3 text-sm font-medium text-sand-900 shadow-soft"
+              >
+                {{ blogLabel }}
+              </NuxtLink>
             </nav>
 
             <div class="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -248,6 +331,7 @@ useHead(() => ({
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p>© {{ new Date().getFullYear() }} Freya Beauty Salon</p>
         <div class="flex gap-4">
+          <NuxtLink :to="localePath(blogPath)" class="hover:text-sand-800">{{ blogLabel }}</NuxtLink>
           <NuxtLink :to="localePath(contactsPath)" class="hover:text-sand-800">{{ t('nav.contacts') }}</NuxtLink>
           <NuxtLink :to="localePath(legalPath)" class="hover:text-sand-800">{{ legalLabel }}</NuxtLink>
           <NuxtLink :to="localePath(privacyPolicyPath)" class="hover:text-sand-800">{{ privacyPolicyLabel }}</NuxtLink>

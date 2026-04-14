@@ -8,9 +8,11 @@ const auth = useAuthStore()
 const route = useRoute()
 const { locale } = useLocale()
 const isMobileMenuOpen = ref(false)
+const isMoreMenuOpen = ref(false)
+const moreMenuRef = ref<HTMLElement | null>(null)
 const { localePath } = useLocalizedPath()
 const { siteUrl } = useSiteMeta()
-const { rootPath, mastersPath, contactsPath, legalPath, privacyPolicyPath, giftCardsPath, authLoginPath, authProfilePath } = useBrandContext()
+const { rootPath, mastersPath, contactsPath, legalPath, privacyPolicyPath, giftCardsPath, authLoginPath, authProfilePath, blogPath } = useBrandContext()
 const isArmenian = computed(() => locale.value === 'hy')
 const { canonicalUrl, alternates } = useLocalizedSeo(() => route.path)
 const torLogoUrl = computed(() => `${siteUrl.value}/tor-logo.jpg`)
@@ -20,7 +22,6 @@ const navLinks = computed(() => [
   { to: `${rootPath.value}/products`, label: copy.value.care },
   { to: mastersPath.value, label: locale.value === 'ru' ? 'Мастера' : locale.value === 'en' ? 'Masters' : 'Մասնագետներ' },
   { to: giftCardsPath.value, label: locale.value === 'ru' ? 'Подарочные карты' : locale.value === 'en' ? 'Gift Cards' : 'Նվեր քարտեր' },
-  { to: '/', label: copy.value.home },
 ])
 
 const copy = computed(() => {
@@ -71,6 +72,17 @@ const allPagesLabel = computed(() => {
   if (locale.value === 'en') return 'All Pages'
   return 'Կայքի քարտեզ'
 })
+const blogLabel = computed(() => {
+  if (locale.value === 'ru') return 'Блог'
+  if (locale.value === 'en') return 'Blog'
+  return 'Բլոգ'
+})
+const freyaLabel = computed(() => 'Freya Beauty')
+const moreLabel = computed(() => {
+  if (locale.value === 'ru') return 'Еще'
+  if (locale.value === 'en') return 'More'
+  return 'Ավելին'
+})
 const siteNavigationItems = computed(() => [
   { name: locale.value === 'ru' ? 'Tor' : locale.value === 'en' ? 'Tor' : 'Tor', url: `${siteUrl.value}${localePath('/tor')}` },
   { name: copy.value.services, url: `${siteUrl.value}${localePath('/tor/services')}` },
@@ -94,8 +106,29 @@ watch(
   () => route.fullPath,
   () => {
     isMobileMenuOpen.value = false
+    isMoreMenuOpen.value = false
   },
 )
+
+onMounted(() => {
+  const handlePointerDown = (event: PointerEvent) => {
+    if (!isMoreMenuOpen.value) return
+
+    const target = event.target as Node | null
+
+    if (target && moreMenuRef.value?.contains(target)) {
+      return
+    }
+
+    isMoreMenuOpen.value = false
+  }
+
+  document.addEventListener('pointerdown', handlePointerDown)
+
+  onBeforeUnmount(() => {
+    document.removeEventListener('pointerdown', handlePointerDown)
+  })
+})
 
 useHead(() => ({
   bodyAttrs: {
@@ -184,6 +217,44 @@ useHead(() => ({
           >
             {{ link.label }}
           </NuxtLink>
+
+          <div ref="moreMenuRef" class="relative">
+            <button
+              type="button"
+              class="tor-nav-link inline-flex items-center gap-1"
+              @click="isMoreMenuOpen = !isMoreMenuOpen"
+            >
+              <span>{{ moreLabel }}</span>
+              <span class="text-xs">▾</span>
+            </button>
+
+            <div
+              v-if="isMoreMenuOpen"
+              class="absolute right-0 top-full z-50 mt-3 min-w-[180px] rounded-2xl border border-white/10 bg-[#111111] p-2 shadow-[0_18px_45px_rgba(0,0,0,0.35)]"
+            >
+              <NuxtLink
+                :to="localePath('/')"
+                class="block rounded-xl px-4 py-3 text-sm font-medium text-stone-100 transition hover:bg-white/[0.06]"
+                @click="isMoreMenuOpen = false"
+              >
+                {{ freyaLabel }}
+              </NuxtLink>
+              <NuxtLink
+                :to="localePath(blogPath)"
+                class="block rounded-xl px-4 py-3 text-sm font-medium text-stone-100 transition hover:bg-white/[0.06]"
+                @click="isMoreMenuOpen = false"
+              >
+                {{ blogLabel }}
+              </NuxtLink>
+              <NuxtLink
+                :to="localePath(contactsPath)"
+                class="block rounded-xl px-4 py-3 text-sm font-medium text-stone-100 transition hover:bg-white/[0.06]"
+                @click="isMoreMenuOpen = false"
+              >
+                {{ locale === 'ru' ? 'Контакты' : locale === 'en' ? 'Contacts' : 'Կոնտակտներ' }}
+              </NuxtLink>
+            </div>
+          </div>
         </nav>
 
         <div class="hidden items-center gap-1.5 lg:flex">
@@ -230,6 +301,18 @@ useHead(() => ({
               >
                 {{ link.label }}
               </NuxtLink>
+              <NuxtLink
+                :to="localePath(blogPath)"
+                class="tor-drawer-link"
+              >
+                {{ blogLabel }}
+              </NuxtLink>
+              <NuxtLink
+                :to="localePath('/')"
+                class="tor-drawer-link"
+              >
+                {{ freyaLabel }}
+              </NuxtLink>
             </nav>
 
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -263,6 +346,7 @@ useHead(() => ({
             <p class="mt-1">{{ copy.tagline }}</p>
           </div>
           <div class="flex gap-4">
+            <NuxtLink :to="localePath(blogPath)" class="transition hover:text-[#d79a49]">{{ blogLabel }}</NuxtLink>
             <NuxtLink :to="localePath(contactsPath)" class="transition hover:text-[#d79a49]">{{ locale === 'ru' ? 'Контакты' : locale === 'en' ? 'Contacts' : 'Կոնտակտներ' }}</NuxtLink>
             <NuxtLink :to="localePath(legalPath)" class="transition hover:text-[#d79a49]">{{ legalLabel }}</NuxtLink>
             <NuxtLink :to="localePath(privacyPolicyPath)" class="transition hover:text-[#d79a49]">{{ privacyPolicyLabel }}</NuxtLink>

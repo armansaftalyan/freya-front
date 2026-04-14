@@ -19,6 +19,7 @@ export const useBrandContext = () => {
   const authProfilePath = computed(() => (isTor.value ? '/tor/account' : '/account'))
   const authAppointmentsPath = computed(() => (isTor.value ? '/tor/account/appointments' : '/account/appointments'))
   const authMasterProfilePath = computed(() => (isTor.value ? '/tor/account/master-profile' : '/account/master-profile'))
+  const blogPath = computed(() => (isTor.value ? '/tor/blog' : '/blog'))
   const authGiftCardsPath = computed(() => (isTor.value ? '/tor/account/gift-cards' : '/account/gift-cards'))
   const authGiftCardScanBasePath = computed(() => (isTor.value ? '/tor/account/gift-cards/scan' : '/account/gift-cards/scan'))
 
@@ -41,6 +42,7 @@ export const useBrandContext = () => {
     authProfilePath,
     authAppointmentsPath,
     authMasterProfilePath,
+    blogPath,
     authGiftCardsPath,
     authGiftCardScanBasePath,
   }

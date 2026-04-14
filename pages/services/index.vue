@@ -1,14 +1,26 @@
 <script setup lang="ts">
+import type { ApiListResponse } from '~/types/api'
+import type { BlogArticleCard } from '~/types/blog'
 import ServicesCatalogPageContent from '~/components/pages/ServicesCatalogPageContent.vue'
+import BlogArticleCardComponent from '~/components/blog/BlogArticleCard.vue'
 
+const api = useApi()
 const { t, locale } = useLocale()
-const { brand, isTor, bookingPath, servicesPath } = useBrandContext()
+const { brand, isTor, bookingPath, servicesPath, blogPath } = useBrandContext()
 const { faqCopy } = usePageFaqContent(brand.value, 'services')
 const { grouped, loading, structuredData } = await useServicesCatalogPage({
   mode: brand.value === 'tor' ? 'api' : 'store',
   brand: brand.value,
   cacheKey: () => brand.value === 'tor' ? `tor-services-page-${locale.value}` : `services-page-${brand.value}-${locale.value}`,
 })
+const { localePath } = useLocalizedPath()
+const { data: latestArticles } = await useAsyncData(
+  () => `latest-blog-${brand.value}-${locale.value}`,
+  async () => {
+    const response = await api.get<ApiListResponse<BlogArticleCard>>('/blog', { brand: brand.value, limit: 3 }, { skipErrorToast: true })
+    return response.data
+  },
+)
 
 const categoryCta = computed(() => {
   if (locale.value === 'ru') return 'Все →'
@@ -116,4 +128,33 @@ useStructuredData(() => ({
     :duration-label="isTor ? t('servicesPage.minutes') : t('homePage.services.durationUnit')"
     :bordered-seo="!isTor"
   />
+
+  <section v-if="latestArticles?.length" :class="isTor ? 'container-shell pb-14' : 'container-shell pb-16'">
+    <div class="space-y-5">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div class="max-w-3xl space-y-2">
+          <p class="text-xs uppercase tracking-[0.22em]" :class="isTor ? 'font-semibold text-[#d79a49]' : 'text-sand-600'">{{ t('blog.latestArticles') }}</p>
+          <h2 :class="isTor ? 'text-3xl font-black uppercase tracking-[0.05em]' : 'text-2xl sm:text-3xl'">{{ t('blog.guides') }}</h2>
+          <p class="text-sm leading-7" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('blog.latestArticlesLead') }}</p>
+        </div>
+        <NuxtLink
+          :to="localePath(blogPath)"
+          class="text-sm font-medium"
+          :class="isTor ? 'text-[#efbf7f]' : 'text-sand-800'"
+        >
+          {{ t('blog.openBlog') }} →
+        </NuxtLink>
+      </div>
+
+      <div class="grid gap-5 lg:grid-cols-3">
+        <BlogArticleCardComponent
+          v-for="article in latestArticles"
+          :key="article.id"
+          :article="article"
+          :theme="isTor ? 'tor' : 'default'"
+          :to="localePath(`${blogPath}/${article.slug}`) as string"
+        />
+      </div>
+    </div>
+  </section>
 </template>
