@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import Card from '~/components/base/Card.vue'
 import FaqSection from '~/components/sections/FaqSection.vue'
-import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
 const route = useRoute()
-const { siteUrl, defaultImageUrl } = useSiteMeta()
+const { siteUrl, defaultImageUrl, telephone, address, openingHoursSpecification, sameAs } = useSiteMeta()
 const { brand, isTor, bookingPath } = useBrandContext()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const brandOgImage = computed(() => brand.value === 'tor' ? `${siteUrl.value}/tor-logo.jpg` : defaultImageUrl.value)
@@ -94,18 +93,24 @@ const mapButtonCopy = computed(() => {
 
 const { faqCopy } = usePageFaqContent(brand.value, 'contacts')
 
-useSeoMeta({
-  title: () => `${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya'} - ${copy.value.title}`,
+const seoTitle = computed(() => {
+  if (brand.value === 'tor') {
+    if (locale.value === 'ru') return 'Контакты барбершопа в Ереване | Tor Barbershop'
+    if (locale.value === 'en') return 'Barbershop Contacts in Yerevan | Tor Barbershop'
+    return 'Barbershop կոնտակտներ Երևանում | Tor Barbershop'
+  }
+
+  if (locale.value === 'ru') return 'Контакты салона красоты в Ереване | Freya Beauty Salon'
+  if (locale.value === 'en') return 'Beauty Salon Contacts in Yerevan | Freya Beauty Salon'
+  return 'Գեղեցկության սրահի կոնտակտներ | Freya Beauty Salon'
+})
+
+usePageSeo({
+  title: () => seoTitle.value,
   description: () => copy.value.description,
-  ogTitle: () => `${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya'} - ${copy.value.title}`,
+  ogTitle: () => seoTitle.value,
   ogDescription: () => copy.value.description,
-  ogType: 'website',
-  ogUrl: () => canonicalUrl.value,
-  ogImage: () => brandOgImage.value,
-  twitterCard: 'summary_large_image',
-  twitterTitle: () => `${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya'} - ${copy.value.title}`,
-  twitterDescription: () => copy.value.description,
-  twitterImage: () => brandOgImage.value,
+  image: () => brandOgImage.value,
 })
 
 useStructuredData(() => ({
@@ -122,13 +127,11 @@ useStructuredData(() => ({
       '@id': `${siteUrl.value}${brand.value === 'tor' ? '/tor' : ''}#contact-salon`,
       name: copy.value.salonName,
       url: canonicalUrl.value,
-      telephone: fixedPhone,
-      address: {
-        '@type': 'PostalAddress',
-        streetAddress: '21 Azatutyan',
-        addressLocality: 'Yerevan',
-        addressCountry: 'AM',
-      },
+      image: brandOgImage.value,
+      telephone,
+      address,
+      openingHoursSpecification,
+      sameAs,
     },
     {
       '@type': 'BreadcrumbList',
@@ -215,8 +218,6 @@ useStructuredData(() => ({
         :lead="faqCopy.lead"
         :items="faqCopy.items"
       />
-
-      <SeoIntentSection v-if="isTor" section="home" theme="tor" />
     </div>
   </section>
 </template>

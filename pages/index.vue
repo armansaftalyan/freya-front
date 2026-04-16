@@ -6,13 +6,12 @@ import HowToBookSection from "~/components/sections/HowToBookSection.vue";
 import ContactsSection from "~/components/sections/ContactsSection.vue";
 import CtaBookingSection from "~/components/sections/CtaBookingSection.vue";
 import FaqSection from "~/components/sections/FaqSection.vue";
-import SeoIntentSection from "~/components/sections/SeoIntentSection.vue";
 import BaseModal from "~/components/base/BaseModal.vue";
 
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
 const route = useRoute()
-const { siteUrl, salonName, defaultImageUrl } = useSiteMeta()
+const { siteUrl, salonName, telephone, address, openingHoursSpecification, sameAs, defaultImageUrl } = useSiteMeta()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const showGiftPromo = ref(false)
 const giftPromoStorageKey = 'freya_gift_promo_seen_session_v1'
@@ -31,29 +30,46 @@ onMounted(() => {
   }
 })
 
-useSeoMeta({
-  title: () => t('homePage.seoTitle'),
-  description: () => t('homePage.seoDescription'),
-  ogTitle: () => t('homePage.seoTitle'),
+const seoTitle = computed(() => {
+  if (locale.value === 'ru') return 'Салон красоты в Ереване онлайн | Freya Beauty Salon'
+  if (locale.value === 'en') return 'Beauty Salon in Yerevan Online | Freya Beauty Salon'
+  return 'Գեղեցկության սրահ Երևանում օնլայն | Freya Beauty Salon'
+})
+
+const seoDescription = computed(() => {
+  if (locale.value === 'ru') return 'Салон красоты Freya Beauty Salon в Ереване: онлайн-запись, мастера, услуги, подарочные карты и удобный выбор времени для визита.'
+  if (locale.value === 'en') return 'Freya Beauty Salon in Yerevan with online booking, beauty services, masters, gift cards, and easy appointment scheduling.'
+  return 'Freya Beauty Salon գեղեցկության սրահ Երևանում՝ օնլայն ամրագրում, ծառայություններ, վարպետներ, նվեր քարտեր և այցի հարմար ժամի ընտրություն։'
+})
+
+usePageSeo({
+  title: () => seoTitle.value,
+  description: () => seoDescription.value,
+  ogTitle: () => seoTitle.value,
   ogDescription: () => t('homePage.ogDescription'),
-  ogType: 'website',
-  ogUrl: () => canonicalUrl.value,
-  ogImage: () => defaultImageUrl.value,
-  twitterCard: 'summary_large_image',
-  twitterTitle: () => t('homePage.seoTitle'),
-  twitterDescription: () => t('homePage.ogDescription'),
-  twitterImage: () => defaultImageUrl.value,
+  image: () => defaultImageUrl.value,
 })
 
 useStructuredData(() => ({
   '@context': 'https://schema.org',
   '@graph': [
     {
+      '@type': 'BeautySalon',
+      '@id': `${siteUrl.value}#salon`,
+      name: salonName,
+      url: canonicalUrl.value,
+      image: defaultImageUrl.value,
+      telephone,
+      address,
+      openingHoursSpecification,
+      sameAs,
+    },
+    {
       '@type': 'WebPage',
       '@id': `${canonicalUrl.value}#webpage`,
       url: canonicalUrl.value,
       name: salonName,
-      description: t('homePage.seoDescription'),
+      description: seoDescription.value,
       isPartOf: {
         '@id': `${siteUrl.value}#website`,
       },
@@ -112,7 +128,6 @@ useStructuredData(() => ({
     <ServicesGrid />
     <MastersGrid />
     <HowToBookSection />
-    <SeoIntentSection section="home" />
     <FaqSection
       :eyebrow="faqCopy.eyebrow"
       :title="faqCopy.title"

@@ -23,6 +23,7 @@ const { data: articles } = await useAsyncData(
 usePageSeo({
   title: () => pageTitle.value,
   description: () => pageDescription.value,
+  ogType: 'website',
 })
 
 const siteUrl = useRuntimeConfig().public.siteUrl

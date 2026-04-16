@@ -69,8 +69,14 @@ const copy = computed(() => {
 })
 
 usePageSeo({
-  title: () => brand.value === 'tor' ? copy.value.title : `Freya - ${t('nav.services')}`,
+  title: () => {
+    if (brand.value === 'tor') return copy.value.title
+    if (locale.value === 'ru') return 'Услуги салона в Ереване онлайн | Freya Beauty Salon'
+    if (locale.value === 'en') return 'Beauty Services in Yerevan Online | Freya Beauty Salon'
+    return 'Սրահի ծառայություններ Երևանում | Freya Beauty Salon'
+  },
   description: () => brand.value === 'tor' ? copy.value.lead : t('servicesPage.seoDescription'),
+  ogType: 'website',
 })
 
 useStructuredData(() => ({

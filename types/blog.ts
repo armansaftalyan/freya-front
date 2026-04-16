@@ -23,6 +23,7 @@ export interface BlogArticleCard {
   excerpt: string | null
   seo_title: string | null
   seo_description: string | null
+  cover_image_url?: string | null
   reading_minutes: number
   published_at: string | null
   category?: BlogArticleCategory | null

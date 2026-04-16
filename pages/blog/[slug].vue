@@ -53,6 +53,8 @@ const dateLabel = computed(() => {
 usePageSeo({
   title: () => article.value?.seo_title || article.value?.title || t('blog.guides'),
   description: () => article.value?.seo_description || article.value?.excerpt || t('blog.guides'),
+  image: () => article.value?.cover_image_url || undefined,
+  ogType: 'article',
 })
 
 useStructuredData(() => {
@@ -62,12 +64,13 @@ useStructuredData(() => {
     '@context': 'https://schema.org',
     '@graph': [
       {
-        '@type': 'BlogPosting',
+        '@type': 'Article',
         headline: article.value.title,
         description: article.value.seo_description || article.value.excerpt || undefined,
         datePublished: article.value.published_at || undefined,
         dateModified: article.value.published_at || undefined,
         mainEntityOfPage: `${config.public.siteUrl}${route.path}`,
+        image: article.value.cover_image_url || undefined,
         articleSection: article.value.category?.name || t('blog.guides'),
       },
       ...(article.value.faq_items.length

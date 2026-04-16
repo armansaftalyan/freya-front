@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { ApiListResponse } from '~/types/api'
 import type { Product, ProductCategory } from '~/types/product'
-import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 
 const api = useApi()
 const route = useRoute()
@@ -50,78 +49,19 @@ const cartQuantity = computed(() => product.value ? cart.getItemQuantity(product
 const selectedQuantity = computed(() => cartQuantity.value || Math.max(1, Number(quantity.value || 1)))
 const orderTotal = computed(() => (product.value?.price || 0) * selectedQuantity.value)
 
-const seoIntentCopy = computed(() => {
-  const productName = product.value?.name || t('nav.products')
-  const categoryName = category.value?.name || t('nav.products')
-  const brandName = product.value?.brand || (isTor.value ? 'Tor' : 'Freya')
-
-  if (isTor.value) {
-    if (locale.value === 'ru') {
-      return {
-        title: `${productName} в Tor Barbershop`,
-        intro: [
-          `${productName} относится к категории ${categoryName} и подходит для поисков по цене, назначению и покупке мужского ухода в Tor.`,
-          `Здесь логично усиливать только коммерчески релевантные запросы вокруг самого товара, бренда ${brandName}, объема и доставки по Еревану.`,
-        ],
-        intents: [productName, `${brandName} ${productName}`, `${productName} цена`, `${productName} купить`, `${categoryName} купить`, `${productName} Ереван`],
-      }
-    }
-
-    if (locale.value === 'en') {
-      return {
-        title: `${productName} at Tor Barbershop`,
-        intro: [
-          `${productName} belongs to ${categoryName} and should support searches around its use case, pricing, and purchase path at Tor.`,
-          `The relevant SEO intent here is limited to the product itself, the ${brandName} brand, size, and delivery in Yerevan.`,
-        ],
-        intents: [productName, `${brandName} ${productName}`, `${productName} price`, `${productName} buy`, `${categoryName} products`, `${productName} Yerevan`],
-      }
-    }
-
-    return {
-      title: `${productName} Tor Barbershop-ում`,
-      intro: [
-        `${productName}-ը պատկանում է ${categoryName} կատեգորիային և պետք է համապատասխանի ապրանքի գնի, նշանակության և Tor-ում գնման որոնումներին։`,
-        `Այստեղ պետք է ուժեղացնել միայն տվյալ ապրանքի, ${brandName} բրենդի, ծավալի և Երևանով առաքման հետ կապված հարցումները։`,
-      ],
-      intents: [productName, `${brandName} ${productName}`, `${productName} գին`, `${productName} գնել`, `${categoryName} ապրանքներ`, `${productName} Երևան`],
-    }
-  }
-
-  if (locale.value === 'ru') {
-    return {
-      title: `${productName} в Freya Beauty Salon`,
-      intro: [
-        `${productName} относится к категории ${categoryName} и должен усиливать поиски по цене, объему, эффекту и покупке в Freya.`,
-        `Для этой карточки важны только целевые запросы вокруг самого товара, бренда ${brandName} и доставки по Еревану, без лишних общих beauty-ключей.`,
-      ],
-      intents: [productName, `${brandName} ${productName}`, `${productName} цена`, `${productName} купить`, `${categoryName} купить`, `${productName} Ереван`],
-    }
-  }
-
-  if (locale.value === 'en') {
-    return {
-      title: `${productName} at Freya Beauty Salon`,
-      intro: [
-        `${productName} belongs to ${categoryName} and should support searches around price, size, effect, and buying path at Freya.`,
-        `This section should stay focused on the exact product, the ${brandName} brand, and Yerevan delivery instead of broad beauty keywords.`,
-      ],
-      intents: [productName, `${brandName} ${productName}`, `${productName} price`, `${productName} buy`, `${categoryName} products`, `${productName} Yerevan`],
-    }
-  }
-
-  return {
-    title: `${productName} Freya Beauty Salon-ում`,
-    intro: [
-      `${productName}-ը պատկանում է ${categoryName} կատեգորիային և պետք է ուժեղացնի ապրանքի գնի, ազդեցության, ծավալի և Freya-ում գնման որոնումները։`,
-      `Այս SEO բաժինը պետք է մնա հենց ապրանքի, ${brandName} բրենդի և Երևանում առաքման հետ կապված նպատակային հարցումների շրջանակում։`,
-    ],
-    intents: [productName, `${brandName} ${productName}`, `${productName} գին`, `${productName} գնել`, `${categoryName} ապրանքներ`, `${productName} Երևան`],
-  }
-})
-
 usePageSeo({
-  title: () => product.value?.seo_title || `${product.value?.name || t('nav.products')} | ${isTor.value ? 'Tor' : 'Freya'}`,
+  title: () => {
+    if (product.value?.seo_title) return product.value.seo_title
+    const productName = product.value?.name || t('nav.products')
+    if (isTor.value) {
+      if (locale.value === 'ru') return `${productName} купить в Ереване | Tor Barbershop`
+      if (locale.value === 'en') return `${productName} in Yerevan | Tor Barbershop`
+      return `${productName} Երևանում | Tor Barbershop`
+    }
+    if (locale.value === 'ru') return `${productName} купить в Ереване | Freya Beauty`
+    if (locale.value === 'en') return `${productName} in Yerevan | Freya Beauty Salon`
+    return `${productName} Երևանում | Freya Beauty Salon`
+  },
   description: () => product.value?.seo_description || product.value?.description || t('productsPage.defaultDescription'),
   image: () => product.value?.image_url || undefined,
 })
@@ -229,9 +169,12 @@ const buyNow = async () => {
         <div class="space-y-5">
           <img
             :src="product.image_url || '/logo.png'"
-            :alt="product.name"
+            :alt="[product.brand || salonName, product.name, product.volume_label].filter(Boolean).join(' ')"
             class="h-[420px] w-full rounded-[2rem] object-cover"
             :class="isTor ? 'border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.22)]' : 'border border-sand-200 shadow-soft'"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
           >
 
           <div class="space-y-3">
@@ -361,20 +304,12 @@ const buyNow = async () => {
               ? 'border border-white/10 bg-white/[0.03] shadow-[0_20px_50px_rgba(0,0,0,0.18)] hover:border-[#c58a3a]/40'
               : 'border border-sand-200 bg-white shadow-soft hover:border-sand-300'"
           >
-            <img :src="item.image_url || '/logo.png'" :alt="item.name" class="h-40 w-full rounded-2xl object-cover">
+            <img :src="item.image_url || '/logo.png'" :alt="[item.brand || salonName, item.name, item.volume_label].filter(Boolean).join(' ')" class="h-40 w-full rounded-2xl object-cover" loading="lazy" decoding="async">
             <p class="mt-3 text-lg">{{ item.name }}</p>
             <p class="mt-2 text-sm font-semibold" :class="isTor ? 'text-white' : 'text-sand-900'">{{ formatAmd(item.price) }}</p>
           </NuxtLink>
         </div>
       </div>
-
-      <SeoIntentSection
-        :section="'product-detail'"
-        :theme="isTor ? 'tor' : 'default'"
-        :title="seoIntentCopy.title"
-        :intro="seoIntentCopy.intro"
-        :intents="seoIntentCopy.intents"
-      />
     </div>
   </section>
 </template>

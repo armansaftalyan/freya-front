@@ -44,6 +44,7 @@ export default defineEventHandler(async (event) => {
   const locales = ['hy', 'ru', 'en'] as const
 
   const staticRoutes = [
+    '/',
     '/all-pages',
     '/tor/all-pages',
     '/blog',
@@ -53,6 +54,7 @@ export default defineEventHandler(async (event) => {
     '/masters',
     '/booking',
     '/contacts',
+    '/legal',
     '/privacy-policy',
     '/gift-cards/buy',
     '/tor',
@@ -61,6 +63,7 @@ export default defineEventHandler(async (event) => {
     '/tor/masters',
     '/tor/booking',
     '/tor/contacts',
+    '/tor/legal',
     '/tor/privacy-policy',
     '/tor/gift-cards/buy',
   ]
@@ -175,15 +178,23 @@ export default defineEventHandler(async (event) => {
   }
 
   const now = new Date().toISOString()
+  const stripLocale = (path: string) => path.replace(/^\/(hy|ru|en)(?=\/|$)/, '') || '/'
   const urls = Array.from(routes)
     .sort()
     .map((route) => {
       const priority = /\/(services|masters)\//.test(route) ? '0.9' : route.endsWith('/contacts') || route.endsWith('/privacy-policy') ? '0.7' : '0.8'
-      return `\n  <url>\n    <loc>${siteUrl}${route}</loc>\n    <lastmod>${now}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`
+      const basePath = stripLocale(route)
+      const alternates = locales
+        .map(locale => basePath === '/' ? `/${locale}` : `/${locale}${basePath}`)
+        .filter(path => routes.has(path))
+        .map(path => `\n    <xhtml:link rel="alternate" hreflang="${path.split('/')[1]}" href="${siteUrl}${path}" />`)
+        .join('')
+
+      return `\n  <url>\n    <loc>${siteUrl}${route}</loc>${alternates}\n    <lastmod>${now}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`
     })
     .join('')
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}\n</urlset>`
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">${urls}\n</urlset>`
 
   setHeader(event, 'content-type', 'application/xml; charset=utf-8')
   return xml

@@ -108,6 +108,8 @@ const copy = computed(() => {
 usePageSeo({
   title: () => copy.value.title,
   description: () => copy.value.description,
+  ogType: 'website',
+  noindex: true,
 })
 
 const { data } = await useAsyncData(`all-pages-${locale.value}`, async () => {

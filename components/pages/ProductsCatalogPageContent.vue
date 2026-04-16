@@ -2,7 +2,6 @@
 import type { Product, ProductCategory } from '~/types/product'
 import ProductCard from '~/components/product/ProductCard.vue'
 import ProductCategorySection from '~/components/product/ProductCategorySection.vue'
-import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 
 const props = withDefaults(defineProps<{
   theme?: 'default' | 'tor'
@@ -11,9 +10,6 @@ const props = withDefaults(defineProps<{
   lead?: string
   backLabel?: string
   backTo?: string
-  seoTitle?: string
-  seoIntro?: string[]
-  seoIntents?: string[]
   groupedProducts: Array<ProductCategory & { products: Product[] }>
   productsPath: string
   productPath: (product: Product) => string
@@ -23,9 +19,6 @@ const props = withDefaults(defineProps<{
   lead: '',
   backLabel: '',
   backTo: '',
-  seoTitle: '',
-  seoIntro: () => [],
-  seoIntents: () => [],
 })
 
 const { localePath } = useLocalizedPath()
@@ -107,13 +100,6 @@ const decreaseFromCart = (productId: number) => cart.decreaseItem(productId, 1)
         </ProductCategorySection>
       </div>
 
-      <SeoIntentSection
-        section="products"
-        :theme="theme"
-        :title="seoTitle || undefined"
-        :intro="seoIntro.length ? seoIntro : undefined"
-        :intents="seoIntents.length ? seoIntents : undefined"
-      />
     </div>
   </section>
 </template>

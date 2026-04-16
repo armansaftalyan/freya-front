@@ -85,10 +85,11 @@ const imageHeightClass = computed(() => props.compact ? 'h-48' : 'h-52')
     <NuxtLink :to="to" class="block rounded-3xl focus-visible:outline-none">
       <img
         :src="product.image_url || '/logo.png'"
-        :alt="product.name"
+        :alt="[product.brand, product.name, product.volume_label].filter(Boolean).join(' ')"
         class="w-full rounded-2xl object-cover"
         :class="imageHeightClass"
         loading="lazy"
+        decoding="async"
       >
     </NuxtLink>
 

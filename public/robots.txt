@@ -1,5 +1,8 @@
 User-agent: *
+Allow: /
 Disallow: /*?
+Disallow: /account/
+Disallow: /tor/account/
 
 Sitemap: https://freyabeauty.am/sitemap.xml
 # Product feeds

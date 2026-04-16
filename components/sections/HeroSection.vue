@@ -33,10 +33,12 @@ const bookingCta = computed(() => locale.value === 'hy' ? 'Ամրագրել' : t
       <div class="fade-in">
         <div class="overflow-hidden rounded-[2rem] border border-sand-200 shadow-soft">
           <img
-            src="https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=1200&q=80"
-            alt="Beauty salon interior"
+            src="https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=1200&q=80&fm=webp"
+            alt="Freya Beauty Salon interior in Yerevan"
             class="h-[430px] w-full object-cover xl:h-[470px]"
-            loading="lazy"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
           >
         </div>
       </div>

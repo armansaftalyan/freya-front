@@ -9,6 +9,9 @@ export default defineNuxtConfig({
   ssr: true,
   devtools: { enabled: false },
   modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', '@vueuse/nuxt'],
+  nitro: {
+    compressPublicAssets: true,
+  },
   css: ['~/assets/css/main.css'],
   tailwindcss: {
     viewer: false,
@@ -51,6 +54,7 @@ export default defineNuxtConfig({
           name: 'description',
           content: 'Premium beauty salon with online booking, top masters, and elegant service.',
         },
+        { name: 'format-detection', content: 'telephone=no' },
         { key: 'app-mobile-title', name: 'apple-mobile-web-app-title', content: 'Freya' },
       ],
       link: [

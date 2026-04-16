@@ -104,15 +104,12 @@ const bookingSeoCopy = computed(() => {
   }
 })
 
-useSeoMeta({
+usePageSeo({
   title: () => bookingSeoCopy.value.title,
   description: () => bookingSeoCopy.value.description,
   ogTitle: () => bookingSeoCopy.value.title,
   ogDescription: () => bookingSeoCopy.value.ogDescription,
-  ogUrl: () => canonicalUrl.value,
-  robots: () => hasQueryParams.value
-    ? 'noindex, nofollow'
-    : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+  noindex: () => hasQueryParams.value,
 })
 
 const auth = useAuthStore()

@@ -2,7 +2,6 @@
 import type { GiftCard } from '~/types/gift-card'
 import Card from '~/components/base/Card.vue'
 import GiftCardVisual from '~/components/giftcards/GiftCardVisual.vue'
-import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 
 const api = useApi()
 const config = useRuntimeConfig()
@@ -415,7 +414,6 @@ const submit = async () => {
         </div>
       </Card>
 
-      <SeoIntentSection :section="'gift-cards'" :theme="isTor ? 'tor' : 'default'" />
     </div>
   </section>
 </template>

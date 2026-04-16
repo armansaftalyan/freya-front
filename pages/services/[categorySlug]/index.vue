@@ -4,7 +4,6 @@ import type { Category } from '~/types/category'
 import type { Master } from '~/types/master'
 import type { Service } from '~/types/service'
 import ServiceCatalogCard from '~/components/catalog/ServiceCatalogCard.vue'
-import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 
 const api = useApi()
 const { t, locale } = useLocale()
@@ -65,12 +64,6 @@ const servicesCollectionLabel = computed(() => {
   return 'Tor ծառայություններ'
 })
 const suggestionCategoryNameById = computed(() => new Map(categories.value.map((item) => [item.id, item.name])))
-const keywordIntents = computed(() => useSeoIntentKeywords({
-  brand: brand.value,
-  kind: 'service-category',
-  slug: category.value?.slug,
-  name: category.value?.name,
-}))
 const pageCopy = computed(() => {
   if (brand.value === 'tor') {
     if (locale.value === 'ru') {
@@ -131,77 +124,21 @@ const pageCopy = computed(() => {
   }
 })
 
-const seoIntentCopy = computed(() => {
-  const categoryName = category.value?.name || t('nav.services')
-
-  if (isTor.value) {
-    if (locale.value === 'ru') {
-      return {
-        title: `${categoryName} в Tor Barbershop`,
-        intro: [
-          `Эта категория Tor собрана под запросы вокруг "${categoryName}", мужского grooming и онлайн-записи в Ереване.`,
-          `Здесь полезно усиливать и прямые, и транслитные формулировки, связанные с ${categoryName}, выбором барбера, ценой, длительностью и бронированием.`,
-        ],
-        intents: [categoryName, `${categoryName} ереван`, `${categoryName} цена`, `${categoryName} онлайн запись`, ...keywordIntents.value],
-      }
-    }
-
-    if (locale.value === 'en') {
-      return {
-        title: `${categoryName} at Tor Barbershop`,
-        intro: [
-          `This Tor category is structured for searches around "${categoryName}", men’s grooming, and online booking in Yerevan.`,
-          `It should support both direct and mixed-language queries connected to ${categoryName}, pricing, duration, and booking intent.`,
-        ],
-        intents: [categoryName, `${categoryName} yerevan`, `${categoryName} price`, `${categoryName} booking`, ...keywordIntents.value],
-      }
-    }
-
-    return {
-      title: `${categoryName} Tor Barbershop-ում`,
-      intro: [
-        `Tor-ի այս կատեգորիան հավաքված է "${categoryName}" intent-ի, տղամարդկանց grooming-ի և Երևանում օնլայն ամրագրման համար։`,
-        `${categoryName}-ի շուրջ արժե ուժեղացնել նաև գնի, տևողության, վարպետի ընտրության և ամրագրման որոնումները։`,
-      ],
-      intents: [categoryName, `${categoryName} yerevan`, `${categoryName} price`, `${categoryName} booking`, ...keywordIntents.value],
-    }
-  }
-
-  if (locale.value === 'ru') {
-    return {
-      title: `${categoryName} в Freya Beauty Salon`,
-      intro: [
-        `Эта категория Freya должна отвечать на поиски вокруг "${categoryName}", beauty-услуг в Ереване и записи онлайн.`,
-        `По ней полезно усиливать запросы про ${categoryName}, цену, длительность, мастера и связанные процедуры в салоне красоты.`,
-      ],
-      intents: [categoryName, `${categoryName} ереван`, `${categoryName} цена`, `${categoryName} онлайн запись`, ...keywordIntents.value],
-    }
-  }
-
-  if (locale.value === 'en') {
-    return {
-      title: `${categoryName} at Freya Beauty Salon`,
-      intro: [
-        `This Freya category should rank for searches around "${categoryName}", beauty services in Yerevan, and online booking intent.`,
-        `It is useful to reinforce queries around ${categoryName}, pricing, duration, specialist choice, and related treatments.`,
-      ],
-      intents: [categoryName, `${categoryName} yerevan`, `${categoryName} price`, `${categoryName} booking`, ...keywordIntents.value],
-    }
-  }
-
-  return {
-    title: `${categoryName} Freya Beauty Salon-ում`,
-    intro: [
-      `Freya-ի այս կատեգորիան պետք է պատասխանի "${categoryName}" intent-ին, Երևանի beauty ծառայությունների պահանջարկին և օնլայն ամրագրմանը։`,
-      `Այստեղ կարևոր է ուժեղացնել ${categoryName}-ի, գնի, տևողության, մասնագետի ընտրության և հարակից ծառայությունների որոնումները։`,
-    ],
-    intents: [categoryName, `${categoryName} yerevan`, `${categoryName} price`, `${categoryName} booking`, ...keywordIntents.value],
-  }
-})
-
 usePageSeo({
-  title: () => category.value?.seo_title || `${category.value?.name || t('nav.services')} | ${brand.value === 'tor' ? 'Tor' : 'Freya'}`,
+  title: () => {
+    if (category.value?.seo_title) return category.value.seo_title
+    const categoryName = category.value?.name || t('nav.services')
+    if (brand.value === 'tor') {
+      if (locale.value === 'ru') return `${categoryName} в Ереване | Tor Barbershop`
+      if (locale.value === 'en') return `${categoryName} in Yerevan | Tor Barbershop`
+      return `${categoryName} Երևանում | Tor Barbershop`
+    }
+    if (locale.value === 'ru') return `${categoryName} в Ереване | Freya Beauty Salon`
+    if (locale.value === 'en') return `${categoryName} in Yerevan | Freya Beauty Salon`
+    return `${categoryName} Երևանում | Freya Beauty Salon`
+  },
   description: () => category.value?.seo_description || category.value?.description || (brand.value === 'tor' ? pageCopy.value.suggestionsLead : t('servicesPage.seoDescription')),
+  ogType: 'website',
 })
 
 useStructuredData(() => {
@@ -309,14 +246,6 @@ useStructuredData(() => {
           />
         </div>
       </div>
-
-      <SeoIntentSection
-        :section="'service-category'"
-        :theme="isTor ? 'tor' : 'default'"
-        :title="seoIntentCopy.title"
-        :intro="seoIntentCopy.intro"
-        :intents="seoIntentCopy.intents"
-      />
     </div>
   </section>
 </template>

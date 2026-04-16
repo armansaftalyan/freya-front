@@ -56,18 +56,12 @@ const seoCopy = computed(() => {
   }
 })
 
-useSeoMeta({
+usePageSeo({
   title: () => seoCopy.value.title,
   description: () => seoCopy.value.description,
   ogTitle: () => seoCopy.value.title,
   ogDescription: () => seoCopy.value.description,
-  ogType: 'website',
-  ogUrl: () => canonicalUrl.value,
-  ogImage: () => brandOgImage.value,
-  twitterCard: 'summary_large_image',
-  twitterTitle: () => seoCopy.value.title,
-  twitterDescription: () => seoCopy.value.description,
-  twitterImage: () => brandOgImage.value,
+  image: () => brandOgImage.value,
 })
 const mastersStore = useMastersStore()
 const { masters, loading } = storeToRefs(mastersStore)
@@ -150,13 +144,14 @@ useStructuredData(() => ({
           class="fade-in"
           :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''"
         >
-          <img
-            :src="masterAvatarSrc(master.avatar, master.name)"
-            :alt="master.name"
-            class="h-56 w-full rounded-2xl object-cover"
-            loading="lazy"
-            @error="onMasterAvatarError($event, master.name)"
-          >
+            <img
+              :src="masterAvatarSrc(master.avatar, master.name)"
+              :alt="`${master.name} – ${isTor ? 'Tor specialist' : 'Freya beauty specialist'}`"
+              class="h-56 w-full rounded-2xl object-cover"
+              loading="lazy"
+              decoding="async"
+              @error="onMasterAvatarError($event, master.name)"
+            >
           <p class="mt-4 text-2xl">{{ master.name }}</p>
           <p class="mt-2 min-h-10 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ master.bio || t('mastersPage.fallbackBio') }}</p>
           <p class="mt-3 text-xs uppercase tracking-[0.14em]" :class="isTor ? 'text-[#c58a3a]' : 'text-sand-700'">{{ t('mastersPage.bookWithMaster') }}</p>

@@ -6,7 +6,6 @@ import type { Master } from '~/types/master'
 import type { Service } from '~/types/service'
 import ServiceCatalogCard from '~/components/catalog/ServiceCatalogCard.vue'
 import BlogArticleCardComponent from '~/components/blog/BlogArticleCard.vue'
-import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 
 const api = useApi()
 const { t, locale } = useLocale()
@@ -79,13 +78,6 @@ const servicesCollectionLabel = computed(() => {
   if (locale.value === 'en') return 'Tor Services'
   return 'Tor ծառայություններ'
 })
-const keywordIntents = computed(() => useSeoIntentKeywords({
-  brand: brand.value,
-  kind: 'service-detail',
-  slug: service.value?.slug,
-  name: service.value?.name,
-  categorySlug: category.value?.slug,
-}))
 const pageCopy = computed(() => {
   if (brand.value === 'tor') {
     if (locale.value === 'ru') {
@@ -122,78 +114,21 @@ const pageCopy = computed(() => {
   }
 })
 
-const seoIntentCopy = computed(() => {
-  const serviceName = service.value?.name || t('nav.services')
-  const categoryName = category.value?.name || t('nav.services')
-
-  if (isTor.value) {
-    if (locale.value === 'ru') {
-      return {
-        title: `${serviceName} в Tor Barbershop`,
-        intro: [
-          `Эта страница должна быть релевантна запросам по услуге "${serviceName}" в Tor, ее цене, длительности и записи онлайн.`,
-          `Поиск вокруг ${serviceName} часто идет вместе с интентом барбера, barbershop yerevan, мужского grooming и выбора конкретной процедуры из категории ${categoryName}.`,
-        ],
-        intents: [serviceName, `${serviceName} цена`, `${serviceName} ереван`, `${serviceName} онлайн запись`, ...keywordIntents.value],
-      }
-    }
-
-    if (locale.value === 'en') {
-      return {
-        title: `${serviceName} at Tor Barbershop`,
-        intro: [
-          `This page should match searches for "${serviceName}" at Tor, including pricing, duration, and online booking intent.`,
-          `Demand around ${serviceName} often overlaps with barber discovery, barbershop yerevan, men’s grooming, and category intent around ${categoryName}.`,
-        ],
-        intents: [serviceName, `${serviceName} price`, `${serviceName} yerevan`, `${serviceName} booking`, ...keywordIntents.value],
-      }
-    }
-
-    return {
-      title: `${serviceName} Tor Barbershop-ում`,
-      intro: [
-        `Այս էջը պետք է համապատասխան լինի "${serviceName}" ծառայության, դրա գնի, տևողության և օնլայն ամրագրման որոնումներին Tor-ում։`,
-        `${serviceName}-ի intent-ը հաճախ կապվում է նաև barbershop yerevan, men grooming և ${categoryName} կատեգորիայի ավելի նեղ որոնումների հետ։`,
-      ],
-      intents: [serviceName, `${serviceName} price`, `${serviceName} yerevan`, `${serviceName} booking`, ...keywordIntents.value],
-    }
-  }
-
-  if (locale.value === 'ru') {
-    return {
-      title: `${serviceName} в Freya Beauty Salon`,
-      intro: [
-        `Эта страница должна ловить спрос по услуге "${serviceName}" в Freya, ее цене, длительности и записи онлайн в Ереване.`,
-        `Запросы вокруг ${serviceName} обычно пересекаются с beauty salon yerevan, salon krasoty yerevan и спросом внутри категории ${categoryName}.`,
-      ],
-      intents: [serviceName, `${serviceName} цена`, `${serviceName} ереван`, `${serviceName} онлайн запись`, ...keywordIntents.value],
-    }
-  }
-
-  if (locale.value === 'en') {
-    return {
-      title: `${serviceName} at Freya Beauty Salon`,
-      intro: [
-        `This page should capture demand for "${serviceName}" at Freya, along with price, duration, and online booking in Yerevan.`,
-        `Searches around ${serviceName} usually overlap with beauty salon yerevan, salon krasoty yerevan, and related intent inside the ${categoryName} category.`,
-      ],
-      intents: [serviceName, `${serviceName} price`, `${serviceName} yerevan`, `${serviceName} booking`, ...keywordIntents.value],
-    }
-  }
-
-  return {
-    title: `${serviceName} Freya Beauty Salon-ում`,
-    intro: [
-      `Այս էջը պետք է վերցնի "${serviceName}" ծառայության, դրա գնի, տևողության և օնլայն ամրագրման պահանջարկը Freya-ում։`,
-      `${serviceName}-ի շուրջ որոնումները սովորաբար հատվում են beauty salon yerevan, salon krasoty yerevan և ${categoryName} կատեգորիայի intent-ների հետ։`,
-    ],
-    intents: [serviceName, `${serviceName} price`, `${serviceName} yerevan`, `${serviceName} booking`, ...keywordIntents.value],
-  }
-})
-
 usePageSeo({
-  title: () => service.value?.seo_title || `${service.value?.name || t('nav.services')} | ${brand.value === 'tor' ? 'Tor' : 'Freya'}`,
+  title: () => {
+    if (service.value?.seo_title) return service.value.seo_title
+    const serviceName = service.value?.name || t('nav.services')
+    if (brand.value === 'tor') {
+      if (locale.value === 'ru') return `${serviceName} в Ереване | Tor Barbershop`
+      if (locale.value === 'en') return `${serviceName} in Yerevan | Tor Barbershop`
+      return `${serviceName} Երևանում | Tor Barbershop`
+    }
+    if (locale.value === 'ru') return `${serviceName} в Ереване | Freya Beauty Salon`
+    if (locale.value === 'en') return `${serviceName} in Yerevan | Freya Beauty Salon`
+    return `${serviceName} Երևանում | Freya Beauty Salon`
+  },
   description: () => service.value?.seo_description || service.value?.description || t('servicesPage.defaultDescription'),
+  ogType: 'website',
 })
 
 useStructuredData(() => {
@@ -221,6 +156,8 @@ useStructuredData(() => {
           price: currentPrice.value?.priceFrom ?? service.value.price_from,
           url: `${config.public.siteUrl}${route.path}`,
         },
+        areaServed: 'Yerevan',
+        duration: service.value.duration_minutes ? `PT${service.value.duration_minutes}M` : undefined,
       },
       {
         '@type': 'BreadcrumbList',
@@ -324,15 +261,6 @@ useStructuredData(() => {
           />
         </div>
       </div>
-
-      <SeoIntentSection
-        :section="'service-detail'"
-        :theme="isTor ? 'tor' : 'default'"
-        :title="seoIntentCopy.title"
-        :intro="seoIntentCopy.intro"
-        :intents="seoIntentCopy.intents"
-      />
-
       <div v-if="relatedArticles?.length" class="space-y-5">
         <div class="max-w-3xl space-y-2">
           <h2 :class="isTor ? 'text-3xl font-black uppercase tracking-[0.05em]' : 'text-2xl sm:text-3xl'">{{ t('blog.serviceDetailTitle') }}</h2>

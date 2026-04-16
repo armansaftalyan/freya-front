@@ -9,19 +9,10 @@ const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const { faqCopy } = usePageFaqContent(brand.value, 'privacy-policy')
 const brandOgImage = computed(() => brand.value === 'tor' ? `${siteUrl.value}/tor-logo.jpg` : defaultImageUrl.value)
 
-useSeoMeta({
-  title: () => `${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya'} - Privacy Policy`,
+usePageSeo({
+  title: () => `${brand.value === 'tor' ? 'Privacy Policy Tor Barbershop' : 'Privacy Policy Freya Beauty Salon'}`,
   description: () => `Privacy policy, personal data processing, cancellation and payment terms for ${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon'}.`,
-  robots: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
-  ogTitle: () => `${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya'} - Privacy Policy`,
-  ogDescription: () => `Privacy policy, personal data processing, cancellation and payment terms for ${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon'}.`,
-  ogType: 'website',
-  ogUrl: () => canonicalUrl.value,
-  ogImage: () => brandOgImage.value,
-  twitterCard: 'summary_large_image',
-  twitterTitle: () => `${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya'} - Privacy Policy`,
-  twitterDescription: () => `Privacy policy, personal data processing, cancellation and payment terms for ${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon'}.`,
-  twitterImage: () => brandOgImage.value,
+  image: () => brandOgImage.value,
 })
 
 const content = computed(() => {

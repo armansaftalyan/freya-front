@@ -2,7 +2,6 @@
 import type { ApiListResponse } from '~/types/api'
 import type { Product, ProductCategory } from '~/types/product'
 import ProductCard from '~/components/product/ProductCard.vue'
-import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 
 const api = useApi()
 const route = useRoute()
@@ -40,77 +39,21 @@ const productQuantity = (productId: number) => cart.getItemQuantity(productId)
 const addToCart = (product: Product) => cart.addItem(product, 1)
 const decreaseFromCart = (productId: number) => cart.decreaseItem(productId, 1)
 
-const seoIntentCopy = computed(() => {
-  const categoryName = category.value?.name || t('nav.products')
-
-  if (isTor.value) {
-    if (locale.value === 'ru') {
-      return {
-        title: `${categoryName} Tor Barbershop`,
-        intro: [
-          `Категория ${categoryName} в Tor должна усиливать спрос по товарам этой группы и по покупке мужского ухода в Ереване.`,
-          `Здесь нужны только точные запросы по самой категории, брендам внутри нее, цене и покупке, без посторонних общих ключей.`,
-        ],
-        intents: [categoryName, `${categoryName} цена`, `${categoryName} купить`, `${categoryName} Tor`, `${categoryName} Ереван`, `товары ${categoryName}`],
-      }
-    }
-
-    if (locale.value === 'en') {
-      return {
-        title: `${categoryName} at Tor Barbershop`,
-        intro: [
-          `The ${categoryName} category at Tor should support searches for this product group and product purchases in Yerevan.`,
-          `Only category-level keywords are useful here: exact category name, brands inside it, pricing, and buying intent.`,
-        ],
-        intents: [categoryName, `${categoryName} price`, `${categoryName} buy`, `${categoryName} Tor`, `${categoryName} Yerevan`, `${categoryName} products`],
-      }
-    }
-
-    return {
-      title: `${categoryName} Tor Barbershop-ում`,
-      intro: [
-        `Tor-ի ${categoryName} ապրանքային կատեգորիան պետք է ուժեղացնի այս կոնկրետ խմբի ապրանքների որոնումները և Երևանում գնման պահանջարկը։`,
-        `Այստեղ կարևոր են միայն ${categoryName}-ի, գնի, բրենդների և գնման հետ կապված նպատակային հարցումները։`,
-      ],
-      intents: [categoryName, `${categoryName} գին`, `${categoryName} գնել`, `${categoryName} Tor`, `${categoryName} Երևան`, `${categoryName} ապրանքներ`],
-    }
-  }
-
-  if (locale.value === 'ru') {
-    return {
-      title: `${categoryName} в Freya Beauty Salon`,
-      intro: [
-        `Категория ${categoryName} в Freya должна поддерживать спрос по этой группе товаров и по покупке home care в Ереване.`,
-        `Для нее полезны только точные запросы по категории, цене, брендам и покупке, без лишнего SEO-шума.`,
-      ],
-      intents: [categoryName, `${categoryName} цена`, `${categoryName} купить`, `${categoryName} Freya`, `${categoryName} Ереван`, `товары ${categoryName}`],
-    }
-  }
-
-  if (locale.value === 'en') {
-    return {
-      title: `${categoryName} at Freya Beauty Salon`,
-      intro: [
-        `The ${categoryName} category at Freya should support searches for this product group and home care purchases in Yerevan.`,
-        `Relevant intent here is limited to the category name, pricing, brands, and buying path.`,
-      ],
-      intents: [categoryName, `${categoryName} price`, `${categoryName} buy`, `${categoryName} Freya`, `${categoryName} Yerevan`, `${categoryName} products`],
-    }
-  }
-
-  return {
-    title: `${categoryName} Freya Beauty Salon-ում`,
-    intro: [
-      `Freya-ի ${categoryName} ապրանքային կատեգորիան պետք է ուժեղացնի այս խմբի ապրանքների և տնային խնամքի գնման որոնումները Երևանում։`,
-      `Այս էջում պետք է մնան միայն կատեգորիայի, գնի, բրենդների և գնման ուղու հետ կապված թիրախային intent-ները։`,
-    ],
-    intents: [categoryName, `${categoryName} գին`, `${categoryName} գնել`, `${categoryName} Freya`, `${categoryName} Երևան`, `${categoryName} ապրանքներ`],
-  }
-})
-
 usePageSeo({
-  title: () => category.value?.seo_title || `${category.value?.name || t('nav.products')} | Freya`,
+  title: () => {
+    if (category.value?.seo_title) return category.value.seo_title
+    const categoryName = category.value?.name || t('nav.products')
+    if (isTor.value) {
+      if (locale.value === 'ru') return `${categoryName} купить в Ереване | Tor Barbershop`
+      if (locale.value === 'en') return `${categoryName} in Yerevan | Tor Barbershop`
+      return `${categoryName} Երևանում | Tor Barbershop`
+    }
+    if (locale.value === 'ru') return `${categoryName} купить в Ереване | Freya Beauty`
+    if (locale.value === 'en') return `${categoryName} in Yerevan | Freya Beauty Salon`
+    return `${categoryName} Երևանում | Freya Beauty Salon`
+  },
   description: () => category.value?.seo_description || category.value?.description || t('productsPage.seoDescription'),
+  ogType: 'website',
 })
 
 useStructuredData(() => {
@@ -194,14 +137,6 @@ useStructuredData(() => {
           @decrease="decreaseFromCart"
         />
       </div>
-
-      <SeoIntentSection
-        :section="'product-category'"
-        :theme="isTor ? 'tor' : 'default'"
-        :title="seoIntentCopy.title"
-        :intro="seoIntentCopy.intro"
-        :intents="seoIntentCopy.intents"
-      />
     </div>
   </section>
 </template>

@@ -56,7 +56,7 @@ const filteredMasters = computed(() =>
           <div class="flex items-center gap-4">
             <img
               :src="masterAvatarSrc(master.avatar, master.name)"
-              :alt="master.name"
+              :alt="`${master.name} – ${brand === 'tor' ? 'Tor master profile' : 'Freya beauty specialist'}`"
               class="h-16 w-16 rounded-2xl object-cover"
               width="64"
               height="64"

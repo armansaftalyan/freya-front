@@ -6,7 +6,6 @@ import type { Product, ProductCategory } from '~/types/product'
 import type { Service } from '~/types/service'
 import ServiceCatalogCard from '~/components/catalog/ServiceCatalogCard.vue'
 import FaqSection from '~/components/sections/FaqSection.vue'
-import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 
 definePageMeta({
   layout: 'tor',
@@ -17,7 +16,7 @@ const route = useRoute()
 const { locale, t } = useLocale()
 const { localePath } = useLocalizedPath()
 const { masterAvatarSrc, onMasterAvatarError } = useMasterAvatar()
-const { siteUrl } = useSiteMeta()
+const { siteUrl, telephone, email, address, openingHoursSpecification, sameAs } = useSiteMeta()
 const { bookingPath, productsPath, mastersPath, servicesPath } = useBrandContext()
 const { formatPriceLabel } = useServicePricing()
 const cart = useCartStore()
@@ -190,18 +189,12 @@ const bookingUrl = computed(() => {
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const torOgImage = computed(() => `${siteUrl.value}/tor-logo.jpg`)
 
-useSeoMeta({
+usePageSeo({
   title: () => copy.value.seoTitle,
   description: () => copy.value.seoDescription,
   ogTitle: () => copy.value.seoTitle,
   ogDescription: () => copy.value.ogDescription,
-  ogType: 'website',
-  ogUrl: () => canonicalUrl.value,
-  ogImage: () => torOgImage.value,
-  twitterCard: 'summary_large_image',
-  twitterTitle: () => copy.value.seoTitle,
-  twitterDescription: () => copy.value.twitterDescription,
-  twitterImage: () => torOgImage.value,
+  image: () => torOgImage.value,
 })
 
 useStructuredData(() => ({
@@ -209,9 +202,16 @@ useStructuredData(() => ({
   '@graph': [
     {
       '@type': 'Barbershop',
+      '@id': `${siteUrl.value}/tor#barbershop`,
       name: copy.value.title,
       description: copy.value.seoDescription,
       url: `${siteUrl.value}${route.path}`,
+      image: torOgImage.value,
+      telephone,
+      email,
+      address,
+      openingHoursSpecification,
+      sameAs,
       parentOrganization: {
         '@id': `${siteUrl.value}#salon`,
       },
@@ -220,6 +220,17 @@ useStructuredData(() => ({
       '@type': 'CollectionPage',
       name: copy.value.title,
       url: `${siteUrl.value}${route.path}`,
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: copy.value.title,
+          item: canonicalUrl.value,
+        },
+      ],
     },
     {
       '@type': 'FAQPage',
@@ -277,9 +288,6 @@ useStructuredData(() => ({
         </div>
       </div>
     </section>
-
-
-
     <section id="services" class="container-shell py-14">
       <div class="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div class="max-w-3xl">
@@ -334,9 +342,10 @@ useStructuredData(() => ({
           <div class="flex flex-1 items-start gap-4">
             <img
               :src="masterAvatarSrc(master.avatar, master.name)"
-              :alt="master.name"
+              :alt="`${master.name} – Tor specialist`"
               class="h-16 w-16 rounded-2xl object-cover"
               loading="lazy"
+              decoding="async"
               @error="onMasterAvatarError($event, master.name)"
             >
             <div class="flex-1">
@@ -404,7 +413,6 @@ useStructuredData(() => ({
       </div>
     </section>
 
-      <SeoIntentSection section="home" theme="tor" />
     <FaqSection
       theme="tor"
       :eyebrow="faqCopy.eyebrow"

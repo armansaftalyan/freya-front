@@ -155,7 +155,7 @@ const seoImage = computed(() =>
   || masterAvatarPlaceholder(master.value?.name)
   || defaultImageUrl.value,
 )
-const canonicalUrl = computed(() => `${siteUrl.value}${route.path}`)
+const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const assetPreconnectLinks = computed(() => {
   const pageOrigin = siteUrl.value ? new URL(siteUrl.value).origin : ''
   const origins = new Set<string>()
@@ -180,28 +180,16 @@ const assetPreconnectLinks = computed(() => {
   return [...origins]
 })
 
-useSeoMeta({
+usePageSeo({
   title: () => seoTitle.value,
   description: () => seoDescription.value,
   ogTitle: () => seoTitle.value,
   ogDescription: () => seoDescription.value,
-  ogType: 'profile',
-  ogUrl: () => canonicalUrl.value,
-  ogImage: () => seoImage.value,
-  ogImageAlt: () => master.value?.name || seoTitle.value,
-  twitterCard: 'summary_large_image',
-  twitterTitle: () => seoTitle.value,
-  twitterDescription: () => seoDescription.value,
-  twitterImage: () => seoImage.value,
-  twitterImageAlt: () => master.value?.name || seoTitle.value,
+  image: () => seoImage.value,
 })
 
 useHead(() => ({
   link: [
-    {
-      rel: 'canonical',
-      href: canonicalUrl.value,
-    },
     ...assetPreconnectLinks.value.flatMap((origin) => ([
       {
         rel: 'preconnect',
@@ -391,7 +379,7 @@ onBeforeUnmount(() => {
         <Card class="h-fit" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
           <img
             :src="masterAvatarSrc(master.avatar, master.name)"
-            :alt="master.name"
+            :alt="`${master.name} – ${brand.value === 'tor' ? 'Tor specialist' : 'Freya beauty specialist'}`"
             class="h-80 w-full rounded-2xl object-cover"
             width="720"
             height="320"
@@ -520,7 +508,7 @@ onBeforeUnmount(() => {
                 >
                   <img
                     :src="image"
-                    :alt="`${master.name} portfolio ${index + 1}`"
+                    :alt="`${master.name} – portfolio photo ${index + 1}`"
                     class="h-full w-full cursor-zoom-in object-cover transition duration-500 group-hover:scale-[1.03]"
                     width="1000"
                     height="1200"
@@ -554,7 +542,7 @@ onBeforeUnmount(() => {
                 <img
                   v-if="certificate.image"
                   :src="certificate.image"
-                  :alt="certificate.title"
+                  :alt="certificate.title || `${master.name} certificate`"
                   class="h-40 w-full cursor-zoom-in object-cover"
                   width="800"
                   height="320"
@@ -601,7 +589,7 @@ onBeforeUnmount(() => {
             <img
               v-if="activeCertificate.image"
               :src="activeCertificate.image"
-              :alt="activeCertificate.title"
+              :alt="activeCertificate.title || `${master?.name} certificate`"
               class="max-h-[75vh] w-full object-contain"
               width="1200"
               height="900"
@@ -653,7 +641,7 @@ onBeforeUnmount(() => {
           >
             <img
               :src="activePortfolioImage"
-              :alt="`${master?.name} portfolio ${portfolioLightboxIndex !== null ? portfolioLightboxIndex + 1 : ''}`"
+              :alt="`${master?.name} – portfolio photo ${portfolioLightboxIndex !== null ? portfolioLightboxIndex + 1 : ''}`"
               class="max-h-[78vh] w-full object-contain"
               width="1200"
               height="1440"

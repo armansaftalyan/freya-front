@@ -2,7 +2,6 @@
 import type { Service } from '~/types/service'
 import ServiceCatalogCard from '~/components/catalog/ServiceCatalogCard.vue'
 import FaqSection from '~/components/sections/FaqSection.vue'
-import SeoIntentSection from '~/components/sections/SeoIntentSection.vue'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 
 const props = withDefaults(defineProps<{
@@ -132,8 +131,6 @@ const detailPathFor = (categorySlug: string, service: Service) =>
           </div>
         </div>
       </div>
-
-      <SeoIntentSection :section="'services'" :theme="theme" :bordered="borderedSeo" />
 
       <FaqSection
         :theme="theme"
