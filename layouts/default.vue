@@ -64,9 +64,9 @@ const titleTemplate = (title?: string | null) => {
 
   if (!title) {
     return baseTitle
+  }else{
+      return title
   }
-
-  return title.toLowerCase().includes(baseTitle.toLowerCase()) ? title : `${title} | ${baseTitle}`
 }
 
 const links: Array<{ to: string; key: string; label?: string }> = [
