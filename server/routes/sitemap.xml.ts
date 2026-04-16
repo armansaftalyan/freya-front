@@ -39,9 +39,16 @@ type SitemapBlogArticle = {
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
-  const siteUrl = String(config.public.siteUrl || '').replace(/\/+$/, '')
+  const requestUrl = getRequestURL(event)
+  const siteUrl = String(config.public.siteUrl || requestUrl.origin || '').replace(/\/+$/, '')
   const apiBase = String(config.public.apiBase || '').replace(/\/+$/, '')
   const locales = ['hy', 'ru', 'en'] as const
+  const xmlEscape = (value: string) => value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
 
   const staticRoutes = [
     '/',
@@ -187,15 +194,20 @@ export default defineEventHandler(async (event) => {
       const alternates = locales
         .map(locale => basePath === '/' ? `/${locale}` : `/${locale}${basePath}`)
         .filter(path => routes.has(path))
-        .map(path => `\n    <xhtml:link rel="alternate" hreflang="${path.split('/')[1]}" href="${siteUrl}${path}" />`)
+        .map(path => `\n    <xhtml:link rel="alternate" hreflang="${path.split('/')[1]}" href="${xmlEscape(`${siteUrl}${path}`)}" />`)
         .join('')
+      const xDefaultPath = basePath === '/' ? '/hy' : `/hy${basePath}`
 
-      return `\n  <url>\n    <loc>${siteUrl}${route}</loc>${alternates}\n    <lastmod>${now}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`
+      return `\n  <url>\n    <loc>${xmlEscape(`${siteUrl}${route}`)}</loc>${alternates}\n    <xhtml:link rel="alternate" hreflang="x-default" href="${xmlEscape(`${siteUrl}${xDefaultPath}`)}" />\n    <lastmod>${now}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`
     })
     .join('')
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">${urls}\n</urlset>`
 
-  setHeader(event, 'content-type', 'application/xml; charset=utf-8')
-  return xml
+  return new Response(xml, {
+    headers: {
+      'content-type': 'application/xml; charset=utf-8',
+      'cache-control': 'public, max-age=900, s-maxage=3600',
+    },
+  })
 })
