@@ -1339,23 +1339,26 @@ const getByPath = (obj: Dict, path: string): string | undefined => {
 export const useLocale = () => {
   const config = useRuntimeConfig()
   const route = useRoute()
-  const localeCookie = useCookie<Locale>('app_locale', { sameSite: 'lax', default: () => 'hy' })
+  const localeCookie = useCookie<Locale | undefined>('app_locale', { sameSite: 'lax' })
   const nativeApp = computed(() => config.public.nativeApp === true || config.public.nativeApp === 'true')
   const locale = computed<Locale>(() => {
     if (nativeApp.value) {
       return normalizeLocale(localeCookie.value)
     }
 
-    return extractLocaleFromPath(route.path) || normalizeLocale(localeCookie.value)
+    return extractLocaleFromPath(route.path) || defaultLocale
   })
-
-  if (localeCookie.value !== locale.value) {
-    localeCookie.value = locale.value
-  }
 
   const setLocale = async (value: Locale) => {
     if (locale.value === value) return
-    localeCookie.value = value
+
+    if (nativeApp.value) {
+      localeCookie.value = value
+    }
+    else {
+      localeCookie.value = undefined
+    }
+
     const target = nativeApp.value ? stripLocalePrefix(route.fullPath) : withLocalePath(route.fullPath, value)
     await navigateTo(target)
   }

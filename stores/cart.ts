@@ -1,15 +1,14 @@
 import type { CartItem, Product } from '~/types/product'
 
 export const useCartStore = defineStore('cartStore', () => {
-  const storage = useCookie<CartItem[]>('freya_cart_v1', {
-    default: () => [],
+  const storage = useCookie<CartItem[] | undefined>('freya_cart_v1', {
     sameSite: 'lax',
   })
 
   const items = computed<CartItem[]>({
     get: () => Array.isArray(storage.value) ? storage.value : [],
     set: (value) => {
-      storage.value = value
+      storage.value = value.length ? value : undefined
     },
   })
 
