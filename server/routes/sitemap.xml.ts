@@ -185,24 +185,15 @@ export default defineEventHandler(async (event) => {
   }
 
   const now = new Date().toISOString()
-  const stripLocale = (path: string) => path.replace(/^\/(hy|ru|en)(?=\/|$)/, '') || '/'
   const urls = Array.from(routes)
     .sort()
     .map((route) => {
       const priority = /\/(services|masters)\//.test(route) ? '0.9' : route.endsWith('/contacts') || route.endsWith('/privacy-policy') ? '0.7' : '0.8'
-      const basePath = stripLocale(route)
-      const alternates = locales
-        .map(locale => basePath === '/' ? `/${locale}` : `/${locale}${basePath}`)
-        .filter(path => routes.has(path))
-        .map(path => `\n    <xhtml:link rel="alternate" hreflang="${path.split('/')[1]}" href="${xmlEscape(`${siteUrl}${path}`)}" />`)
-        .join('')
-      const xDefaultPath = basePath === '/' ? '/hy' : `/hy${basePath}`
-
-      return `\n  <url>\n    <loc>${xmlEscape(`${siteUrl}${route}`)}</loc>${alternates}\n    <xhtml:link rel="alternate" hreflang="x-default" href="${xmlEscape(`${siteUrl}${xDefaultPath}`)}" />\n    <lastmod>${now}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`
+      return `\n  <url>\n    <loc>${xmlEscape(`${siteUrl}${route}`)}</loc>\n    <lastmod>${now}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`
     })
     .join('')
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">${urls}\n</urlset>`
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}\n</urlset>`
 
   return new Response(xml, {
     headers: {
