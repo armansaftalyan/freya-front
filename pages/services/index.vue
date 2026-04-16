@@ -72,7 +72,7 @@ usePageSeo({
   title: () => {
     if (brand.value === 'tor') return copy.value.title
     if (locale.value === 'ru') return 'Услуги салона в Ереване онлайн | Freya Beauty Salon'
-    if (locale.value === 'en') return 'Beauty Services in Yerevan Online | Freya Beauty Salon'
+    if (locale.value === 'en') return 'Beauty Services in Yerevan 2026 | Book Online | Freya Salon'
     return 'Սրահի ծառայություններ Երևանում | Freya Beauty Salon'
   },
   description: () => brand.value === 'tor' ? copy.value.lead : t('servicesPage.seoDescription'),

@@ -52,8 +52,6 @@ export default defineEventHandler(async (event) => {
 
   const staticRoutes = [
     '/',
-    '/all-pages',
-    '/tor/all-pages',
     '/blog',
     '/tor/blog',
     '/services',
@@ -188,7 +186,24 @@ export default defineEventHandler(async (event) => {
   const urls = Array.from(routes)
     .sort()
     .map((route) => {
-      const priority = /\/(services|masters)\//.test(route) ? '0.9' : route.endsWith('/contacts') || route.endsWith('/privacy-policy') ? '0.7' : '0.8'
+      const normalizedRoute = route.replace(/^\/(hy|ru|en)(?=\/|$)/, '') || '/'
+      const priority = normalizedRoute === '/'
+        ? '1.0'
+        : normalizedRoute === '/services' || normalizedRoute === '/tor/services'
+          ? '0.9'
+          : /^\/(services|tor\/services)\/[^/]+$/.test(normalizedRoute)
+            ? '0.8'
+            : normalizedRoute === '/masters' || normalizedRoute === '/tor/masters'
+              ? '0.7'
+              : normalizedRoute === '/blog' || normalizedRoute === '/tor/blog'
+                ? '0.6'
+                : normalizedRoute === '/products' || normalizedRoute === '/tor/products'
+                  ? '0.5'
+                  : normalizedRoute === '/legal' || normalizedRoute === '/privacy-policy' || normalizedRoute === '/tor/legal' || normalizedRoute === '/tor/privacy-policy'
+                    ? '0.3'
+                    : /\/(services|tor\/services)\//.test(normalizedRoute)
+                      ? '0.8'
+                      : '0.7'
       return `\n  <url>\n    <loc>${xmlEscape(`${siteUrl}${route}`)}</loc>\n    <lastmod>${now}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`
     })
     .join('')

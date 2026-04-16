@@ -134,6 +134,8 @@ usePageSeo({
       return `${categoryName} Երևանում | Tor Barbershop`
     }
     if (locale.value === 'ru') return `${categoryName} в Ереване | Freya Beauty Salon`
+    if (locale.value === 'en' && category.value?.slug === 'hair') return 'Hair Services Yerevan | Cuts, Coloring & Styling | Freya'
+    if (locale.value === 'en' && category.value?.slug === 'nails') return 'Manicure & Pedicure Yerevan | Gel, Design & Care | Freya'
     if (locale.value === 'en') return `${categoryName} in Yerevan | Freya Beauty Salon`
     return `${categoryName} Երևանում | Freya Beauty Salon`
   },

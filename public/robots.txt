@@ -1,8 +1,9 @@
 User-agent: *
 Allow: /
-Disallow: /*?
 Disallow: /account/
 Disallow: /tor/account/
+Disallow: /api/
+Disallow: /*?*utm_
 
 Sitemap: https://freyabeauty.am/sitemap.xml
 # Product feeds
