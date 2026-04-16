@@ -11,9 +11,8 @@ const isMobileMenuOpen = ref(false)
 const isMoreMenuOpen = ref(false)
 const moreMenuRef = ref<HTMLElement | null>(null)
 const { localePath } = useLocalizedPath()
-const { siteUrl } = useSiteMeta()
+const { siteUrl, telephone } = useSiteMeta()
 const { rootPath, mastersPath, contactsPath, legalPath, privacyPolicyPath, giftCardsPath, authLoginPath, authProfilePath, blogPath } = useBrandContext()
-const isArmenian = computed(() => locale.value === 'hy')
 const { canonicalUrl, alternates } = useLocalizedSeo(() => route.path)
 const torLogoUrl = computed(() => `${siteUrl.value}/tor-logo.jpg`)
 
@@ -195,7 +194,7 @@ useHead(() => ({
 </script>
 
 <template>
-  <div class="tor-shell flex min-h-screen flex-col" :class="{ 'locale-hy': isArmenian }">
+  <div class="tor-shell flex min-h-screen flex-col" :class="{ 'locale-hy': locale === 'hy' }">
     <SharedToastStack />
 
     <header class="sticky top-0 z-40 border-b border-white/10 bg-[#0b0b0b]/90 backdrop-blur">
@@ -340,6 +339,15 @@ useHead(() => ({
     <footer class="border-t border-white/10 bg-black py-8">
       <div class="container-shell flex flex-col gap-4 text-sm text-stone-400">
         <PaymentMethodIcons dark />
+
+        <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-stone-200">
+          <h3 class="text-base font-semibold">Tor Barbershop</h3>
+          <p class="mt-1">21 Azatutyan, Yerevan, Armenia</p>
+          <p class="mt-1">
+            <a href="tel:+37444733773" class="transition hover:text-[#d79a49]">{{ telephone }}</a>
+          </p>
+          <p class="mt-1">Daily: 10:00-19:00</p>
+        </div>
 
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>

@@ -8,7 +8,17 @@ const route = useRoute()
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
 const { brand, isTor, blogPath, rootPath } = useBrandContext()
-const pageTitle = computed(() => brand.value === 'tor' ? t('blog.pageTitleTor') : t('blog.pageTitleFreya'))
+const pageTitle = computed(() => {
+  if (brand.value === 'tor') {
+    return t('blog.pageTitleTor')
+  }
+
+  if (locale.value === 'en') {
+    return 'Beauty Tips & Guides Yerevan | Freya Salon Blog'
+  }
+
+  return t('blog.pageTitleFreya')
+})
 const pageDescription = computed(() => brand.value === 'tor' ? t('blog.pageDescriptionTor') : t('blog.pageDescriptionFreya'))
 const brandHomeLabel = computed(() => brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon')
 

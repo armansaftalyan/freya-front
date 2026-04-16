@@ -99,6 +99,14 @@ const seoTitle = computed(() => {
   }
 
   if (locale.value === 'en') {
+    if (brand.value !== 'tor' && master.value.slug === 'bella-safaryan-1') {
+      return 'Bella Safaryan | Hair Stylist in Yerevan | Freya Salon'
+    }
+
+    if (brand.value !== 'tor' && master.value.slug === 'tanya-sargsyan-2') {
+      return 'Tanya Sargsyan | Hair Colorist Yerevan | Freya Salon'
+    }
+
     return specialty
       ? `${master.value.name} | ${specialty} | ${brandLabel}`
       : `${master.value.name} | ${masterKeyword.value} | ${brandLabel}`

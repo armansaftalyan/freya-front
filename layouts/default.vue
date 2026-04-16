@@ -7,20 +7,21 @@ import PaymentMethodIcons from '~/components/layout/PaymentMethodIcons.vue'
 const auth = useAuthStore()
 const { t, locale, locales } = useLocale()
 const route = useRoute()
-const { authLoginPath, authProfilePath, contactsPath, legalPath, privacyPolicyPath, blogPath } = useBrandContext()
-const { salonName, telephone, email, address, sameAs, siteUrl, logoUrl, defaultImageUrl } = useSiteMeta()
+const { brand, authLoginPath, authProfilePath, contactsPath, legalPath, privacyPolicyPath, blogPath, rootPath } = useBrandContext()
+const { salonName, torSalonName, telephone, email, address, sameAs, siteUrl, logoUrl, defaultImageUrl } = useSiteMeta()
 const isMobileMenuOpen = ref(false)
 const isMoreMenuOpen = ref(false)
 const moreMenuRef = ref<HTMLElement | null>(null)
 const { localePath } = useLocalizedPath()
 const localizedPath = computed(() => withLocalePath(stripLocalePrefix(route.path), normalizeLocale(locale.value)))
 const canonicalUrl = computed(() => `${siteUrl.value}${localizedPath.value}`)
+const brandName = computed(() => brand.value === 'tor' ? torSalonName : salonName)
+const allPagesPath = computed(() => `${rootPath.value}/all-pages`)
 const alternateLinks = computed(() => locales.map(item => ({
   rel: 'alternate',
   hreflang: item.code,
   href: `${siteUrl.value}${withLocalePath(stripLocalePrefix(route.path), item.code)}`,
 })))
-const isArmenian = computed(() => locale.value === 'hy')
 const bookingCta = computed(() => locale.value === 'hy' ? 'Ամրագրել' : t('nav.bookNow'))
 const privacyPolicyLabel = computed(() => {
   if (locale.value === 'ru') return 'Политика конфиденциальности'
@@ -59,13 +60,13 @@ const siteNavigationItems = computed(() => [
 ])
 const navLinkClass = computed(() => 'whitespace-nowrap text-[15px] font-medium text-sand-900 transition hover:text-sand-600 xl:text-base')
 const titleTemplate = (title?: string | null) => {
-  const baseTitle = 'Freya Beauty Salon'
+  const baseTitle = brandName.value
 
   if (!title) {
     return baseTitle
   }
 
-  return /\bFreya\b/i.test(title) ? title : `${title} | ${baseTitle}`
+  return title.toLowerCase().includes(baseTitle.toLowerCase()) ? title : `${title} | ${baseTitle}`
 }
 
 const links: Array<{ to: string; key: string; label?: string }> = [
@@ -115,7 +116,7 @@ useHead(() => ({
   ],
   meta: [
     { property: 'og:url', content: canonicalUrl.value },
-    { property: 'og:site_name', content: 'Freya Beauty Salon' },
+    { property: 'og:site_name', content: brandName.value },
     { name: 'yandex-verification', content: '80a17421b9f1f3e7' },
   ],
   script: [
@@ -126,9 +127,9 @@ useHead(() => ({
         '@context': 'https://schema.org',
         '@graph': [
           {
-            '@type': 'BeautySalon',
-            '@id': `${siteUrl.value}#salon`,
-            name: salonName,
+            '@type': brand.value === 'tor' ? 'Barbershop' : 'BeautySalon',
+            '@id': `${siteUrl.value}${rootPath.value}#salon`,
+            name: brandName.value,
             url: siteUrl.value,
             image: defaultImageUrl.value,
             logo: logoUrl.value,
@@ -155,12 +156,12 @@ useHead(() => ({
           },
           {
             '@type': 'WebSite',
-            '@id': `${siteUrl.value}#website`,
+            '@id': `${siteUrl.value}${rootPath.value}#website`,
             url: siteUrl.value,
-            name: salonName,
+            name: brandName.value,
             inLanguage: locale.value,
             publisher: {
-              '@id': `${siteUrl.value}#salon`,
+              '@id': `${siteUrl.value}${rootPath.value}#salon`,
             },
           },
           ...siteNavigationItems.value.map((item, index) => ({
@@ -329,14 +330,23 @@ useHead(() => ({
       <div class="container-shell flex flex-col gap-4 text-sm text-[var(--muted)]">
         <PaymentMethodIcons />
 
+        <div class="rounded-2xl border border-sand-200 bg-sand-50/70 p-4 text-sand-900">
+          <h3 class="text-base font-semibold">{{ brandName }}</h3>
+          <p class="mt-1">21 Azatutyan, Yerevan, Armenia</p>
+          <p class="mt-1">
+            <a href="tel:+37444733773" class="hover:text-sand-700">+374 44 733773</a>
+          </p>
+          <p class="mt-1">Daily: 10:00-19:00</p>
+        </div>
+
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p>© {{ new Date().getFullYear() }} Freya Beauty Salon</p>
+        <p>© {{ new Date().getFullYear() }} {{ brandName }}</p>
         <div class="flex gap-4">
           <NuxtLink :to="localePath(blogPath)" class="hover:text-sand-800">{{ blogLabel }}</NuxtLink>
           <NuxtLink :to="localePath(contactsPath)" class="hover:text-sand-800">{{ t('nav.contacts') }}</NuxtLink>
           <NuxtLink :to="localePath(legalPath)" class="hover:text-sand-800">{{ legalLabel }}</NuxtLink>
           <NuxtLink :to="localePath(privacyPolicyPath)" class="hover:text-sand-800">{{ privacyPolicyLabel }}</NuxtLink>
-          <NuxtLink :to="localePath('/all-pages')" class="hover:text-sand-800">{{ allPagesLabel }}</NuxtLink>
+          <NuxtLink :to="localePath(allPagesPath)" class="hover:text-sand-800">{{ allPagesLabel }}</NuxtLink>
         </div>
         </div>
       </div>
