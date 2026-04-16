@@ -45,7 +45,7 @@ const seoCopy = computed(() => {
 
   if (locale.value === 'en') {
     return {
-      title: 'Beauty Experts in Yerevan | Meet Our Masters | Freya Salon',
+      title: 'Beauty Experts in Yerevan | Meet Our Masters ',
       description: 'Meet Freya Beauty Salon masters in Yerevan for nails, cosmetology, massage, elos, women haircuts, coloring, and premium beauty care.',
     }
   }

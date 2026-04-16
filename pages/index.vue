@@ -32,7 +32,7 @@ onMounted(() => {
 
 const seoTitle = computed(() => {
   if (locale.value === 'ru') return 'Салон красоты в Ереване онлайн | Freya Beauty Salon'
-  if (locale.value === 'en') return 'Beauty Salon in Yerevan | Hair, Nails & Cosmetology | Freya'
+  if (locale.value === 'en') return 'Beauty Salon in Yerevan | Hair, Nails & Cosmetology'
   return 'Գեղեցկության սրահ Երևանում օնլայն | Freya Beauty Salon'
 })
 
