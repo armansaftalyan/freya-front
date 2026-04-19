@@ -1,14 +1,56 @@
 import type { CartItem, Product } from '~/types/product'
 
 export const useCartStore = defineStore('cartStore', () => {
-  const storage = useCookie<CartItem[] | undefined>('freya_cart_v1', {
-    sameSite: 'lax',
-  })
+  const storage = useState<CartItem[]>('cart_items_state', () => [])
+  const hydrated = useState<boolean>('cart_items_hydrated', () => false)
+  const storageKey = 'freya_cart_v1'
+
+  const persistItems = (value: CartItem[]) => {
+    if (!import.meta.client) return
+
+    if (value.length) {
+      window.localStorage.setItem(storageKey, JSON.stringify(value))
+    }
+    else {
+      window.localStorage.removeItem(storageKey)
+    }
+  }
+
+  const hydrateItems = () => {
+    if (!import.meta.client || hydrated.value) return
+
+    hydrated.value = true
+
+    const storedValue = window.localStorage.getItem(storageKey)
+    if (storedValue) {
+      try {
+        const parsed = JSON.parse(storedValue)
+        storage.value = Array.isArray(parsed) ? parsed : []
+        return
+      }
+      catch {
+        window.localStorage.removeItem(storageKey)
+      }
+    }
+
+    const legacyCart = useCookie<CartItem[] | undefined>('freya_cart_v1', {
+      sameSite: 'lax',
+    })
+
+    if (Array.isArray(legacyCart.value) && legacyCart.value.length) {
+      storage.value = legacyCart.value
+      persistItems(legacyCart.value)
+      legacyCart.value = undefined
+    }
+  }
+
+  hydrateItems()
 
   const items = computed<CartItem[]>({
     get: () => Array.isArray(storage.value) ? storage.value : [],
     set: (value) => {
-      storage.value = value.length ? value : undefined
+      storage.value = value
+      persistItems(value)
     },
   })
 
@@ -85,9 +127,11 @@ export const useCartStore = defineStore('cartStore', () => {
 
   return {
     items,
+    hydrated,
     itemsCount,
     totalPrice,
     addItem,
+    hydrateItems,
     getItemQuantity,
     syncProducts,
     decreaseItem,

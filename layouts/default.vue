@@ -136,7 +136,13 @@ useHead(() => ({
             logo: logoUrl.value,
             telephone,
             email,
+            priceRange: '$$',
             address,
+            geo: {
+              '@type': 'GeoCoordinates',
+              latitude: 40.1776,
+              longitude: 44.5126,
+            },
             openingHoursSpecification: [
               {
                 '@type': 'OpeningHoursSpecification',

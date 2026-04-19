@@ -6,35 +6,42 @@ type SitemapCategory = {
   id: number
   slug: string
   is_active?: boolean
+  updated_at?: string | null
 }
 
 type SitemapService = {
   slug: string
   category_id: number
   is_active?: boolean
+  updated_at?: string | null
 }
 
 type SitemapProductCategory = {
   id: number
   slug: string
   is_active?: boolean
+  updated_at?: string | null
 }
 
 type SitemapProduct = {
   slug: string
   category_id: number
   is_active?: boolean
+  updated_at?: string | null
 }
 
 type SitemapMaster = {
   slug: string | null
   id: number
   is_active?: boolean
+  updated_at?: string | null
 }
 
 type SitemapBlogArticle = {
   slug: string
   is_published?: boolean
+  updated_at?: string | null
+  published_at?: string | null
 }
 
 export default defineEventHandler(async (event) => {
@@ -49,6 +56,21 @@ export default defineEventHandler(async (event) => {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;')
+  const routeLastmod = new Map<string, string>()
+  const now = new Date()
+  const homepageLastmod = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString()
+  const weeklyLastmod = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - now.getUTCDay())).toISOString()
+  const normalizeLastmod = (...values: Array<string | null | undefined>) => {
+    for (const value of values) {
+      if (!value) continue
+      const parsed = new Date(value)
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed.toISOString()
+      }
+    }
+
+    return ''
+  }
 
   const staticRoutes = [
     '/',
@@ -77,7 +99,9 @@ export default defineEventHandler(async (event) => {
 
   const addLocalizedRoute = (route: string) => {
     for (const locale of locales) {
-      routes.add(route === '/' ? `/${locale}` : `/${locale}${route}`)
+      const localizedRoute = route === '/' ? `/${locale}` : `/${locale}${route}`
+      routes.add(localizedRoute)
+      routeLastmod.set(localizedRoute, route === '/' ? homepageLastmod : weeklyLastmod)
     }
   }
 
@@ -131,7 +155,14 @@ export default defineEventHandler(async (event) => {
         for (const service of (servicesResponse.data || []).filter(service => service.is_active !== false)) {
           const categorySlug = categorySlugById.get(service.category_id)
           if (!categorySlug) continue
-          addLocalizedRoute(`${basePath}/${categorySlug}/${service.slug}`)
+          const route = `${basePath}/${categorySlug}/${service.slug}`
+          addLocalizedRoute(route)
+          const lastmod = normalizeLastmod(service.updated_at)
+          if (lastmod) {
+            for (const locale of locales) {
+              routeLastmod.set(`/${locale}${route}`, lastmod)
+            }
+          }
         }
       }
 
@@ -139,19 +170,47 @@ export default defineEventHandler(async (event) => {
       addServiceRoutes(torCategoriesResponse, torServicesResponse, '/tor/services')
 
       for (const article of (freyaBlogArticlesResponse.data || []).filter(article => article.is_published !== false)) {
-        addLocalizedRoute(`/blog/${article.slug}`)
+        const route = `/blog/${article.slug}`
+        addLocalizedRoute(route)
+        const lastmod = normalizeLastmod(article.updated_at, article.published_at)
+        if (lastmod) {
+          for (const locale of locales) {
+            routeLastmod.set(`/${locale}${route}`, lastmod)
+          }
+        }
       }
 
       for (const article of (torBlogArticlesResponse.data || []).filter(article => article.is_published !== false)) {
-        addLocalizedRoute(`/tor/blog/${article.slug}`)
+        const route = `/tor/blog/${article.slug}`
+        addLocalizedRoute(route)
+        const lastmod = normalizeLastmod(article.updated_at, article.published_at)
+        if (lastmod) {
+          for (const locale of locales) {
+            routeLastmod.set(`/${locale}${route}`, lastmod)
+          }
+        }
       }
 
       for (const master of (freyaMastersResponse.data || []).filter(master => master.is_active !== false && master.slug)) {
-        addLocalizedRoute(`/masters/${master.slug}`)
+        const route = `/masters/${master.slug}`
+        addLocalizedRoute(route)
+        const lastmod = normalizeLastmod(master.updated_at)
+        if (lastmod) {
+          for (const locale of locales) {
+            routeLastmod.set(`/${locale}${route}`, lastmod)
+          }
+        }
       }
 
       for (const master of (torMastersResponse.data || []).filter(master => master.is_active !== false && master.slug)) {
-        addLocalizedRoute(`/tor/masters/${master.slug}`)
+        const route = `/tor/masters/${master.slug}`
+        addLocalizedRoute(route)
+        const lastmod = normalizeLastmod(master.updated_at)
+        if (lastmod) {
+          for (const locale of locales) {
+            routeLastmod.set(`/${locale}${route}`, lastmod)
+          }
+        }
       }
 
       const addProductRoutes = (
@@ -170,7 +229,14 @@ export default defineEventHandler(async (event) => {
         for (const product of (productsResponse.data || []).filter(product => product.is_active !== false)) {
           const categorySlug = productCategorySlugById.get(product.category_id)
           if (!categorySlug) continue
-          addLocalizedRoute(`${basePath}/${categorySlug}/${product.slug}`)
+          const route = `${basePath}/${categorySlug}/${product.slug}`
+          addLocalizedRoute(route)
+          const lastmod = normalizeLastmod(product.updated_at)
+          if (lastmod) {
+            for (const locale of locales) {
+              routeLastmod.set(`/${locale}${route}`, lastmod)
+            }
+          }
         }
       }
 
@@ -182,11 +248,11 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const now = new Date().toISOString()
   const urls = Array.from(routes)
     .sort()
     .map((route) => {
       const normalizedRoute = route.replace(/^\/(hy|ru|en)(?=\/|$)/, '') || '/'
+      const lastmod = routeLastmod.get(route) || weeklyLastmod
       const priority = normalizedRoute === '/'
         ? '1.0'
         : normalizedRoute === '/services' || normalizedRoute === '/tor/services'
@@ -204,7 +270,7 @@ export default defineEventHandler(async (event) => {
                     : /\/(services|tor\/services)\//.test(normalizedRoute)
                       ? '0.8'
                       : '0.7'
-      return `\n  <url>\n    <loc>${xmlEscape(`${siteUrl}${route}`)}</loc>\n    <lastmod>${now}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`
+      return `\n  <url>\n    <loc>${xmlEscape(`${siteUrl}${route}`)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priority}</priority>\n  </url>`
     })
     .join('')
 

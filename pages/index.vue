@@ -60,7 +60,13 @@ useStructuredData(() => ({
       url: canonicalUrl.value,
       image: defaultImageUrl.value,
       telephone,
+      priceRange: '$$',
       address,
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: 40.1776,
+        longitude: 44.5126,
+      },
       openingHoursSpecification,
       sameAs,
     },

@@ -15,6 +15,9 @@ const bookingCta = computed(() => locale.value === 'hy' ? 'Ամրագրել' : t
         <h1 class="max-w-3xl text-5xl leading-[1.02] tracking-[-0.03em] text-sand-950 sm:text-6xl xl:text-7xl">
           {{ t('homePage.hero.title') }}
         </h1>
+        <h2 class="mt-4 max-w-2xl text-xl text-sand-700 sm:text-2xl">
+          {{ t('homePage.hero.seoHeading') }}
+        </h2>
         <p class="max-w-2xl text-lg leading-8 text-[var(--muted)] xl:text-[1.35rem]">
           {{ t('homePage.hero.subtitle') }}
         </p>

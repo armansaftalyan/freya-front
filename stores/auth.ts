@@ -3,10 +3,47 @@ import type { AuthResponse, LoginPayload, RegisterPayload } from '~/types/auth'
 import type { User } from '~/types/user'
 
 export const useAuthStore = defineStore('authStore', () => {
-  const token = useCookie<string | null>('auth_token', { sameSite: 'lax', secure: false })
+  const token = useState<string | null>('auth_token_state', () => null)
   const user = ref<User | null>(null)
   const loading = ref(false)
   let fetchMePromise: Promise<void> | null = null
+  const storageKey = 'auth_token'
+
+  const persistToken = (value: string | null) => {
+    if (!import.meta.client) return
+
+    if (value) {
+      window.localStorage.setItem(storageKey, value)
+    }
+    else {
+      window.localStorage.removeItem(storageKey)
+    }
+  }
+
+  const migrateLegacyCookieToken = () => {
+    if (!import.meta.client || token.value) return
+
+    const legacyToken = useCookie<string | null>('auth_token', { sameSite: 'lax', secure: false })
+    if (!legacyToken.value) return
+
+    token.value = legacyToken.value
+    persistToken(legacyToken.value)
+    legacyToken.value = null
+  }
+
+  const hydrateToken = () => {
+    if (!import.meta.client) return
+
+    if (token.value) return
+
+    const storedToken = window.localStorage.getItem(storageKey)
+    if (storedToken) {
+      token.value = storedToken
+      return
+    }
+
+    migrateLegacyCookieToken()
+  }
 
   const isAuth = computed(() => Boolean(token.value && user.value))
 
@@ -26,6 +63,7 @@ export const useAuthStore = defineStore('authStore', () => {
 
   const setAuth = (payload: AuthResponse) => {
     token.value = payload.token
+    persistToken(payload.token)
     user.value = normalizeUser(payload.user)
   }
 
@@ -35,6 +73,7 @@ export const useAuthStore = defineStore('authStore', () => {
 
   const clearAuth = () => {
     token.value = null
+    persistToken(null)
     user.value = null
   }
 
@@ -74,6 +113,7 @@ export const useAuthStore = defineStore('authStore', () => {
   }
 
   const fetchMe = async (force = false) => {
+    hydrateToken()
     if (!token.value) return
     if (!force && user.value) return
     if (fetchMePromise) {
@@ -118,6 +158,7 @@ export const useAuthStore = defineStore('authStore', () => {
     token,
     loading,
     isAuth,
+    hydrateToken,
     login,
     register,
     fetchMe,

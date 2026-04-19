@@ -12,6 +12,9 @@ const { localePath } = useLocalizedPath()
 const route = useRoute()
 const auth = useAuthStore()
 const cart = useCartStore()
+cart.hydrateItems()
+const uiReady = ref(false)
+const cartReady = computed(() => uiReady.value && cart.hydrated)
 const { isTor, brand, productsPath } = useBrandContext()
 const cartSyncKey = computed(() => cart.items.map(item => item.product.id).sort((a, b) => a - b).join(','))
 const catalogPath = computed(() => productsPath.value)
@@ -81,13 +84,13 @@ useStructuredData(() => ({
   url: `${siteUrl.value}${isTor.value ? '/tor/cart' : '/cart'}`,
 }))
 
-await useAsyncData(
+useAsyncData(
   () => `cart-products-${locale.value}-${cartSyncKey.value}`,
   async () => {
     await syncCartProducts()
     return true
   },
-  { watch: [locale, cartSyncKey] },
+  { watch: [locale, cartSyncKey], server: false },
 )
 
 const quoteKey = computed(() => JSON.stringify({
@@ -95,7 +98,7 @@ const quoteKey = computed(() => JSON.stringify({
   delivery_type: form.delivery_type,
 }))
 
-await useAsyncData(
+useAsyncData(
   () => `cart-order-quote-${locale.value}-${quoteKey.value}`,
   async () => {
     if (!cart.items.length) {
@@ -115,7 +118,7 @@ await useAsyncData(
     orderQuote.value = response.data
     return response.data
   },
-  { watch: [locale, cartSyncKey, () => form.delivery_type] },
+  { watch: [locale, cartSyncKey, () => form.delivery_type], server: false },
 )
 
 const summarySubtotal = computed(() => orderQuote.value?.subtotal_price ?? cart.totalPrice)
@@ -135,6 +138,11 @@ const createdOrderPaymentLabel = computed(() => {
   if (createdOrder.value.payment_provider === 'idram') return t('productsPage.paymentProviderIdram')
   return t('productsPage.paymentProviderBankCard')
 })
+
+onMounted(() => {
+  uiReady.value = true
+})
+
 const idramPayload = computed(() => {
   if (payment.value?.status !== 'redirect' || !payment.value.payload?.fields) return null
   return payment.value.payload
@@ -254,7 +262,17 @@ const submit = async () => {
       </div>
 
       <div
-        v-if="createdOrder"
+        v-if="!cartReady"
+        class="rounded-3xl p-8 text-center"
+        :class="isTor
+          ? 'border border-white/10 bg-white/[0.03] shadow-[0_20px_50px_rgba(0,0,0,0.22)]'
+          : 'border border-sand-200 bg-white shadow-soft'"
+      >
+        <p class="text-lg">{{ t('common.loading') }}</p>
+      </div>
+
+      <div
+        v-else-if="createdOrder"
         class="rounded-[2rem] p-6"
         :class="isTor
           ? 'border border-white/10 bg-[linear-gradient(180deg,rgba(22,22,22,0.96),rgba(12,12,12,0.94))] shadow-[0_20px_50px_rgba(0,0,0,0.24)]'

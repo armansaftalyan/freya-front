@@ -3,6 +3,13 @@ const siteUrl = import.meta.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 const googleAnalyticsId = import.meta.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_ID || ''
 const yandexMetricaId = import.meta.env.NUXT_PUBLIC_YANDEX_METRIKA_ID || ''
 const nativeApp = import.meta.env.NUXT_PUBLIC_NATIVE_APP === 'true'
+const publicSsrCacheHeaders = {
+  'Cache-Control': 'public, max-age=3600, s-maxage=14400, stale-while-revalidate=86400',
+}
+const publicSwrRule = {
+  swr: 14400,
+  headers: publicSsrCacheHeaders,
+}
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
@@ -31,10 +38,155 @@ export default defineNuxtConfig({
     },
   },
   routeRules: {
+    '/': publicSwrRule,
+    '/en': publicSwrRule,
+    '/ru': publicSwrRule,
+    '/hy': publicSwrRule,
+    '/en/blog': publicSwrRule,
+    '/en/blog/**': publicSwrRule,
+    '/en/services': publicSwrRule,
+    '/en/services/**': publicSwrRule,
+    '/en/products': publicSwrRule,
+    '/en/products/**': publicSwrRule,
+    '/en/masters': publicSwrRule,
+    '/en/masters/**': publicSwrRule,
+    '/en/contacts': publicSwrRule,
+    '/en/legal': publicSwrRule,
+    '/en/privacy-policy': publicSwrRule,
+    '/en/tor': publicSwrRule,
+    '/en/tor/blog': publicSwrRule,
+    '/en/tor/blog/**': publicSwrRule,
+    '/en/tor/services': publicSwrRule,
+    '/en/tor/services/**': publicSwrRule,
+    '/en/tor/products': publicSwrRule,
+    '/en/tor/products/**': publicSwrRule,
+    '/en/tor/masters': publicSwrRule,
+    '/en/tor/masters/**': publicSwrRule,
+    '/en/tor/contacts': publicSwrRule,
+    '/en/tor/legal': publicSwrRule,
+    '/en/tor/privacy-policy': publicSwrRule,
+    '/ru/blog': publicSwrRule,
+    '/ru/blog/**': publicSwrRule,
+    '/ru/services': publicSwrRule,
+    '/ru/services/**': publicSwrRule,
+    '/ru/products': publicSwrRule,
+    '/ru/products/**': publicSwrRule,
+    '/ru/masters': publicSwrRule,
+    '/ru/masters/**': publicSwrRule,
+    '/ru/contacts': publicSwrRule,
+    '/ru/legal': publicSwrRule,
+    '/ru/privacy-policy': publicSwrRule,
+    '/ru/tor': publicSwrRule,
+    '/ru/tor/blog': publicSwrRule,
+    '/ru/tor/blog/**': publicSwrRule,
+    '/ru/tor/services': publicSwrRule,
+    '/ru/tor/services/**': publicSwrRule,
+    '/ru/tor/products': publicSwrRule,
+    '/ru/tor/products/**': publicSwrRule,
+    '/ru/tor/masters': publicSwrRule,
+    '/ru/tor/masters/**': publicSwrRule,
+    '/ru/tor/contacts': publicSwrRule,
+    '/ru/tor/legal': publicSwrRule,
+    '/ru/tor/privacy-policy': publicSwrRule,
+    '/hy/blog': publicSwrRule,
+    '/hy/blog/**': publicSwrRule,
+    '/hy/services': publicSwrRule,
+    '/hy/services/**': publicSwrRule,
+    '/hy/products': publicSwrRule,
+    '/hy/products/**': publicSwrRule,
+    '/hy/masters': publicSwrRule,
+    '/hy/masters/**': publicSwrRule,
+    '/hy/contacts': publicSwrRule,
+    '/hy/legal': publicSwrRule,
+    '/hy/privacy-policy': publicSwrRule,
+    '/hy/tor': publicSwrRule,
+    '/hy/tor/blog': publicSwrRule,
+    '/hy/tor/blog/**': publicSwrRule,
+    '/hy/tor/services': publicSwrRule,
+    '/hy/tor/services/**': publicSwrRule,
+    '/hy/tor/products': publicSwrRule,
+    '/hy/tor/products/**': publicSwrRule,
+    '/hy/tor/masters': publicSwrRule,
+    '/hy/tor/masters/**': publicSwrRule,
+    '/hy/tor/contacts': publicSwrRule,
+    '/hy/tor/legal': publicSwrRule,
+    '/hy/tor/privacy-policy': publicSwrRule,
     '/account': { prerender: false },
     '/account/**': { prerender: false },
+    '/en/account': {
+      prerender: false,
+      headers: {
+        'Cache-Control': 'private, no-store',
+      },
+    },
+    '/en/account/**': {
+      prerender: false,
+      headers: {
+        'Cache-Control': 'private, no-store',
+      },
+    },
+    '/ru/account': {
+      prerender: false,
+      headers: {
+        'Cache-Control': 'private, no-store',
+      },
+    },
+    '/ru/account/**': {
+      prerender: false,
+      headers: {
+        'Cache-Control': 'private, no-store',
+      },
+    },
+    '/hy/account': {
+      prerender: false,
+      headers: {
+        'Cache-Control': 'private, no-store',
+      },
+    },
+    '/hy/account/**': {
+      prerender: false,
+      headers: {
+        'Cache-Control': 'private, no-store',
+      },
+    },
     '/tor/account': { prerender: false },
     '/tor/account/**': { prerender: false },
+    '/en/tor/account': {
+      prerender: false,
+      headers: {
+        'Cache-Control': 'private, no-store',
+      },
+    },
+    '/en/tor/account/**': {
+      prerender: false,
+      headers: {
+        'Cache-Control': 'private, no-store',
+      },
+    },
+    '/ru/tor/account': {
+      prerender: false,
+      headers: {
+        'Cache-Control': 'private, no-store',
+      },
+    },
+    '/ru/tor/account/**': {
+      prerender: false,
+      headers: {
+        'Cache-Control': 'private, no-store',
+      },
+    },
+    '/hy/tor/account': {
+      prerender: false,
+      headers: {
+        'Cache-Control': 'private, no-store',
+      },
+    },
+    '/hy/tor/account/**': {
+      prerender: false,
+      headers: {
+        'Cache-Control': 'private, no-store',
+      },
+    },
   },
   runtimeConfig: {
     public: {
