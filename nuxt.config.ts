@@ -10,6 +10,12 @@ const publicSwrRule = {
   swr: 14400,
   headers: publicSsrCacheHeaders,
 }
+const privateNoStoreRule = {
+  prerender: false,
+  headers: {
+    'Cache-Control': 'private, no-store',
+  },
+}
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
@@ -113,80 +119,35 @@ export default defineNuxtConfig({
     '/hy/tor/privacy-policy': publicSwrRule,
     '/account': { prerender: false },
     '/account/**': { prerender: false },
-    '/en/account': {
-      prerender: false,
-      headers: {
-        'Cache-Control': 'private, no-store',
-      },
-    },
-    '/en/account/**': {
-      prerender: false,
-      headers: {
-        'Cache-Control': 'private, no-store',
-      },
-    },
-    '/ru/account': {
-      prerender: false,
-      headers: {
-        'Cache-Control': 'private, no-store',
-      },
-    },
-    '/ru/account/**': {
-      prerender: false,
-      headers: {
-        'Cache-Control': 'private, no-store',
-      },
-    },
-    '/hy/account': {
-      prerender: false,
-      headers: {
-        'Cache-Control': 'private, no-store',
-      },
-    },
-    '/hy/account/**': {
-      prerender: false,
-      headers: {
-        'Cache-Control': 'private, no-store',
-      },
-    },
+    '/en/account': privateNoStoreRule,
+    '/en/account/**': privateNoStoreRule,
+    '/ru/account': privateNoStoreRule,
+    '/ru/account/**': privateNoStoreRule,
+    '/hy/account': privateNoStoreRule,
+    '/hy/account/**': privateNoStoreRule,
+    '/en/cart': privateNoStoreRule,
+    '/ru/cart': privateNoStoreRule,
+    '/hy/cart': privateNoStoreRule,
+    '/en/booking': privateNoStoreRule,
+    '/ru/booking': privateNoStoreRule,
+    '/hy/booking': privateNoStoreRule,
+    '/en/gift-cards/buy': privateNoStoreRule,
+    '/ru/gift-cards/buy': privateNoStoreRule,
+    '/hy/gift-cards/buy': privateNoStoreRule,
     '/tor/account': { prerender: false },
     '/tor/account/**': { prerender: false },
-    '/en/tor/account': {
-      prerender: false,
-      headers: {
-        'Cache-Control': 'private, no-store',
-      },
-    },
-    '/en/tor/account/**': {
-      prerender: false,
-      headers: {
-        'Cache-Control': 'private, no-store',
-      },
-    },
-    '/ru/tor/account': {
-      prerender: false,
-      headers: {
-        'Cache-Control': 'private, no-store',
-      },
-    },
-    '/ru/tor/account/**': {
-      prerender: false,
-      headers: {
-        'Cache-Control': 'private, no-store',
-      },
-    },
-    '/hy/tor/account': {
-      prerender: false,
-      headers: {
-        'Cache-Control': 'private, no-store',
-      },
-    },
-    '/hy/tor/account/**': {
-      prerender: false,
-      headers: {
-        'Cache-Control': 'private, no-store',
-      },
-    },
+    '/en/tor/account': privateNoStoreRule,
+    '/en/tor/account/**': privateNoStoreRule,
+    '/ru/tor/account': privateNoStoreRule,
+    '/ru/tor/account/**': privateNoStoreRule,
+    '/hy/tor/account': privateNoStoreRule,
+    '/hy/tor/account/**': privateNoStoreRule,
+    '/en/tor/cart': privateNoStoreRule,
+    '/ru/tor/cart': privateNoStoreRule,
+    '/hy/tor/cart': privateNoStoreRule,
+    '/en/tor/booking': privateNoStoreRule,
+    '/ru/tor/booking': privateNoStoreRule,
+    '/hy/tor/booking': privateNoStoreRule,
   },
   runtimeConfig: {
     public: {
