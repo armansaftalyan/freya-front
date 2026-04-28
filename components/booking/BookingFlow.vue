@@ -1012,7 +1012,13 @@ onMounted(() => {
           {{ t('booking.oneCategoryPerLine') }}
         </p>
 
-        <div ref="mobileStepsStickyRef" class="sticky top-16 z-20 mt-4">
+        <div
+          ref="mobileStepsStickyRef"
+          class="sticky top-16 z-20 mt-4 rounded-[1.5rem] p-2"
+          :class="isTor
+            ? 'border border-white/10 bg-[#0f0f10]/96 shadow-[0_18px_40px_rgba(0,0,0,0.38)] backdrop-blur'
+            : 'bg-[rgba(248,244,237,0.96)] shadow-soft backdrop-blur'"
+        >
           <BookingBreadcrumbs :current="mobileStep" :theme="isTor ? 'dark' : 'light'" />
         </div>
 
