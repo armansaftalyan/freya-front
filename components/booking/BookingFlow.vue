@@ -803,11 +803,14 @@ const submit = async () => {
     toast.push({ type: 'success', title: t('common.appointmentCreated') })
 
     lines.value = [createEmptyLine()]
+    activeLineIndex.value = 0
+    mobileStep.value = 1
     comment.value = ''
     guestFirstName.value = ''
     guestLastName.value = ''
     guestPhone.value = ''
     bookingForClient.value = isMasterUser.value ? true : false
+    void scrollMobileStepCardIntoView()
   }
   catch (error: any) {
     const parsed = useApiError(error)
