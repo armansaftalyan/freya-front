@@ -126,9 +126,14 @@ const creating = ref(false)
 const successCount = ref(0)
 const createdAppointments = ref<Appointment[]>([])
 const currentMasterProfile = ref<Master | null>(null)
+const mobileStepCardRef = ref<HTMLElement | null>(null)
+const mobileStepsStickyRef = ref<HTMLElement | null>(null)
+const mobileStepsStickyHeight = ref(0)
+const mobileStepsStickyTopOffset = ref(0)
 const clientLookupLoading = ref(false)
 const matchedClient = ref<User | null>(null)
 let clientLookupTimer: ReturnType<typeof setTimeout> | null = null
+let mobileStepsStickyObserver: ResizeObserver | null = null
 
 const comment = ref('')
 const guestFirstName = ref('')
@@ -283,6 +288,26 @@ const selectedMaster = (line: BookingLine): Master | undefined => {
     || (isMasterUser.value && currentMasterProfile.value?.id === line.masterId ? currentMasterProfile.value : undefined)
 }
 
+const scrollMobileStepCardIntoView = async () => {
+  if (!import.meta.client) return
+
+  await nextTick()
+
+  const targetTop = mobileStepCardRef.value
+    ? mobileStepCardRef.value.getBoundingClientRect().top + window.scrollY - mobileStepsStickyHeight.value - mobileStepsStickyTopOffset.value - 12
+    : 0
+
+  window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' })
+}
+
+const updateMobileStepsStickyHeight = () => {
+  if (!import.meta.client) return
+  mobileStepsStickyHeight.value = mobileStepsStickyRef.value?.offsetHeight || 0
+  if (mobileStepsStickyRef.value) {
+    mobileStepsStickyTopOffset.value = Number.parseFloat(window.getComputedStyle(mobileStepsStickyRef.value).top || '0') || 0
+  }
+}
+
 const mobileStep = ref(1)
 const activeLineIndex = ref(0)
 
@@ -322,10 +347,12 @@ const goToNextMobileStep = () => {
   }
 
   mobileStep.value = Math.min(4, mobileStep.value + 1)
+  void scrollMobileStepCardIntoView()
 }
 
 const goToPreviousMobileStep = () => {
   mobileStep.value = Math.max(1, mobileStep.value - 1)
+  void scrollMobileStepCardIntoView()
 }
 
 const selectLineForMobile = (index: number) => {
@@ -341,6 +368,8 @@ const selectLineForMobile = (index: number) => {
       mobileStep.value = 1
     }
   }
+
+  void scrollMobileStepCardIntoView()
 }
 
 const servicePriceLabelForLine = (line: BookingLine, service: Service) => {
@@ -919,9 +948,25 @@ onBeforeUnmount(() => {
     clearTimeout(clientLookupTimer)
     clientLookupTimer = null
   }
+  mobileStepsStickyObserver?.disconnect()
+  mobileStepsStickyObserver = null
   for (const line of lines.value) {
     clearLineNetworkState(line.id)
   }
+})
+
+onMounted(() => {
+  updateMobileStepsStickyHeight()
+
+  if (!import.meta.client || typeof ResizeObserver === 'undefined' || !mobileStepsStickyRef.value) {
+    return
+  }
+
+  mobileStepsStickyObserver = new ResizeObserver(() => {
+    updateMobileStepsStickyHeight()
+  })
+
+  mobileStepsStickyObserver.observe(mobileStepsStickyRef.value)
 })
 </script>
 
@@ -967,37 +1012,39 @@ onBeforeUnmount(() => {
           {{ t('booking.oneCategoryPerLine') }}
         </p>
 
-        <div class="sticky top-4 z-20 mt-4 space-y-3">
+        <div ref="mobileStepsStickyRef" class="sticky top-16 z-20 mt-4">
           <BookingBreadcrumbs :current="mobileStep" :theme="isTor ? 'dark' : 'light'" />
-          <div
-            class="rounded-[1.75rem] px-4 py-3 backdrop-blur"
-            :class="isTor ? 'border border-white/10 bg-[#161616]/90' : 'border border-sand-200/80 bg-white/95 shadow-soft'"
-          >
-            <div class="flex items-center justify-between gap-3">
-              <div>
-                <p class="text-[11px] uppercase tracking-[0.18em]" :class="isTor ? 'text-[#d79a49]' : 'text-sand-600'">{{ bookingBrandName }}</p>
-                <p class="text-lg font-semibold">{{ t('booking.wizard') }}</p>
-              </div>
-              <BaseButton size="sm" variant="secondary" :theme="isTor ? 'tor' : 'default'" @click="addLine">{{ t('booking.addLine') }}</BaseButton>
+        </div>
+
+        <div
+          class="mt-3 rounded-[1.75rem] px-4 py-3"
+          :class="isTor ? 'border border-white/10 bg-[#161616]' : 'border border-sand-200/80 bg-white shadow-soft'"
+        >
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-[11px] uppercase tracking-[0.18em]" :class="isTor ? 'text-[#d79a49]' : 'text-sand-600'">{{ bookingBrandName }}</p>
+              <p class="text-lg font-semibold">{{ t('booking.wizard') }}</p>
             </div>
-            <div v-if="lines.length > 1" class="mt-3 flex gap-2 overflow-x-auto pb-1">
-              <button
-                v-for="(line, index) in lines"
-                :key="`mobile-line-${line.id}`"
-                type="button"
-                class="shrink-0 rounded-full border px-3 py-1.5 text-sm transition"
-                :class="activeLineIndex === index
-                  ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
-                  : (isTor ? 'border-white/10 bg-white/[0.04] text-stone-200' : 'border-sand-200 bg-white text-sand-800')"
-                @click="selectLineForMobile(index)"
-              >
-                {{ t('booking.lineTitle') }} #{{ index + 1 }}
-              </button>
-            </div>
+            <BaseButton size="sm" variant="secondary" :theme="isTor ? 'tor' : 'default'" @click="addLine">{{ t('booking.addLine') }}</BaseButton>
+          </div>
+          <div v-if="lines.length > 1" class="mt-3 flex gap-2 overflow-x-auto pb-1">
+            <button
+              v-for="(line, index) in lines"
+              :key="`mobile-line-${line.id}`"
+              type="button"
+              class="shrink-0 rounded-full border px-3 py-1.5 text-sm transition"
+              :class="activeLineIndex === index
+                ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
+                : (isTor ? 'border-white/10 bg-white/[0.04] text-stone-200' : 'border-sand-200 bg-white text-sand-800')"
+              @click="selectLineForMobile(index)"
+            >
+              {{ t('booking.lineTitle') }} #{{ index + 1 }}
+            </button>
           </div>
         </div>
 
-        <Card v-if="activeLine" class="mt-4 overflow-hidden" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_24px_60px_rgba(0,0,0,0.22)]' : ''">
+        <div v-if="activeLine" ref="mobileStepCardRef" class="mt-4">
+        <Card class="overflow-hidden" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_24px_60px_rgba(0,0,0,0.22)]' : ''">
           <div class="flex items-start justify-between gap-3">
             <div>
               <p class="text-[11px] uppercase tracking-[0.18em]" :class="isTor ? 'text-[#d79a49]' : 'text-sand-600'">{{ t('booking.lineTitle') }} #{{ activeLineIndex + 1 }}</p>
@@ -1179,6 +1226,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
         </Card>
+        </div>
 
         <div class="sticky bottom-3 z-20 mt-4 rounded-[1.75rem] p-3 backdrop-blur" :class="isTor ? 'border border-white/10 bg-[#161616]/92' : 'border border-sand-200/80 bg-white/95 shadow-soft'">
           <div class="flex gap-3">
