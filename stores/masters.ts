@@ -18,11 +18,12 @@ export const useMastersStore = defineStore('mastersStore', () => {
       serviceId || 'none',
       serviceIds?.length ? [...serviceIds].sort((a, b) => a - b).join(',') : 'none',
     ].join(':')
+  const hasMastersData = () => masters.value.length > 0
 
   const fetchMasters = async (serviceId?: number, serviceIds?: number[], brand?: 'freya' | 'tor') => {
     const contextKey = mastersKey(serviceId, serviceIds, brand)
 
-    if (initializedKey.value === contextKey) return
+    if (initializedKey.value === contextKey && hasMastersData()) return
     if (pendingKey.value === contextKey && initPromise) {
       await initPromise
       return

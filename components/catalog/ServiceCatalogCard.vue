@@ -20,13 +20,14 @@ const props = withDefaults(defineProps<{
 })
 
 const isTor = computed(() => props.theme === 'tor')
+const { localePath } = useLocalizedPath()
 
 const openCard = () => {
   if (!props.cardTo) {
     return
   }
 
-  navigateTo(props.cardTo)
+  navigateTo(localePath(props.cardTo))
 }
 </script>
 

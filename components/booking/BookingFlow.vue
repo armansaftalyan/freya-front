@@ -9,6 +9,7 @@ import type { Slot } from '~/types/slot'
 import type { User } from '~/types/user'
 import Card from '~/components/base/Card.vue'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
+import BookingBreadcrumbs from '~/components/booking/BookingBreadcrumbs.vue'
 import SlotPicker from '~/components/booking/SlotPicker.vue'
 import FaqSection from '~/components/sections/FaqSection.vue'
 
@@ -280,6 +281,66 @@ const selectedServicesLabel = (line: BookingLine): string => {
 const selectedMaster = (line: BookingLine): Master | undefined => {
   return line.masters.find(item => item.id === line.masterId)
     || (isMasterUser.value && currentMasterProfile.value?.id === line.masterId ? currentMasterProfile.value : undefined)
+}
+
+const mobileStep = ref(1)
+const activeLineIndex = ref(0)
+
+const activeLine = computed(() => lines.value[activeLineIndex.value] || null)
+
+const lineHasCategoryAndServices = (line: BookingLine | null) => Boolean(line?.categoryId && line.serviceIds.length)
+const lineHasDateAndSlot = (line: BookingLine | null) => Boolean(line?.date && line?.slot)
+
+const canOpenMobileStep = (step: number, line: BookingLine | null) => {
+  if (!line) return false
+  if (step <= 1) return true
+  if (step === 2) return lineHasCategoryAndServices(line)
+  if (step === 3) return lineHasCategoryAndServices(line)
+  if (step === 4) return lineHasCategoryAndServices(line) && lineHasDateAndSlot(line)
+  return false
+}
+
+const setMobileStep = (step: number) => {
+  if (!activeLine.value || !canOpenMobileStep(step, activeLine.value)) {
+    return
+  }
+
+  mobileStep.value = step
+}
+
+const goToNextMobileStep = () => {
+  if (!activeLine.value) return
+
+  if (mobileStep.value === 1 && !lineHasCategoryAndServices(activeLine.value)) {
+    toast.push({ type: 'error', title: t('common.requestFailed'), description: t('booking.errors.service') })
+    return
+  }
+
+  if (mobileStep.value === 3 && !lineHasDateAndSlot(activeLine.value)) {
+    toast.push({ type: 'error', title: t('common.requestFailed'), description: !activeLine.value.date ? t('booking.errors.date') : t('booking.errors.slot') })
+    return
+  }
+
+  mobileStep.value = Math.min(4, mobileStep.value + 1)
+}
+
+const goToPreviousMobileStep = () => {
+  mobileStep.value = Math.max(1, mobileStep.value - 1)
+}
+
+const selectLineForMobile = (index: number) => {
+  activeLineIndex.value = index
+  if (activeLine.value && !canOpenMobileStep(mobileStep.value, activeLine.value)) {
+    if (lineHasCategoryAndServices(activeLine.value) && lineHasDateAndSlot(activeLine.value)) {
+      mobileStep.value = 4
+    }
+    else if (lineHasCategoryAndServices(activeLine.value)) {
+      mobileStep.value = 3
+    }
+    else {
+      mobileStep.value = 1
+    }
+  }
 }
 
 const servicePriceLabelForLine = (line: BookingLine, service: Service) => {
@@ -603,13 +664,20 @@ const addLine = () => {
   }
 
   lines.value.push(createEmptyLine())
+  activeLineIndex.value = lines.value.length - 1
+  mobileStep.value = 1
 }
 
 const removeLine = (lineId: number) => {
   clearLineNetworkState(lineId)
+  const removedIndex = lines.value.findIndex(line => line.id === lineId)
   lines.value = lines.value.filter(line => line.id !== lineId)
   if (!lines.value.length) {
     lines.value = [createEmptyLine()]
+  }
+
+  if (removedIndex >= 0 && activeLineIndex.value >= lines.value.length) {
+    activeLineIndex.value = Math.max(0, lines.value.length - 1)
   }
 }
 
@@ -759,6 +827,15 @@ const bootstrapBookingFlow = async () => {
 
 await bootstrapBookingFlow()
 
+watch(
+  () => lines.value.length,
+  () => {
+    if (activeLineIndex.value >= lines.value.length) {
+      activeLineIndex.value = Math.max(0, lines.value.length - 1)
+    }
+  },
+)
+
 const extractMatchedUser = (payload: any): User | null => {
   if (!payload) return null
   if (Array.isArray(payload?.data)) return payload.data[0] || null
@@ -880,214 +957,463 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <p
-        class="rounded-xl px-3 py-2 text-xs"
-        :class="isTor
-          ? 'border border-white/10 bg-white/[0.03] text-stone-300'
-          : 'border border-sand-200 bg-sand-50 text-sand-700'"
-      >
-        {{ t('booking.oneCategoryPerLine') }}
-      </p>
-
-      <div class="space-y-4">
-        <Card
-          v-for="(line, index) in lines"
-          :key="line.id"
-          :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''"
+      <div class="lg:hidden">
+        <p
+          class="rounded-xl px-3 py-2 text-xs"
+          :class="isTor
+            ? 'border border-white/10 bg-white/[0.03] text-stone-300'
+            : 'border border-sand-200 bg-sand-50 text-sand-700'"
         >
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <h2 class="text-2xl sm:text-3xl">{{ t('booking.lineTitle') }} #{{ index + 1 }}</h2>
-            <BaseButton v-if="lines.length > 1" size="sm" variant="secondary" :theme="isTor ? 'tor' : 'default'" @click="removeLine(line.id)">{{ t('booking.removeLine') }}</BaseButton>
+          {{ t('booking.oneCategoryPerLine') }}
+        </p>
+
+        <div class="sticky top-4 z-20 mt-4 space-y-3">
+          <BookingBreadcrumbs :current="mobileStep" :theme="isTor ? 'dark' : 'light'" />
+          <div
+            class="rounded-[1.75rem] px-4 py-3 backdrop-blur"
+            :class="isTor ? 'border border-white/10 bg-[#161616]/90' : 'border border-sand-200/80 bg-white/95 shadow-soft'"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="text-[11px] uppercase tracking-[0.18em]" :class="isTor ? 'text-[#d79a49]' : 'text-sand-600'">{{ bookingBrandName }}</p>
+                <p class="text-lg font-semibold">{{ t('booking.wizard') }}</p>
+              </div>
+              <BaseButton size="sm" variant="secondary" :theme="isTor ? 'tor' : 'default'" @click="addLine">{{ t('booking.addLine') }}</BaseButton>
+            </div>
+            <div v-if="lines.length > 1" class="mt-3 flex gap-2 overflow-x-auto pb-1">
+              <button
+                v-for="(line, index) in lines"
+                :key="`mobile-line-${line.id}`"
+                type="button"
+                class="shrink-0 rounded-full border px-3 py-1.5 text-sm transition"
+                :class="activeLineIndex === index
+                  ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
+                  : (isTor ? 'border-white/10 bg-white/[0.04] text-stone-200' : 'border-sand-200 bg-white text-sand-800')"
+                @click="selectLineForMobile(index)"
+              >
+                {{ t('booking.lineTitle') }} #{{ index + 1 }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <Card v-if="activeLine" class="mt-4 overflow-hidden" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_24px_60px_rgba(0,0,0,0.22)]' : ''">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-[11px] uppercase tracking-[0.18em]" :class="isTor ? 'text-[#d79a49]' : 'text-sand-600'">{{ t('booking.lineTitle') }} #{{ activeLineIndex + 1 }}</p>
+              <h2 class="mt-1 text-2xl leading-tight">
+                {{ mobileStep === 1 ? t('booking.categoryService') : mobileStep === 2 ? t('booking.master') : mobileStep === 3 ? t('booking.dateSlot') : t('booking.confirm') }}
+              </h2>
+            </div>
+            <BaseButton v-if="lines.length > 1" size="sm" variant="secondary" :theme="isTor ? 'tor' : 'default'" @click="removeLine(activeLine.id)">{{ t('booking.removeLine') }}</BaseButton>
           </div>
 
-          <div class="mt-4 grid gap-5 xl:grid-cols-2">
-            <div class="space-y-4">
-              <div class="space-y-2">
-                <p class="text-sm" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ t('booking.chooseCategory') }}</p>
-                <div class="flex flex-wrap gap-2">
-                  <button
-                    v-for="category in visibleCategories"
-                    :key="`${line.id}-${category.id}`"
-                    type="button"
-                    class="rounded-full border px-3 py-1.5 text-sm transition"
-                    :class="line.categoryId === category.id
-                      ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
-                      : (isTor ? 'border-white/10 bg-white/[0.04] text-stone-200 hover:border-[#d79a49]/50' : 'border-sand-200 bg-white text-sand-900 hover:border-sand-600')"
-                    @click="setLineCategory(line, category.id)"
-                  >
-                    {{ category.name }}
-                  </button>
-                </div>
+          <div v-if="mobileStep === 1" class="mt-5 space-y-5">
+            <div class="space-y-2">
+              <p class="text-sm" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ t('booking.chooseCategory') }}</p>
+              <div class="flex flex-wrap gap-2">
+                <button
+                  v-for="category in visibleCategories"
+                  :key="`${activeLine.id}-${category.id}`"
+                  type="button"
+                  class="rounded-full border px-3 py-2 text-sm transition"
+                  :class="activeLine.categoryId === category.id
+                    ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
+                    : (isTor ? 'border-white/10 bg-white/[0.04] text-stone-200' : 'border-sand-200 bg-white text-sand-900')"
+                  @click="setLineCategory(activeLine, category.id)"
+                >
+                  {{ category.name }}
+                </button>
               </div>
+            </div>
 
-              <div class="space-y-2">
-                <p class="text-sm" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ t('booking.service') }}</p>
-                <div class="grid gap-2">
-                  <button
-                    v-for="item in servicesForLine(line)"
-                    :key="`${line.id}-service-${item.id}`"
-                    type="button"
-                    class="w-full rounded-2xl border px-4 py-3 text-left transition"
-                    :disabled="isServiceDisabledForLine(line, item)"
-                      :class="isServiceDisabledForLine(line, item)
-                        ? (isTor ? 'cursor-not-allowed border-white/10 bg-white/[0.02] text-stone-500' : 'cursor-not-allowed border-sand-200 bg-sand-100 text-sand-400')
-                        : line.serviceIds.includes(item.id)
-                        ? (isTor ? 'border-[#d79a49] bg-white/[0.05]' : 'border-sand-900 bg-sand-50')
-                        : (isTor ? 'border-white/10 bg-white/[0.03] hover:border-[#d79a49]/50' : 'border-sand-200 bg-white hover:border-sand-600')"
-                    @click="toggleServiceForLine(line, item)"
-                  >
-                    <div class="flex items-start justify-between gap-3">
-                      <div>
-                        <p class="font-semibold">{{ item.name }}</p>
-                        <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ item.duration_minutes }} {{ t('booking.minutesUnit') }} · {{ servicePriceLabelForLine(line, item) }}</p>
-                      </div>
-                      <span
-                        class="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full border text-base font-bold leading-none"
-                        :class="line.serviceIds.includes(item.id)
-                          ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
-                          : (isTor ? 'border-white/15 text-stone-400' : 'border-sand-300 text-sand-500')"
-                      >
-                        {{ line.serviceIds.includes(item.id) ? '✓' : '+' }}
-                      </span>
+            <div class="space-y-3">
+              <p class="text-sm" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ t('booking.service') }}</p>
+              <div class="grid gap-3">
+                <button
+                  v-for="item in servicesForLine(activeLine)"
+                  :key="`${activeLine.id}-service-${item.id}`"
+                  type="button"
+                  class="w-full rounded-[1.5rem] border px-4 py-4 text-left transition"
+                  :disabled="isServiceDisabledForLine(activeLine, item)"
+                  :class="isServiceDisabledForLine(activeLine, item)
+                    ? (isTor ? 'cursor-not-allowed border-white/10 bg-white/[0.02] text-stone-500' : 'cursor-not-allowed border-sand-200 bg-sand-100 text-sand-400')
+                    : activeLine.serviceIds.includes(item.id)
+                    ? (isTor ? 'border-[#d79a49] bg-white/[0.06]' : 'border-sand-900 bg-sand-50')
+                    : (isTor ? 'border-white/10 bg-white/[0.03]' : 'border-sand-200 bg-white')"
+                  @click="toggleServiceForLine(activeLine, item)"
+                >
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <p class="font-semibold">{{ item.name }}</p>
+                      <p class="mt-1 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ item.duration_minutes }} {{ t('booking.minutesUnit') }} · {{ servicePriceLabelForLine(activeLine, item) }}</p>
                     </div>
-                  </button>
-                </div>
-                <div v-if="line.serviceIds.length" class="space-y-2">
-                  <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'"><span class="font-semibold">{{ t('booking.service') }}:</span> {{ selectedServicesLabel(line) }}</p>
-                  <div class="flex flex-wrap gap-2">
-                    <button
-                      v-for="item in selectedServices(line)"
-                      :key="`selected-${line.id}-${item.id}`"
-                      type="button"
-                      class="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm"
-                      :class="isTor
-                        ? 'border-white/10 bg-white/[0.04] text-stone-100 hover:border-[#d79a49]/50'
-                        : 'border-sand-300 bg-white text-sand-800 hover:border-sand-600'"
-                      @click="line.serviceIds = line.serviceIds.filter(id => id !== item.id); fetchMastersForLine(line)"
+                    <span
+                      class="inline-flex h-8 w-8 items-center justify-center rounded-full border text-base font-bold"
+                      :class="activeLine.serviceIds.includes(item.id)
+                        ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
+                        : (isTor ? 'border-white/15 text-stone-400' : 'border-sand-300 text-sand-500')"
                     >
-                      <span>{{ item.name }}</span>
-                      <span class="text-base font-bold leading-none">×</span>
-                    </button>
+                      {{ activeLine.serviceIds.includes(item.id) ? '✓' : '+' }}
+                    </span>
                   </div>
-                </div>
+                </button>
               </div>
             </div>
 
-            <div class="space-y-4">
-              <p class="text-sm" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ t('booking.master') }}</p>
-              <div v-if="line.mastersLoading" class="grid gap-2">
-                <SkeletonBlock v-for="idx in 3" :key="`masters-${line.id}-${idx}`" :theme="isTor ? 'dark' : 'light'" class="h-12" />
-              </div>
-              <div v-else class="grid gap-2">
-                <button
-                  v-if="!isMasterUser"
-                  type="button"
-                  class="w-full rounded-xl border px-3 py-2 text-left transition"
-                  :class="line.masterId === null
-                    ? (isTor ? 'border-[#d79a49] bg-white/[0.05]' : 'border-sand-900 bg-sand-50')
-                    : (isTor ? 'border-white/10 bg-white/[0.03] hover:border-[#d79a49]/50' : 'border-sand-200 bg-white hover:border-sand-600')"
-                  @click="selectMasterForLine(line, null)"
-                >
-                  <p class="font-semibold">{{ t('booking.anyMaster') }}</p>
-                </button>
-                <button
-                  v-for="master in line.masters"
-                  :key="`${line.id}-master-${master.id}`"
-                  type="button"
-                  class="w-full rounded-xl border px-3 py-2 text-left transition"
-                  :class="line.masterId === master.id
-                    ? (isTor ? 'border-[#d79a49] bg-white/[0.05]' : 'border-sand-900 bg-sand-50')
-                    : (isTor ? 'border-white/10 bg-white/[0.03] hover:border-[#d79a49]/50' : 'border-sand-200 bg-white hover:border-sand-600')"
-                  @click="selectMasterForLine(line, master.id)"
-                >
-                  <p class="font-semibold">{{ master.name }}</p>
-                  <p class="line-clamp-1 text-xs" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ master.bio || t('booking.masterFallbackBio') }}</p>
-                </button>
-                <p v-if="line.serviceIds.length && line.mastersResolved && !line.mastersLoading && !line.masters.length" class="text-xs text-amber-700">{{ t('booking.noMastersForSelection') }}</p>
-              </div>
+            <div v-if="activeLine.serviceIds.length" class="rounded-[1.5rem] p-4" :class="isTor ? 'border border-white/10 bg-white/[0.04]' : 'border border-sand-200 bg-sand-50/70'">
+              <p class="text-sm font-semibold">{{ t('booking.service') }}</p>
+              <p class="mt-1 text-sm" :class="isTor ? 'text-stone-300' : 'text-sand-800'">{{ selectedServicesLabel(activeLine) }}</p>
             </div>
           </div>
 
-          <div class="mt-5 space-y-4">
-            <BaseInput v-model="line.date" type="date" :theme="isTor ? 'dark' : 'light'" :label="t('booking.date')" :min="minBookingDate" @update:model-value="fetchSlotsForLine(line)" />
-            <div v-if="line.slotsLoading" class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <SkeletonBlock v-for="idx in 8" :key="`slots-${line.id}-${idx}`" :theme="isTor ? 'dark' : 'light'" class="h-10" />
+          <div v-else-if="mobileStep === 2" class="mt-5 space-y-3">
+            <div class="rounded-[1.5rem] p-4" :class="isTor ? 'border border-white/10 bg-white/[0.04]' : 'border border-sand-200 bg-sand-50/70'">
+              <p class="text-xs uppercase tracking-[0.16em]" :class="isTor ? 'text-[#d79a49]' : 'text-sand-600'">{{ t('booking.service') }}</p>
+              <p class="mt-2 font-semibold">{{ selectedServicesLabel(activeLine) }}</p>
             </div>
-            <div class="rounded-2xl p-3" :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200'">
-              <SlotPicker v-if="line.slots.length" :slots="line.slots" :selected="line.slot" :theme="isTor ? 'dark' : 'light'" @pick="onSelectSlot(line, $event)" />
+
+            <div v-if="activeLine.mastersLoading" class="grid gap-2">
+              <SkeletonBlock v-for="idx in 3" :key="`mobile-masters-${activeLine.id}-${idx}`" :theme="isTor ? 'dark' : 'light'" class="h-16" />
+            </div>
+            <div v-else class="grid gap-3">
+              <button
+                v-if="!isMasterUser"
+                type="button"
+                class="w-full rounded-[1.5rem] border px-4 py-4 text-left transition"
+                :class="activeLine.masterId === null
+                  ? (isTor ? 'border-[#d79a49] bg-white/[0.05]' : 'border-sand-900 bg-sand-50')
+                  : (isTor ? 'border-white/10 bg-white/[0.03]' : 'border-sand-200 bg-white')"
+                @click="selectMasterForLine(activeLine, null)"
+              >
+                <p class="font-semibold">{{ t('booking.anyMaster') }}</p>
+              </button>
+              <button
+                v-for="master in activeLine.masters"
+                :key="`${activeLine.id}-master-${master.id}`"
+                type="button"
+                class="w-full rounded-[1.5rem] border px-4 py-4 text-left transition"
+                :class="activeLine.masterId === master.id
+                  ? (isTor ? 'border-[#d79a49] bg-white/[0.05]' : 'border-sand-900 bg-sand-50')
+                  : (isTor ? 'border-white/10 bg-white/[0.03]' : 'border-sand-200 bg-white')"
+                @click="selectMasterForLine(activeLine, master.id)"
+              >
+                <p class="font-semibold">{{ master.name }}</p>
+                <p class="mt-1 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ master.bio || t('booking.masterFallbackBio') }}</p>
+              </button>
+              <p v-if="activeLine.serviceIds.length && activeLine.mastersResolved && !activeLine.mastersLoading && !activeLine.masters.length" class="text-xs text-amber-700">{{ t('booking.noMastersForSelection') }}</p>
+            </div>
+          </div>
+
+          <div v-else-if="mobileStep === 3" class="mt-5 space-y-4">
+            <div class="rounded-[1.5rem] p-4" :class="isTor ? 'border border-white/10 bg-white/[0.04]' : 'border border-sand-200 bg-sand-50/70'">
+              <p class="font-semibold">{{ selectedServicesLabel(activeLine) }}</p>
+              <p class="mt-1 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ selectedMaster(activeLine)?.name || t('booking.anyMaster') }}</p>
+            </div>
+            <BaseInput v-model="activeLine.date" type="date" :theme="isTor ? 'dark' : 'light'" :label="t('booking.date')" :min="minBookingDate" @update:model-value="fetchSlotsForLine(activeLine)" />
+            <div v-if="activeLine.slotsLoading" class="grid grid-cols-2 gap-2">
+              <SkeletonBlock v-for="idx in 8" :key="`mobile-slots-${activeLine.id}-${idx}`" :theme="isTor ? 'dark' : 'light'" class="h-11" />
+            </div>
+            <div class="rounded-[1.5rem] p-3" :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200 bg-white'">
+              <SlotPicker v-if="activeLine.slots.length" :slots="activeLine.slots" :selected="activeLine.slot" :theme="isTor ? 'dark' : 'light'" @pick="onSelectSlot(activeLine, $event)" />
               <p v-else class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.noSlots') }}</p>
             </div>
           </div>
+
+          <div v-else class="mt-5 space-y-4">
+            <div class="space-y-3 rounded-[1.5rem] p-4 text-sm" :class="isTor ? 'border border-white/10 bg-white/[0.04]' : 'border border-sand-200 bg-sand-50/50'">
+              <div v-for="(line, index) in lines" :key="`mobile-summary-${line.id}`" class="rounded-xl p-3" :class="isTor ? 'border border-white/10 bg-white/[0.04]' : 'border border-sand-200 bg-white'">
+                <p class="font-semibold">{{ t('booking.lineTitle') }} #{{ index + 1 }}</p>
+                <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.summary.service') }}:</span> <span class="font-semibold">{{ selectedServicesLabel(line) }}</span></p>
+                <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.master') }}:</span> <span class="font-semibold">{{ selectedMaster(line)?.name || t('booking.anyMaster') }}</span></p>
+                <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.summary.slot') }}:</span> <span class="font-semibold">{{ formatYerevanDateTime(line.slot?.start_at) }}</span></p>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <div v-if="canBookForClient && !isMasterUser" class="space-y-3 rounded-[1.5rem] p-4" :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200 bg-sand-50/50'">
+                <p class="text-sm font-semibold">{{ t('booking.contactModeTitle') }}</p>
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    class="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition"
+                    :class="!bookingForClient
+                      ? (isTor ? 'bg-[#d79a49] text-black' : 'bg-sand-900 text-white')
+                      : (isTor ? 'border border-white/10 bg-white/[0.03] text-stone-200' : 'border border-sand-200 bg-white text-sand-800')"
+                    @click="bookingForClient = false"
+                  >
+                    {{ t('booking.bookForSelf') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition"
+                    :class="bookingForClient
+                      ? (isTor ? 'bg-[#d79a49] text-black' : 'bg-sand-900 text-white')
+                      : (isTor ? 'border border-white/10 bg-white/[0.03] text-stone-200' : 'border border-sand-200 bg-white text-sand-800')"
+                    @click="bookingForClient = true"
+                  >
+                    {{ t('booking.bookForClient') }}
+                  </button>
+                </div>
+                <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ bookingForClient ? t('booking.clientBookingHint') : t('booking.selfBookingHint') }}</p>
+              </div>
+              <p v-else-if="!auth.isAuth" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestHint') }}</p>
+              <div
+                v-if="auth.isAuth && !bookingForClient && !isMasterUser"
+                class="space-y-2 rounded-[1.5rem] p-4 text-sm"
+                :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200 bg-sand-50/50'"
+              >
+                <p class="font-semibold">{{ t('nav.myProfile') }}</p>
+                <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestFirstName') }}:</span> <span class="font-semibold">{{ bookingContact.firstName || '—' }}</span></p>
+                <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestLastName') }}:</span> <span class="font-semibold">{{ bookingContact.lastName || '—' }}</span></p>
+                <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestPhone') }}:</span> <span class="font-semibold">{{ bookingContact.phone || '—' }}</span></p>
+              </div>
+              <BaseInput v-if="shouldUseGuestContact" v-model="guestFirstName" :theme="isTor ? 'dark' : 'light'" :label="t('booking.guestFirstName')" :placeholder="t('booking.guestFirstNamePlaceholder')" />
+              <BaseInput v-if="shouldUseGuestContact" v-model="guestLastName" :theme="isTor ? 'dark' : 'light'" :label="t('booking.guestLastName')" :placeholder="t('booking.guestLastNamePlaceholder')" />
+              <BaseInput v-if="shouldUseGuestContact" v-model="guestPhone" :theme="isTor ? 'dark' : 'light'" type="tel" :label="t('booking.guestPhone')" :placeholder="t('booking.guestPhonePlaceholder')" />
+              <p v-if="bookingForClient && clientLookupLoading" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.clientLookupLoading') }}</p>
+              <p v-else-if="bookingForClient && matchedClient" class="text-sm" :class="isTor ? 'text-emerald-300' : 'text-emerald-700'">{{ t('booking.clientFound') }}: {{ matchedClient.first_name }} {{ matchedClient.last_name }}</p>
+              <p v-else-if="bookingForClient && normalizePhone(guestPhone)" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.clientNotFound') }}</p>
+              <p v-if="isMasterUser && currentMasterProfile" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.masterOnlyServicesHint') }}</p>
+              <BaseInput v-model="comment" :theme="isTor ? 'dark' : 'light'" :label="t('booking.commentLabel')" :placeholder="t('booking.commentPlaceholder')" />
+            </div>
+          </div>
+        </Card>
+
+        <div class="sticky bottom-3 z-20 mt-4 rounded-[1.75rem] p-3 backdrop-blur" :class="isTor ? 'border border-white/10 bg-[#161616]/92' : 'border border-sand-200/80 bg-white/95 shadow-soft'">
+          <div class="flex gap-3">
+            <BaseButton v-if="mobileStep > 1" variant="secondary" :theme="isTor ? 'tor' : 'default'" class="flex-1" @click="goToPreviousMobileStep">{{ t('common.previous') }}</BaseButton>
+            <BaseButton
+              v-if="mobileStep < 4"
+              :theme="isTor ? 'tor' : 'default'"
+              class="flex-1"
+              @click="goToNextMobileStep"
+            >
+              {{ t('common.next') }}
+            </BaseButton>
+            <BaseButton
+              v-else
+              :theme="isTor ? 'tor' : 'default'"
+              class="flex-1"
+              :disabled="creating"
+              @click="submit"
+            >
+              {{ creating ? t('booking.creating') : t('booking.create') }}
+            </BaseButton>
+          </div>
+        </div>
+      </div>
+
+      <div class="hidden lg:block">
+        <p
+          class="rounded-xl px-3 py-2 text-xs"
+          :class="isTor
+            ? 'border border-white/10 bg-white/[0.03] text-stone-300'
+            : 'border border-sand-200 bg-sand-50 text-sand-700'"
+        >
+          {{ t('booking.oneCategoryPerLine') }}
+        </p>
+
+        <div class="mt-4 space-y-4">
+          <Card
+            v-for="(line, index) in lines"
+            :key="line.id"
+            :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''"
+          >
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <h2 class="text-2xl sm:text-3xl">{{ t('booking.lineTitle') }} #{{ index + 1 }}</h2>
+              <BaseButton v-if="lines.length > 1" size="sm" variant="secondary" :theme="isTor ? 'tor' : 'default'" @click="removeLine(line.id)">{{ t('booking.removeLine') }}</BaseButton>
+            </div>
+
+            <div class="mt-4 grid gap-5 xl:grid-cols-2">
+              <div class="space-y-4">
+                <div class="space-y-2">
+                  <p class="text-sm" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ t('booking.chooseCategory') }}</p>
+                  <div class="flex flex-wrap gap-2">
+                    <button
+                      v-for="category in visibleCategories"
+                      :key="`${line.id}-${category.id}`"
+                      type="button"
+                      class="rounded-full border px-3 py-1.5 text-sm transition"
+                      :class="line.categoryId === category.id
+                        ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
+                        : (isTor ? 'border-white/10 bg-white/[0.04] text-stone-200 hover:border-[#d79a49]/50' : 'border-sand-200 bg-white text-sand-900 hover:border-sand-600')"
+                      @click="setLineCategory(line, category.id)"
+                    >
+                      {{ category.name }}
+                    </button>
+                  </div>
+                </div>
+
+                <div class="space-y-2">
+                  <p class="text-sm" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ t('booking.service') }}</p>
+                  <div class="grid gap-2">
+                    <button
+                      v-for="item in servicesForLine(line)"
+                      :key="`${line.id}-service-${item.id}`"
+                      type="button"
+                      class="w-full rounded-2xl border px-4 py-3 text-left transition"
+                      :disabled="isServiceDisabledForLine(line, item)"
+                        :class="isServiceDisabledForLine(line, item)
+                          ? (isTor ? 'cursor-not-allowed border-white/10 bg-white/[0.02] text-stone-500' : 'cursor-not-allowed border-sand-200 bg-sand-100 text-sand-400')
+                          : line.serviceIds.includes(item.id)
+                          ? (isTor ? 'border-[#d79a49] bg-white/[0.05]' : 'border-sand-900 bg-sand-50')
+                          : (isTor ? 'border-white/10 bg-white/[0.03] hover:border-[#d79a49]/50' : 'border-sand-200 bg-white hover:border-sand-600')"
+                      @click="toggleServiceForLine(line, item)"
+                    >
+                      <div class="flex items-start justify-between gap-3">
+                        <div>
+                          <p class="font-semibold">{{ item.name }}</p>
+                          <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ item.duration_minutes }} {{ t('booking.minutesUnit') }} · {{ servicePriceLabelForLine(line, item) }}</p>
+                        </div>
+                        <span
+                          class="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full border text-base font-bold leading-none"
+                          :class="line.serviceIds.includes(item.id)
+                            ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
+                            : (isTor ? 'border-white/15 text-stone-400' : 'border-sand-300 text-sand-500')"
+                        >
+                          {{ line.serviceIds.includes(item.id) ? '✓' : '+' }}
+                        </span>
+                      </div>
+                    </button>
+                  </div>
+                  <div v-if="line.serviceIds.length" class="space-y-2">
+                    <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'"><span class="font-semibold">{{ t('booking.service') }}:</span> {{ selectedServicesLabel(line) }}</p>
+                    <div class="flex flex-wrap gap-2">
+                      <button
+                        v-for="item in selectedServices(line)"
+                        :key="`selected-${line.id}-${item.id}`"
+                        type="button"
+                        class="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm"
+                        :class="isTor
+                          ? 'border-white/10 bg-white/[0.04] text-stone-100 hover:border-[#d79a49]/50'
+                          : 'border-sand-300 bg-white text-sand-800 hover:border-sand-600'"
+                        @click="line.serviceIds = line.serviceIds.filter(id => id !== item.id); fetchMastersForLine(line)"
+                      >
+                        <span>{{ item.name }}</span>
+                        <span class="text-base font-bold leading-none">×</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <p class="text-sm" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ t('booking.master') }}</p>
+                <div v-if="line.mastersLoading" class="grid gap-2">
+                  <SkeletonBlock v-for="idx in 3" :key="`masters-${line.id}-${idx}`" :theme="isTor ? 'dark' : 'light'" class="h-12" />
+                </div>
+                <div v-else class="grid gap-2">
+                  <button
+                    v-if="!isMasterUser"
+                    type="button"
+                    class="w-full rounded-xl border px-3 py-2 text-left transition"
+                    :class="line.masterId === null
+                      ? (isTor ? 'border-[#d79a49] bg-white/[0.05]' : 'border-sand-900 bg-sand-50')
+                      : (isTor ? 'border-white/10 bg-white/[0.03] hover:border-[#d79a49]/50' : 'border-sand-200 bg-white hover:border-sand-600')"
+                    @click="selectMasterForLine(line, null)"
+                  >
+                    <p class="font-semibold">{{ t('booking.anyMaster') }}</p>
+                  </button>
+                  <button
+                    v-for="master in line.masters"
+                    :key="`${line.id}-master-${master.id}`"
+                    type="button"
+                    class="w-full rounded-xl border px-3 py-2 text-left transition"
+                    :class="line.masterId === master.id
+                      ? (isTor ? 'border-[#d79a49] bg-white/[0.05]' : 'border-sand-900 bg-sand-50')
+                      : (isTor ? 'border-white/10 bg-white/[0.03] hover:border-[#d79a49]/50' : 'border-sand-200 bg-white hover:border-sand-600')"
+                    @click="selectMasterForLine(line, master.id)"
+                  >
+                    <p class="font-semibold">{{ master.name }}</p>
+                    <p class="line-clamp-1 text-xs" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ master.bio || t('booking.masterFallbackBio') }}</p>
+                  </button>
+                  <p v-if="line.serviceIds.length && line.mastersResolved && !line.mastersLoading && !line.masters.length" class="text-xs text-amber-700">{{ t('booking.noMastersForSelection') }}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-5 space-y-4">
+              <BaseInput v-model="line.date" type="date" :theme="isTor ? 'dark' : 'light'" :label="t('booking.date')" :min="minBookingDate" @update:model-value="fetchSlotsForLine(line)" />
+              <div v-if="line.slotsLoading" class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <SkeletonBlock v-for="idx in 8" :key="`slots-${line.id}-${idx}`" :theme="isTor ? 'dark' : 'light'" class="h-10" />
+              </div>
+              <div class="rounded-2xl p-3" :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200'">
+                <SlotPicker v-if="line.slots.length" :slots="line.slots" :selected="line.slot" :theme="isTor ? 'dark' : 'light'" @pick="onSelectSlot(line, $event)" />
+                <p v-else class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.noSlots') }}</p>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        <div class="mt-4 flex gap-3">
+          <BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'" @click="addLine">{{ t('booking.addLine') }}</BaseButton>
+        </div>
+
+        <Card class="mt-4" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
+          <h2 class="text-2xl sm:text-3xl">{{ t('booking.confirm') }}</h2>
+          <div class="mt-4 grid gap-6 lg:grid-cols-2">
+            <div class="space-y-3 rounded-2xl p-4 text-sm" :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200 bg-sand-50/50'">
+              <div v-for="(line, index) in lines" :key="`summary-${line.id}`" class="rounded-xl p-3" :class="isTor ? 'border border-white/10 bg-white/[0.04]' : 'border border-sand-200 bg-white'">
+                <p class="font-semibold">{{ t('booking.lineTitle') }} #{{ index + 1 }}</p>
+                <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.summary.service') }}:</span> <span class="font-semibold">{{ selectedServicesLabel(line) }}</span></p>
+                <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.master') }}:</span> <span class="font-semibold">{{ selectedMaster(line)?.name || t('booking.anyMaster') }}</span></p>
+                <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.summary.slot') }}:</span> <span class="font-semibold">{{ formatYerevanDateTime(line.slot?.start_at) }}</span></p>
+              </div>
+            </div>
+            <div class="space-y-3">
+              <div v-if="canBookForClient && !isMasterUser" class="space-y-3 rounded-2xl p-4" :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200 bg-sand-50/50'">
+                <p class="text-sm font-semibold">{{ t('booking.contactModeTitle') }}</p>
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    class="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition"
+                    :class="!bookingForClient
+                      ? (isTor ? 'bg-[#d79a49] text-black' : 'bg-sand-900 text-white')
+                      : (isTor ? 'border border-white/10 bg-white/[0.03] text-stone-200' : 'border border-sand-200 bg-white text-sand-800')"
+                    @click="bookingForClient = false"
+                  >
+                    {{ t('booking.bookForSelf') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition"
+                    :class="bookingForClient
+                      ? (isTor ? 'bg-[#d79a49] text-black' : 'bg-sand-900 text-white')
+                      : (isTor ? 'border border-white/10 bg-white/[0.03] text-stone-200' : 'border border-sand-200 bg-white text-sand-800')"
+                    @click="bookingForClient = true"
+                  >
+                    {{ t('booking.bookForClient') }}
+                  </button>
+                </div>
+                <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ bookingForClient ? t('booking.clientBookingHint') : t('booking.selfBookingHint') }}</p>
+              </div>
+              <p v-else-if="!auth.isAuth" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestHint') }}</p>
+              <div
+                v-if="auth.isAuth && !bookingForClient && !isMasterUser"
+                class="space-y-2 rounded-2xl p-4 text-sm"
+                :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200 bg-sand-50/50'"
+              >
+                <p class="font-semibold">{{ t('nav.myProfile') }}</p>
+                <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestFirstName') }}:</span> <span class="font-semibold">{{ bookingContact.firstName || '—' }}</span></p>
+                <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestLastName') }}:</span> <span class="font-semibold">{{ bookingContact.lastName || '—' }}</span></p>
+                <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestPhone') }}:</span> <span class="font-semibold">{{ bookingContact.phone || '—' }}</span></p>
+              </div>
+              <BaseInput v-if="shouldUseGuestContact" v-model="guestFirstName" :theme="isTor ? 'dark' : 'light'" :label="t('booking.guestFirstName')" :placeholder="t('booking.guestFirstNamePlaceholder')" />
+              <BaseInput v-if="shouldUseGuestContact" v-model="guestLastName" :theme="isTor ? 'dark' : 'light'" :label="t('booking.guestLastName')" :placeholder="t('booking.guestLastNamePlaceholder')" />
+              <BaseInput v-if="shouldUseGuestContact" v-model="guestPhone" :theme="isTor ? 'dark' : 'light'" type="tel" :label="t('booking.guestPhone')" :placeholder="t('booking.guestPhonePlaceholder')" />
+              <p v-if="bookingForClient && clientLookupLoading" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.clientLookupLoading') }}</p>
+              <p v-else-if="bookingForClient && matchedClient" class="text-sm" :class="isTor ? 'text-emerald-300' : 'text-emerald-700'">{{ t('booking.clientFound') }}: {{ matchedClient.first_name }} {{ matchedClient.last_name }}</p>
+              <p v-else-if="bookingForClient && normalizePhone(guestPhone)" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.clientNotFound') }}</p>
+              <p v-if="isMasterUser && currentMasterProfile" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.masterOnlyServicesHint') }}</p>
+              <BaseInput v-model="comment" :theme="isTor ? 'dark' : 'light'" :label="t('booking.commentLabel')" :placeholder="t('booking.commentPlaceholder')" />
+            </div>
+          </div>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <BaseButton :theme="isTor ? 'tor' : 'default'" :disabled="creating" @click="submit">{{ creating ? t('booking.creating') : t('booking.create') }}</BaseButton>
+          </div>
         </Card>
       </div>
-
-      <div class="flex gap-3">
-        <BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'" @click="addLine">{{ t('booking.addLine') }}</BaseButton>
-      </div>
-
-      <Card :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
-        <h2 class="text-2xl sm:text-3xl">{{ t('booking.confirm') }}</h2>
-        <div class="mt-4 grid gap-6 lg:grid-cols-2">
-          <div class="space-y-3 rounded-2xl p-4 text-sm" :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200 bg-sand-50/50'">
-            <div v-for="(line, index) in lines" :key="`summary-${line.id}`" class="rounded-xl p-3" :class="isTor ? 'border border-white/10 bg-white/[0.04]' : 'border border-sand-200 bg-white'">
-              <p class="font-semibold">{{ t('booking.lineTitle') }} #{{ index + 1 }}</p>
-              <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.summary.service') }}:</span> <span class="font-semibold">{{ selectedServicesLabel(line) }}</span></p>
-              <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.master') }}:</span> <span class="font-semibold">{{ selectedMaster(line)?.name || t('booking.anyMaster') }}</span></p>
-              <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.summary.slot') }}:</span> <span class="font-semibold">{{ formatYerevanDateTime(line.slot?.start_at) }}</span></p>
-            </div>
-          </div>
-          <div class="space-y-3">
-            <div v-if="canBookForClient && !isMasterUser" class="space-y-3 rounded-2xl p-4" :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200 bg-sand-50/50'">
-              <p class="text-sm font-semibold">{{ t('booking.contactModeTitle') }}</p>
-              <div class="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  class="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition"
-                  :class="!bookingForClient
-                    ? (isTor ? 'bg-[#d79a49] text-black' : 'bg-sand-900 text-white')
-                    : (isTor ? 'border border-white/10 bg-white/[0.03] text-stone-200' : 'border border-sand-200 bg-white text-sand-800')"
-                  @click="bookingForClient = false"
-                >
-                  {{ t('booking.bookForSelf') }}
-                </button>
-                <button
-                  type="button"
-                  class="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition"
-                  :class="bookingForClient
-                    ? (isTor ? 'bg-[#d79a49] text-black' : 'bg-sand-900 text-white')
-                    : (isTor ? 'border border-white/10 bg-white/[0.03] text-stone-200' : 'border border-sand-200 bg-white text-sand-800')"
-                  @click="bookingForClient = true"
-                >
-                  {{ t('booking.bookForClient') }}
-                </button>
-              </div>
-              <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ bookingForClient ? t('booking.clientBookingHint') : t('booking.selfBookingHint') }}</p>
-            </div>
-            <p v-else-if="!auth.isAuth" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestHint') }}</p>
-            <div
-              v-if="auth.isAuth && !bookingForClient && !isMasterUser"
-              class="space-y-2 rounded-2xl p-4 text-sm"
-              :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200 bg-sand-50/50'"
-            >
-              <p class="font-semibold">{{ t('nav.myProfile') }}</p>
-              <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestFirstName') }}:</span> <span class="font-semibold">{{ bookingContact.firstName || '—' }}</span></p>
-              <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestLastName') }}:</span> <span class="font-semibold">{{ bookingContact.lastName || '—' }}</span></p>
-              <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestPhone') }}:</span> <span class="font-semibold">{{ bookingContact.phone || '—' }}</span></p>
-            </div>
-            <BaseInput v-if="shouldUseGuestContact" v-model="guestFirstName" :theme="isTor ? 'dark' : 'light'" :label="t('booking.guestFirstName')" :placeholder="t('booking.guestFirstNamePlaceholder')" />
-            <BaseInput v-if="shouldUseGuestContact" v-model="guestLastName" :theme="isTor ? 'dark' : 'light'" :label="t('booking.guestLastName')" :placeholder="t('booking.guestLastNamePlaceholder')" />
-            <BaseInput v-if="shouldUseGuestContact" v-model="guestPhone" :theme="isTor ? 'dark' : 'light'" type="tel" :label="t('booking.guestPhone')" :placeholder="t('booking.guestPhonePlaceholder')" />
-            <p v-if="bookingForClient && clientLookupLoading" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.clientLookupLoading') }}</p>
-            <p v-else-if="bookingForClient && matchedClient" class="text-sm" :class="isTor ? 'text-emerald-300' : 'text-emerald-700'">{{ t('booking.clientFound') }}: {{ matchedClient.first_name }} {{ matchedClient.last_name }}</p>
-            <p v-else-if="bookingForClient && normalizePhone(guestPhone)" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.clientNotFound') }}</p>
-            <p v-if="isMasterUser && currentMasterProfile" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.masterOnlyServicesHint') }}</p>
-            <BaseInput v-model="comment" :theme="isTor ? 'dark' : 'light'" :label="t('booking.commentLabel')" :placeholder="t('booking.commentPlaceholder')" />
-          </div>
-        </div>
-        <div class="mt-6 flex flex-wrap gap-3">
-          <BaseButton :theme="isTor ? 'tor' : 'default'" :disabled="creating" @click="submit">{{ creating ? t('booking.creating') : t('booking.create') }}</BaseButton>
-        </div>
-      </Card>
 
       <FaqSection
         :theme="isTor ? 'tor' : 'default'"

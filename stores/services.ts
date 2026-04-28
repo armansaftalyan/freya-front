@@ -17,6 +17,7 @@ export const useServicesStore = defineStore('servicesStore', () => {
 
   const currentBrand = () => brandContext.brand.value
   const currentKey = () => `${locale.value}:${currentBrand()}`
+  const hasCatalogData = () => categories.value.length > 0 && services.value.length > 0
 
   const fetchCategories = async (brand = currentBrand()) => {
     const response = await api.get<ApiListResponse<Category>>('/categories', { brand })
@@ -34,7 +35,7 @@ export const useServicesStore = defineStore('servicesStore', () => {
   const init = async (force = false) => {
     const contextKey = currentKey()
 
-    if (!force && initializedKey.value === contextKey && initialized.value) return
+    if (!force && initializedKey.value === contextKey && initialized.value && hasCatalogData()) return
     if (!force && pendingKey.value === contextKey && initPromise) {
       await initPromise
       return
