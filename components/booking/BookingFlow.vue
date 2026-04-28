@@ -147,6 +147,16 @@ const mastersAbortControllers = new Map<number, AbortController>()
 const slotsAbortControllers = new Map<number, AbortController>()
 
 const minBookingDate = computed(() => todayYerevanDate())
+const defaultBookingDate = () => {
+  const nowLabel = formatYerevanDateTime(new Date(), `${todayYerevanDate()} 00:00`)
+  const currentHour = Number(nowLabel.split(' ')[1]?.split(':')[0] || '0')
+
+  if (currentHour >= 15) {
+    return formatYerevanDate(new Date(Date.now() + 24 * 60 * 60 * 1000)) || todayYerevanDate()
+  }
+
+  return todayYerevanDate()
+}
 
 const bookingContact = computed(() => ({
   firstName: auth.user?.first_name?.trim?.() || '',
@@ -254,7 +264,7 @@ const createEmptyLine = (preset: Partial<Pick<BookingLine, 'categoryId' | 'maste
   categoryId: preset.categoryId ?? defaultCategoryId.value,
   serviceIds: preset.serviceId ? [preset.serviceId] : [],
   masterId: preset.masterId ?? currentMasterProfile.value?.id ?? null,
-  date: '',
+  date: defaultBookingDate(),
   slot: null,
   masters: currentMasterProfile.value ? [currentMasterProfile.value] : [],
   mastersLoading: false,
@@ -851,6 +861,7 @@ const bootstrapBookingFlow = async () => {
     if (line.masterId && !line.masters.some(master => master.id === line.masterId)) {
       line.masterId = null
     }
+    await fetchSlotsForLine(line, true)
   }
 }
 
