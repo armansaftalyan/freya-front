@@ -30,7 +30,7 @@ interface BookingLine {
 const { t, locale } = useLocale()
 const { formatAmd } = useCurrency()
 const { formatPriceLabel } = useServicePricing()
-const { formatYerevanDateTime, todayYerevanDate } = useDateTime()
+const { formatYerevanDateTime, formatYerevanDate, todayYerevanDate } = useDateTime()
 const { siteUrl } = useSiteMeta()
 const { isTor, brand, authAppointmentsPath } = useBrandContext()
 const route = useRoute()
