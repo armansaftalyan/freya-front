@@ -23,9 +23,9 @@ const yerevanTimeFormatter = new Intl.DateTimeFormat('en-GB', {
 })
 
 export const useDateTime = () => {
-  const formatYerevanDateTime = (raw?: string | null, fallback = '-'): string => {
+  const formatYerevanDateTime = (raw?: string | Date | null, fallback = '-'): string => {
     if (!raw) return fallback
-    const date = new Date(raw)
+    const date = raw instanceof Date ? raw : new Date(raw)
     if (Number.isNaN(date.getTime())) return String(raw)
     return yerevanDateTimeFormatter.format(date).replace(',', '')
   }
@@ -37,9 +37,9 @@ export const useDateTime = () => {
     return yerevanDateFormatter.format(date)
   }
 
-  const formatYerevanTime = (raw?: string | null): string => {
+  const formatYerevanTime = (raw?: string | Date | null): string => {
     if (!raw) return ''
-    const date = new Date(raw)
+    const date = raw instanceof Date ? raw : new Date(raw)
     if (!Number.isNaN(date.getTime())) {
       return yerevanTimeFormatter.format(date)
     }

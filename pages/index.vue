@@ -11,22 +11,24 @@ import BaseModal from "~/components/base/BaseModal.vue";
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
 const route = useRoute()
+const { bookingPath, authRegisterPath } = useBrandContext()
 const { siteUrl, salonName, telephone, address, openingHoursSpecification, sameAs, defaultImageUrl } = useSiteMeta()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
-const showGiftPromo = ref(false)
-const giftPromoStorageKey = 'freya_gift_promo_seen_session_v1'
+const { promoCopy } = useFirstBookingPromo()
+const showPromo = ref(false)
+const promoStorageKey = 'freya_first_visit_promo_seen_session_v1'
 const { faqCopy } = usePageFaqContent('freya', 'home')
 
 onMounted(() => {
   try {
-    const alreadySeen = sessionStorage.getItem(giftPromoStorageKey) === '1'
+    const alreadySeen = sessionStorage.getItem(promoStorageKey) === '1'
     if (!alreadySeen) {
-      showGiftPromo.value = true
-      sessionStorage.setItem(giftPromoStorageKey, '1')
+      showPromo.value = true
+      sessionStorage.setItem(promoStorageKey, '1')
     }
   }
   catch {
-    showGiftPromo.value = false
+    showPromo.value = false
   }
 })
 
@@ -111,21 +113,21 @@ useStructuredData(() => ({
 
 <template>
   <div>
-    <BaseModal v-model="showGiftPromo" :title="t('homePage.giftPromo.title')" max-width-class="max-w-3xl">
+    <BaseModal v-model="showPromo" :title="promoCopy.modalTitle" max-width-class="max-w-3xl">
       <div class="space-y-4">
         <div class="rounded-3xl bg-[radial-gradient(circle_at_top_left,#f9d57c_0%,#f0ba57_36%,#111827_100%)] p-5 text-white">
           <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-sand-100/90">{{ t('homePage.giftPromo.badge') }}</p>
-            <p class="mt-3 text-lg font-semibold leading-tight sm:text-2xl">{{ t('homePage.giftPromo.title') }}</p>
-            <p class="mt-2 text-sm text-sand-100/90">{{ t('homePage.giftPromo.subtitle') }}</p>
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-sand-100/90">{{ promoCopy.badge }}</p>
+            <p class="mt-3 text-lg font-semibold leading-tight sm:text-2xl">{{ promoCopy.modalLead }}</p>
+            <p class="mt-2 text-sm text-sand-100/90">{{ promoCopy.modalDescription }}</p>
           </div>
         </div>
         <div class="grid gap-2 sm:grid-cols-2">
-          <NuxtLink :to="localePath('/gift-cards/buy')" class="inline-flex items-center justify-center rounded-2xl bg-sand-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-black" @click="showGiftPromo = false">
-            {{ t('homePage.giftPromo.primary') }}
+          <NuxtLink :to="localePath(bookingPath)" class="inline-flex items-center justify-center rounded-2xl bg-sand-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-black" @click="showPromo = false">
+            {{ promoCopy.modalPrimary }}
           </NuxtLink>
-          <NuxtLink :to="localePath('/booking')" class="inline-flex items-center justify-center rounded-2xl border border-sand-300 bg-white px-4 py-3 text-sm font-semibold text-sand-900 transition hover:border-sand-600" @click="showGiftPromo = false">
-            {{ t('homePage.giftPromo.secondary') }}
+          <NuxtLink :to="localePath(authRegisterPath)" class="inline-flex items-center justify-center rounded-2xl border border-sand-300 bg-white px-4 py-3 text-sm font-semibold text-sand-900 transition hover:border-sand-600" @click="showPromo = false">
+            {{ promoCopy.modalSecondary }}
           </NuxtLink>
         </div>
       </div>

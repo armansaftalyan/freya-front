@@ -39,6 +39,7 @@ const props = withDefaults(defineProps<{
 
 const { localePath } = useLocalizedPath()
 const { formatPriceLabel } = useServicePricing()
+const { isVisible: isPromoVisible, promoCopy, promoPricingFor } = useFirstBookingPromo()
 const isTor = computed(() => props.theme === 'tor')
 
 const detailPathFor = (categorySlug: string, service: Service) =>
@@ -124,6 +125,9 @@ const detailPathFor = (categorySlug: string, service: Service) =>
               :duration-minutes="service.duration_minutes"
               :duration-label="durationLabel"
               :price-label="formatPriceLabel(service)"
+              :promo-price-label="isPromoVisible ? promoPricingFor(service).promoLabel : ''"
+              :promo-badge="isPromoVisible ? promoCopy.badge : ''"
+              :promo-disclaimer="isPromoVisible ? promoCopy.disclaimer : ''"
               :action-label="actionLabel"
               :action-to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } }) as string"
               :card-to="detailPathFor(entry.category.slug, service)"

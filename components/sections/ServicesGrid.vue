@@ -6,6 +6,7 @@ const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
 const { brand, bookingPath, rootPath } = useBrandContext()
 const { formatPriceLabel } = useServicePricing()
+const { isVisible: isPromoVisible, promoCopy, promoPricingFor } = useFirstBookingPromo()
 const servicesStore = useServicesStore()
 const { categories, services } = storeToRefs(servicesStore)
 
@@ -57,9 +58,20 @@ const grouped = computed(() =>
                 <p class="mt-3 text-sm leading-6 text-[var(--muted)]">{{ service.description }}</p>
               </div>
               <div class="mt-auto flex items-end justify-between gap-3 pt-6">
-                <p class="text-base font-semibold text-sand-700">
-                  {{ formatPriceLabel(service) }}
-                </p>
+                <div>
+                  <p
+                    v-if="isPromoVisible"
+                    class="mb-1 inline-flex rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-rose-700"
+                  >
+                    {{ promoCopy.badge }}
+                  </p>
+                  <p v-if="isPromoVisible" class="text-xs text-sand-500 line-through">
+                    {{ formatPriceLabel(service) }}
+                  </p>
+                  <p class="text-base font-semibold text-sand-700">
+                    {{ isPromoVisible ? promoPricingFor(service).promoLabel : formatPriceLabel(service) }}
+                  </p>
+                </div>
                 <NuxtLink :to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } })" class="inline-block">
                   <BaseButton size="sm">{{ t('nav.bookNow') }}</BaseButton>
                 </NuxtLink>

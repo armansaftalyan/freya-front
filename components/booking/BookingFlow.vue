@@ -31,6 +31,7 @@ const { t, locale } = useLocale()
 const { formatAmd } = useCurrency()
 const { formatPriceLabel } = useServicePricing()
 const { formatYerevanDateTime, formatYerevanDate, todayYerevanDate } = useDateTime()
+const { isVisible: isPromoVisible, promoCopy, promoPricingFor } = useFirstBookingPromo()
 const { siteUrl } = useSiteMeta()
 const { isTor, brand, authAppointmentsPath } = useBrandContext()
 const route = useRoute()
@@ -385,6 +386,25 @@ const selectLineForMobile = (index: number) => {
 const servicePriceLabelForLine = (line: BookingLine, service: Service) => {
   return formatPriceLabel(service, selectedMaster(line))
 }
+
+const promoPriceLabelForLine = (line: BookingLine, service: Service) => {
+  return promoPricingFor(service, selectedMaster(line)).promoLabel
+}
+
+const lineOriginalTotal = (line: BookingLine) => {
+  return selectedServices(line).reduce((total, service) => {
+    return total + promoPricingFor(service, selectedMaster(line)).priceFrom
+  }, 0)
+}
+
+const linePromoTotal = (line: BookingLine) => {
+  return selectedServices(line).reduce((total, service) => {
+    return total + promoPricingFor(service, selectedMaster(line)).promoFrom
+  }, 0)
+}
+
+const bookingOriginalTotal = computed(() => lines.value.reduce((total, line) => total + lineOriginalTotal(line), 0))
+const bookingPromoTotal = computed(() => lines.value.reduce((total, line) => total + linePromoTotal(line), 0))
 
 const hydrateMasterForLine = async (line: BookingLine, masterId: number) => {
   const existing = line.masters.find(master => master.id === masterId)
@@ -1007,6 +1027,18 @@ onMounted(() => {
         </div>
       </div>
 
+      <div
+        v-if="isPromoVisible"
+        class="rounded-[1.75rem] p-5"
+        :class="isTor
+          ? 'border border-[#c58a3a]/30 bg-[linear-gradient(180deg,rgba(197,138,58,0.14),rgba(255,255,255,0.03))]'
+          : 'border border-rose-200 bg-[linear-gradient(180deg,rgba(255,241,242,0.95),rgba(255,255,255,0.98))] shadow-soft'"
+      >
+        <p class="text-xs font-semibold uppercase tracking-[0.16em]" :class="isTor ? 'text-[#d79a49]' : 'text-rose-700'">{{ promoCopy.badge }}</p>
+        <h2 class="mt-2 text-2xl">{{ promoCopy.title }}</h2>
+        <p class="mt-2 max-w-3xl text-sm leading-6" :class="isTor ? 'text-stone-300' : 'text-sand-800'">{{ promoCopy.description }}</p>
+      </div>
+
       <div v-if="successCount" class="rounded-3xl p-6" :class="isTor ? 'border border-emerald-500/30 bg-white/[0.03] shadow-[0_20px_50px_rgba(0,0,0,0.22)]' : 'border border-emerald-200 bg-white shadow-soft'">
         <p class="text-xs uppercase tracking-[0.16em] text-emerald-700">{{ t('booking.successLabel') }}</p>
         <h2 class="mt-2 text-3xl">{{ t('booking.success') }}</h2>
@@ -1111,12 +1143,23 @@ onMounted(() => {
                   @click="toggleServiceForLine(activeLine, item)"
                 >
                   <div class="flex items-start justify-between gap-3">
-                    <div>
+                    <div class="min-w-0 flex-1">
                       <p class="font-semibold">{{ item.name }}</p>
-                      <p class="mt-1 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ item.duration_minutes }} {{ t('booking.minutesUnit') }} · {{ servicePriceLabelForLine(activeLine, item) }}</p>
+                      <p class="mt-1 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ item.duration_minutes }} {{ t('booking.minutesUnit') }}</p>
+                      <div v-if="isPromoVisible" class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span
+                          class="inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]"
+                          :class="isTor ? 'border-[#c58a3a]/45 text-[#d8a15a]' : 'border-rose-200 bg-rose-50 text-rose-700'"
+                        >
+                          {{ promoCopy.shortBadge }}
+                        </span>
+                        <span class="text-sm font-semibold" :class="isTor ? 'text-stone-100' : 'text-sand-800'">{{ promoPriceLabelForLine(activeLine, item) }}</span>
+                        <span class="text-xs line-through" :class="isTor ? 'text-stone-500' : 'text-sand-500'">{{ servicePriceLabelForLine(activeLine, item) }}</span>
+                      </div>
+                      <p v-else class="mt-1 text-sm font-semibold" :class="isTor ? 'text-stone-300' : 'text-sand-800'">{{ servicePriceLabelForLine(activeLine, item) }}</p>
                     </div>
                     <span
-                      class="inline-flex h-8 w-8 items-center justify-center rounded-full border text-base font-bold"
+                      class="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-base font-bold"
                       :class="activeLine.serviceIds.includes(item.id)
                         ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
                         : (isTor ? 'border-white/15 text-stone-400' : 'border-sand-300 text-sand-500')"
@@ -1194,6 +1237,7 @@ onMounted(() => {
                 <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.summary.service') }}:</span> <span class="font-semibold">{{ selectedServicesLabel(line) }}</span></p>
                 <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.master') }}:</span> <span class="font-semibold">{{ selectedMaster(line)?.name || t('booking.anyMaster') }}</span></p>
                 <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.summary.slot') }}:</span> <span class="font-semibold">{{ formatYerevanDateTime(line.slot?.start_at) }}</span></p>
+                <p v-if="isPromoVisible"><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ promoCopy.summary }}:</span> <span class="ml-1 text-xs line-through" :class="isTor ? 'text-stone-500' : 'text-sand-500'">{{ formatAmd(lineOriginalTotal(line)) }}</span> <span class="font-semibold">{{ formatAmd(linePromoTotal(line)) }}</span></p>
               </div>
             </div>
 
@@ -1330,12 +1374,23 @@ onMounted(() => {
                       @click="toggleServiceForLine(line, item)"
                     >
                       <div class="flex items-start justify-between gap-3">
-                        <div>
+                        <div class="min-w-0 flex-1">
                           <p class="font-semibold">{{ item.name }}</p>
-                          <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ item.duration_minutes }} {{ t('booking.minutesUnit') }} · {{ servicePriceLabelForLine(line, item) }}</p>
+                          <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ item.duration_minutes }} {{ t('booking.minutesUnit') }}</p>
+                          <div v-if="isPromoVisible" class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span
+                              class="inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]"
+                              :class="isTor ? 'border-[#c58a3a]/45 text-[#d8a15a]' : 'border-rose-200 bg-rose-50 text-rose-700'"
+                            >
+                              {{ promoCopy.shortBadge }}
+                            </span>
+                            <span class="text-sm font-semibold" :class="isTor ? 'text-stone-100' : 'text-sand-800'">{{ promoPriceLabelForLine(line, item) }}</span>
+                            <span class="text-xs line-through" :class="isTor ? 'text-stone-500' : 'text-sand-500'">{{ servicePriceLabelForLine(line, item) }}</span>
+                          </div>
+                          <p v-else class="text-sm font-semibold" :class="isTor ? 'text-stone-300' : 'text-sand-800'">{{ servicePriceLabelForLine(line, item) }}</p>
                         </div>
                         <span
-                          class="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full border text-base font-bold leading-none"
+                          class="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-base font-bold leading-none"
                           :class="line.serviceIds.includes(item.id)
                             ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
                             : (isTor ? 'border-white/15 text-stone-400' : 'border-sand-300 text-sand-500')"
@@ -1427,9 +1482,23 @@ onMounted(() => {
                 <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.summary.service') }}:</span> <span class="font-semibold">{{ selectedServicesLabel(line) }}</span></p>
                 <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.master') }}:</span> <span class="font-semibold">{{ selectedMaster(line)?.name || t('booking.anyMaster') }}</span></p>
                 <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.summary.slot') }}:</span> <span class="font-semibold">{{ formatYerevanDateTime(line.slot?.start_at) }}</span></p>
+                <p v-if="isPromoVisible"><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ promoCopy.summary }}:</span> <span class="ml-1 text-xs line-through" :class="isTor ? 'text-stone-500' : 'text-sand-500'">{{ formatAmd(lineOriginalTotal(line)) }}</span> <span class="font-semibold">{{ formatAmd(linePromoTotal(line)) }}</span></p>
               </div>
             </div>
             <div class="space-y-3">
+              <div
+                v-if="isPromoVisible"
+                class="rounded-2xl p-4 text-sm"
+                :class="isTor ? 'border border-[#c58a3a]/25 bg-white/[0.03]' : 'border border-rose-200 bg-rose-50/70'"
+              >
+                <p class="font-semibold">{{ promoCopy.title }}</p>
+                <p class="mt-2">
+                  <span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('servicesPage.priceLabel') }}:</span>
+                  <span class="ml-1 text-xs line-through" :class="isTor ? 'text-stone-500' : 'text-sand-500'">{{ formatAmd(bookingOriginalTotal) }}</span>
+                  <span class="ml-2 text-lg font-semibold">{{ formatAmd(bookingPromoTotal) }}</span>
+                </p>
+                <p class="mt-2 text-xs leading-5" :class="isTor ? 'text-stone-500' : 'text-[var(--muted)]'">{{ promoCopy.disclaimer }}</p>
+              </div>
               <div v-if="canBookForClient && !isMasterUser" class="space-y-3 rounded-2xl p-4" :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200 bg-sand-50/50'">
                 <p class="text-sm font-semibold">{{ t('booking.contactModeTitle') }}</p>
                 <div class="flex flex-wrap gap-2">

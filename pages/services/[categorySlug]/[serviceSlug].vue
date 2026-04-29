@@ -10,6 +10,7 @@ import BlogArticleCardComponent from '~/components/blog/BlogArticleCard.vue'
 const api = useApi()
 const { t, locale } = useLocale()
 const { resolvePriceRange, formatPriceLabel } = useServicePricing()
+const { isVisible: isPromoVisible, promoCopy, promoPricingFor } = useFirstBookingPromo()
 const route = useRoute()
 const config = useRuntimeConfig()
 const { localePath } = useLocalizedPath()
@@ -214,8 +215,21 @@ useStructuredData(() => {
             </div>
             <div class="rounded-3xl p-5" :class="isTor ? 'border border-white/10 bg-white/[0.04]' : 'border border-sand-200 bg-white'">
               <p class="text-xs uppercase tracking-[0.14em]" :class="isTor ? 'font-semibold text-[#c58a3a]' : 'text-sand-600'">{{ t('servicesPage.priceLabel') }}</p>
-              <p class="mt-2 text-2xl" :class="isTor ? 'text-stone-100' : ''">
+              <p
+                v-if="isPromoVisible"
+                class="mt-2 inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]"
+                :class="isTor ? 'border-[#c58a3a]/45 text-[#d8a15a]' : 'border-rose-200 bg-rose-50 text-rose-700'"
+              >
+                {{ promoCopy.badge }}
+              </p>
+              <p v-if="isPromoVisible" class="mt-2 text-sm line-through" :class="isTor ? 'text-stone-500' : 'text-sand-500'">
                 {{ formatPriceLabel(service, selectedMaster) }}
+              </p>
+              <p class="mt-2 text-2xl" :class="isTor ? 'text-stone-100' : ''">
+                {{ isPromoVisible ? promoPricingFor(service, selectedMaster).promoLabel : formatPriceLabel(service, selectedMaster) }}
+              </p>
+              <p v-if="isPromoVisible" class="mt-2 text-xs leading-5" :class="isTor ? 'text-stone-500' : 'text-[var(--muted)]'">
+                {{ promoCopy.disclaimer }}
               </p>
             </div>
           </div>
@@ -255,6 +269,9 @@ useStructuredData(() => {
             :duration-minutes="item.duration_minutes"
             :duration-label="t('servicesPage.minutes')"
             :price-label="formatPriceLabel(item, selectedMaster)"
+            :promo-price-label="isPromoVisible ? promoPricingFor(item, selectedMaster).promoLabel : ''"
+            :promo-badge="isPromoVisible ? promoCopy.badge : ''"
+            :promo-disclaimer="isPromoVisible ? promoCopy.disclaimer : ''"
             :action-label="pageCopy.primaryAction"
             :action-to="localePath({ path: bookingPath, query: { category_id: String(item.category_id), service_id: String(item.id), ...(selectedMaster ? { master_id: String(selectedMaster.id) } : {}) } }) as string"
             :card-to="{ path: `${servicesPath}/${category?.slug}/${item.slug}`, query: selectedMaster ? { master_id: String(selectedMaster.id) } : undefined }"

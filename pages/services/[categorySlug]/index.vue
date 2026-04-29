@@ -9,6 +9,7 @@ const api = useApi()
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
 const { formatPriceLabel } = useServicePricing()
+const { isVisible: isPromoVisible, promoCopy, promoPricingFor } = useFirstBookingPromo()
 const route = useRoute()
 const config = useRuntimeConfig()
 const { brand, isTor, servicesPath, bookingPath } = useBrandContext()
@@ -217,6 +218,9 @@ useStructuredData(() => {
           :duration-minutes="service.duration_minutes"
           :duration-label="t('servicesPage.minutes')"
           :price-label="formatPriceLabel(service, selectedMaster)"
+          :promo-price-label="isPromoVisible ? promoPricingFor(service, selectedMaster).promoLabel : ''"
+          :promo-badge="isPromoVisible ? promoCopy.badge : ''"
+          :promo-disclaimer="isPromoVisible ? promoCopy.disclaimer : ''"
           :action-label="isTor ? pageCopy.primaryAction : pageCopy.primaryAction"
           :action-to="isTor
             ? localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id), ...(selectedMaster ? { master_id: String(selectedMaster.id) } : {}) } }) as string
@@ -242,6 +246,9 @@ useStructuredData(() => {
             :duration-minutes="item.duration_minutes"
             :duration-label="t('servicesPage.minutes')"
             :price-label="formatPriceLabel(item, selectedMaster)"
+            :promo-price-label="isPromoVisible ? promoPricingFor(item, selectedMaster).promoLabel : ''"
+            :promo-badge="isPromoVisible ? promoCopy.badge : ''"
+            :promo-disclaimer="isPromoVisible ? promoCopy.disclaimer : ''"
             :action-label="isTor ? pageCopy.primaryAction : t('nav.bookNow')"
             :action-to="localePath({ path: bookingPath, query: { category_id: String(item.category_id), service_id: String(item.id), ...(selectedMaster ? { master_id: String(selectedMaster.id) } : {}) } }) as string"
             :card-to="{ path: `${servicesPath}/${categories.find((categoryItem) => categoryItem.id === item.category_id)?.slug || category?.slug}/${item.slug}`, query: selectedMaster ? { master_id: String(selectedMaster.id) } : undefined }"

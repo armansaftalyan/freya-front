@@ -7,6 +7,9 @@ const props = withDefaults(defineProps<{
   durationMinutes: number
   durationLabel: string
   priceLabel: string
+  promoPriceLabel?: string
+  promoBadge?: string
+  promoDisclaimer?: string
   actionLabel: string
   actionTo: RouteLocationRaw
   theme?: 'default' | 'tor'
@@ -17,6 +20,9 @@ const props = withDefaults(defineProps<{
   theme: 'default',
   eyebrow: '',
   cardTo: '',
+  promoPriceLabel: '',
+  promoBadge: '',
+  promoDisclaimer: '',
 })
 
 const isTor = computed(() => props.theme === 'tor')
@@ -73,9 +79,32 @@ const openCard = () => {
     </p>
 
     <div class="mt-auto flex items-end justify-between gap-3 pt-4">
-      <p class="text-base font-semibold" :class="isTor ? 'text-stone-100' : 'text-sand-700'">
-        {{ priceLabel }}
-      </p>
+      <div>
+        <p
+          v-if="promoBadge"
+          class="mb-1 inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]"
+          :class="isTor ? 'border-[#c58a3a]/45 text-[#d8a15a]' : 'border-rose-200 bg-rose-50 text-rose-700'"
+        >
+          {{ promoBadge }}
+        </p>
+        <p
+          v-if="promoPriceLabel"
+          class="text-xs line-through"
+          :class="isTor ? 'text-stone-500' : 'text-sand-500'"
+        >
+          {{ priceLabel }}
+        </p>
+        <p class="text-base font-semibold" :class="isTor ? 'text-stone-100' : 'text-sand-700'">
+          {{ promoPriceLabel || priceLabel }}
+        </p>
+        <p
+          v-if="promoDisclaimer"
+          class="mt-1 text-xs leading-5"
+          :class="isTor ? 'text-stone-500' : 'text-[var(--muted)]'"
+        >
+          {{ promoDisclaimer }}
+        </p>
+      </div>
       <NuxtLink :to="actionTo" class="inline-block shrink-0" @click.stop>
         <BaseButton size="sm" :theme="isTor ? 'tor' : 'default'">{{ actionLabel }}</BaseButton>
       </NuxtLink>
