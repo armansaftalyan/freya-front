@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import Card from "~/components/base/Card.vue";
+import ServiceCatalogCard from '~/components/catalog/ServiceCatalogCard.vue'
 
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
-const { brand, bookingPath, rootPath } = useBrandContext()
+const { brand, bookingPath, rootPath, servicesPath } = useBrandContext()
 const { formatPriceLabel } = useServicePricing()
 const { isVisible: isPromoVisible, promoCopy, promoPricingFor } = useFirstBookingPromo()
 const servicesStore = useServicesStore()
@@ -27,6 +27,9 @@ const grouped = computed(() =>
     }))
     .filter((entry) => entry.items.length),
 )
+
+const detailPathFor = (categorySlug: string, service: { slug: string }) =>
+  localePath(`${servicesPath.value}/${categorySlug}/${service.slug}`) as string
 </script>
 
 <template>
@@ -47,36 +50,22 @@ const grouped = computed(() =>
         <div v-for="entry in grouped" :key="entry.category.id" class="space-y-4">
           <h3 class="text-[1.9rem] leading-tight text-sand-950 sm:text-[2.1rem]">{{ entry.category.name }}</h3>
           <div class="grid gap-4 md:grid-cols-3">
-            <Card v-for="service in entry.items" :key="service.id" class="fade-in flex h-full flex-col">
-              <div class="flex-1">
-                <div class="flex items-start justify-between gap-3">
-                  <p class="text-2xl leading-tight text-sand-950">{{ service.name }}</p>
-                  <span class="shrink-0 whitespace-nowrap rounded-full border border-sand-300 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-sand-700">
-                    {{ service.duration_minutes }} {{ t('homePage.services.durationUnit') }}
-                  </span>
-                </div>
-                <p class="mt-3 text-sm leading-6 text-[var(--muted)]">{{ service.description }}</p>
-              </div>
-              <div class="mt-auto flex items-end justify-between gap-3 pt-6">
-                <div>
-                  <p
-                    v-if="isPromoVisible"
-                    class="mb-1 inline-flex rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-rose-700"
-                  >
-                    {{ promoCopy.badge }}
-                  </p>
-                  <p v-if="isPromoVisible" class="text-xs text-sand-500 line-through">
-                    {{ formatPriceLabel(service) }}
-                  </p>
-                  <p class="text-base font-semibold text-sand-700">
-                    {{ isPromoVisible ? promoPricingFor(service).promoLabel : formatPriceLabel(service) }}
-                  </p>
-                </div>
-                <NuxtLink :to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } })" class="inline-block">
-                  <BaseButton size="sm">{{ t('nav.bookNow') }}</BaseButton>
-                </NuxtLink>
-              </div>
-            </Card>
+            <ServiceCatalogCard
+              v-for="service in entry.items"
+              :key="service.id"
+              class="fade-in"
+              :name="service.name"
+              :description="service.description"
+              :duration-minutes="service.duration_minutes"
+              :duration-label="t('homePage.services.durationUnit')"
+              :price-label="formatPriceLabel(service)"
+              :promo-price-label="isPromoVisible ? promoPricingFor(service).promoLabel : ''"
+              :promo-badge="isPromoVisible ? promoCopy.badge : ''"
+              :promo-disclaimer="isPromoVisible ? promoCopy.disclaimer : ''"
+              :action-label="t('nav.bookNow')"
+              :action-to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } }) as string"
+              :card-to="detailPathFor(entry.category.slug, service)"
+            />
           </div>
         </div>
       </div>
