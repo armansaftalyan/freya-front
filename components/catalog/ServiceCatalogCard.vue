@@ -72,7 +72,7 @@ const openCard = () => {
     </div>
 
     <p
-      class="mt-3 min-h-[3rem] text-sm leading-6"
+      class="mt-3 min-h-[3rem] overflow-hidden text-sm leading-6 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"
       :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'"
     >
       {{ description }}
