@@ -3,6 +3,9 @@ const siteUrl = import.meta.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 const googleAnalyticsId = import.meta.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_ID || ''
 const yandexMetricaId = import.meta.env.NUXT_PUBLIC_YANDEX_METRIKA_ID || ''
 const nativeApp = import.meta.env.NUXT_PUBLIC_NATIVE_APP === 'true'
+const firstBookingPromoEnabled = import.meta.env.NUXT_PUBLIC_FIRST_BOOKING_PROMO_ENABLED === 'true'
+const firstBookingPromoPercentOff = Number(import.meta.env.NUXT_PUBLIC_FIRST_BOOKING_PROMO_PERCENT_OFF || 50)
+const firstBookingPromoAudience = import.meta.env.NUXT_PUBLIC_FIRST_BOOKING_PROMO_AUDIENCE || 'all'
 const publicSsrCacheHeaders = {
   'Cache-Control': 'public, max-age=3600, s-maxage=14400, stale-while-revalidate=86400',
 }
@@ -156,6 +159,9 @@ export default defineNuxtConfig({
       googleAnalyticsId,
       yandexMetricaId,
       nativeApp,
+      firstBookingPromoEnabled,
+      firstBookingPromoPercentOff,
+      firstBookingPromoAudience,
     },
   },
   app: {
