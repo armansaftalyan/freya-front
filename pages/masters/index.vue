@@ -65,6 +65,7 @@ usePageSeo({
 })
 const mastersStore = useMastersStore()
 const { masters, loading } = storeToRefs(mastersStore)
+const mastersPageKey = computed(() => `${locale.value}:${brand.value}`)
 
 const loadMasters = async () => {
   await mastersStore.fetchMasters(undefined, undefined, brand.value)
@@ -80,6 +81,14 @@ watch(
     await loadMasters()
   },
 )
+
+onMounted(async () => {
+  if (mastersStore.initializedKey === mastersPageKey.value && masters.value.length > 0) {
+    return
+  }
+
+  await loadMasters()
+})
 
 useStructuredData(() => ({
   '@context': 'https://schema.org',

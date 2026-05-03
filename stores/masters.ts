@@ -29,6 +29,12 @@ export const useMastersStore = defineStore('mastersStore', () => {
       return
     }
 
+    if (initializedKey.value !== null && initializedKey.value !== contextKey) {
+      masters.value = []
+      master.value = null
+      initializedKey.value = null
+    }
+
     loading.value = true
     pendingKey.value = contextKey
     try {
