@@ -11,7 +11,7 @@ import BaseModal from "~/components/base/BaseModal.vue";
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
 const route = useRoute()
-const { bookingPath, authRegisterPath } = useBrandContext()
+const { bookingPath } = useBrandContext()
 const { siteUrl, salonName, telephone, address, openingHoursSpecification, sameAs, defaultImageUrl } = useSiteMeta()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const { promoCopy } = useFirstBookingPromo()
@@ -122,12 +122,9 @@ useStructuredData(() => ({
             <p class="mt-2 text-sm text-sand-100/90">{{ promoCopy.modalDescription }}</p>
           </div>
         </div>
-        <div class="grid gap-2 sm:grid-cols-2">
+        <div>
           <NuxtLink :to="localePath(bookingPath)" class="inline-flex items-center justify-center rounded-2xl bg-sand-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-black" @click="showPromo = false">
             {{ promoCopy.modalPrimary }}
-          </NuxtLink>
-          <NuxtLink :to="localePath(authRegisterPath)" class="inline-flex items-center justify-center rounded-2xl border border-sand-300 bg-white px-4 py-3 text-sm font-semibold text-sand-900 transition hover:border-sand-600" @click="showPromo = false">
-            {{ promoCopy.modalSecondary }}
           </NuxtLink>
         </div>
       </div>
