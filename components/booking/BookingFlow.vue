@@ -245,16 +245,6 @@ const lineActiveBookingGroup = (line: BookingLine): string | null => {
   return lineBookingGroup(line)
 }
 
-const selectedBookingGroups = computed(() => lines.value
-  .map(line => lineActiveBookingGroup(line))
-  .filter((group): group is string => Boolean(group)))
-
-const totalBookingGroups = computed(() => new Set(
-  categories.value
-    .map(category => bookingGroupForCategory(category))
-    .filter((group): group is string => Boolean(group)),
-).size)
-
 const defaultCategoryId = computed<number | null>(() => {
   if (!visibleCategories.value.length) return null
   return visibleCategories.value[0]?.id ?? null
@@ -716,17 +706,6 @@ const fetchSlotsForLine = (line: BookingLine, immediate = false) => {
   slotsDebounceTimers.set(line.id, timer)
 }
 
-const addLine = () => {
-  if (new Set(selectedBookingGroups.value).size >= totalBookingGroups.value) {
-    toast.push({ type: 'error', title: t('common.requestFailed'), description: t('booking.oneCategoryPerLine') })
-    return
-  }
-
-  lines.value.push(createEmptyLine())
-  activeLineIndex.value = lines.value.length - 1
-  mobileStep.value = 1
-}
-
 const removeLine = (lineId: number) => {
   clearLineNetworkState(lineId)
   const removedIndex = lines.value.findIndex(line => line.id === lineId)
@@ -1077,7 +1056,6 @@ onMounted(() => {
               <p class="text-[11px] uppercase tracking-[0.18em]" :class="isTor ? 'text-[#d79a49]' : 'text-sand-600'">{{ bookingBrandName }}</p>
               <p class="text-lg font-semibold">{{ t('booking.wizard') }}</p>
             </div>
-            <BaseButton size="sm" variant="secondary" :theme="isTor ? 'tor' : 'default'" @click="addLine">{{ t('booking.addLine') }}</BaseButton>
           </div>
           <div v-if="lines.length > 1" class="mt-3 flex gap-2 overflow-x-auto pb-1">
             <button
@@ -1467,10 +1445,6 @@ onMounted(() => {
               </div>
             </div>
           </Card>
-        </div>
-
-        <div class="mt-4 flex gap-3">
-          <BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'" @click="addLine">{{ t('booking.addLine') }}</BaseButton>
         </div>
 
         <Card class="mt-4" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">

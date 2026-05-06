@@ -77,6 +77,23 @@ const resolveMediaUrl = (value: string | null | undefined) => {
   return backendBaseUrl.value ? `${backendBaseUrl.value}/${value.replace(/^\/+/, '')}` : value
 }
 
+const portfolioVideoExtensions = ['mp4', 'webm', 'mov', 'm4v', 'ogv', 'ogg', 'avi', 'mkv']
+
+const isVideoMedia = (value: string | null | undefined) => {
+  if (!value) return false
+
+  try {
+    const target = /^https?:\/\//i.test(value) ? new URL(value) : new URL(value, backendBaseUrl.value || 'https://example.test')
+    const extension = target.pathname.split('.').pop()?.toLowerCase() || ''
+    return portfolioVideoExtensions.includes(extension)
+  }
+  catch {
+    const normalized = value.split('?')[0]?.split('#')[0] || ''
+    const extension = normalized.split('.').pop()?.toLowerCase() || ''
+    return portfolioVideoExtensions.includes(extension)
+  }
+}
+
 const fallbackAvatar = computed(() => masterAvatarPlaceholder(profile.value?.name || auth.user?.name))
 const portfolioFallback = `data:image/svg+xml;utf8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 960">
@@ -95,7 +112,15 @@ const portfolioFallback = `data:image/svg+xml;utf8,${encodeURIComponent(`
 </svg>
 `)}`;
 const avatarPreview = computed(() => resolveMediaUrl(profile.value?.avatar) || fallbackAvatar.value)
-const portfolioPreviews = computed(() => form.portfolio.map(image => resolveMediaUrl(image) || ''))
+const portfolioItems = computed(() => form.portfolio.map((item) => {
+  const url = resolveMediaUrl(item) || ''
+
+  return {
+    source: item,
+    url,
+    isVideo: isVideoMedia(url || item),
+  }
+}))
 
 const onAvatarError = (event: Event) => {
   onMasterAvatarError(event, profile.value?.name || auth.user?.name)
@@ -325,7 +350,7 @@ const removePortfolioItem = async (index: number) => {
                   <p class="mt-1 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('account.portfolioHint') }}</p>
                 </div>
                 <label class="inline-flex cursor-pointer items-center">
-                  <input type="file" accept="image/*" multiple class="hidden" :disabled="uploadingPortfolio" @change="onPortfolioChange">
+                  <input type="file" accept="image/*,video/*" multiple class="hidden" :disabled="uploadingPortfolio" @change="onPortfolioChange">
                   <span
                     class="inline-flex min-h-12 items-center justify-center rounded-full px-6 text-sm font-semibold transition-all"
                     :class="isTor ? 'border border-white/10 bg-white/[0.06] text-stone-100 hover:border-[#d79a49]/50 hover:bg-white/[0.12]' : 'bg-white/70 text-sand-900 ring-1 ring-sand-200 shadow-sm hover:-translate-y-0.5 hover:bg-white hover:shadow-md'"
@@ -337,12 +362,26 @@ const removePortfolioItem = async (index: number) => {
 
               <div v-if="form.portfolio.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 <article
-                  v-for="(image, index) in form.portfolio"
-                  :key="`${image}-${index}`"
+                  v-for="(item, index) in portfolioItems"
+                  :key="`${item.source}-${index}`"
                   class="overflow-hidden rounded-[28px]"
                   :class="isTor ? 'border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05)_0%,rgba(0,0,0,0.35)_100%)]' : 'border border-sand-200 bg-white'"
                 >
-                  <img :src="portfolioPreviews[index] || portfolioFallback" :alt="`${profile.name} portfolio ${index + 1}`" class="h-56 w-full object-cover" @error="onPortfolioError">
+                  <video
+                    v-if="item.isVideo"
+                    :src="item.url"
+                    class="h-56 w-full object-cover"
+                    controls
+                    preload="metadata"
+                    playsinline
+                  />
+                  <img
+                    v-else
+                    :src="item.url || portfolioFallback"
+                    :alt="`${profile.name} portfolio ${index + 1}`"
+                    class="h-56 w-full object-cover"
+                    @error="onPortfolioError"
+                  >
                   <div class="flex items-center justify-between gap-2 p-3">
                     <span class="text-sm" :class="isTor ? 'text-stone-300' : 'text-sand-700'">#{{ index + 1 }}</span>
                     <BaseButton size="sm" variant="secondary" :theme="isTor ? 'tor' : 'default'" @click="removePortfolioItem(index)">

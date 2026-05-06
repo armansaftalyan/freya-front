@@ -49,7 +49,25 @@ const certificates = computed(() =>
     Boolean(certificate.image || certificate.title || certificate.issuer || certificate.year),
   ),
 )
-const portfolioImages = computed(() => master.value?.portfolio || [])
+const portfolioVideoExtensions = ['mp4', 'webm', 'mov', 'm4v', 'ogv', 'ogg', 'avi', 'mkv']
+const isVideoMedia = (value: string | null | undefined) => {
+  if (!value) return false
+
+  try {
+    const target = new URL(value, siteUrl.value || 'https://example.test')
+    const extension = target.pathname.split('.').pop()?.toLowerCase() || ''
+    return portfolioVideoExtensions.includes(extension)
+  }
+  catch {
+    const normalized = value.split('?')[0]?.split('#')[0] || ''
+    const extension = normalized.split('.').pop()?.toLowerCase() || ''
+    return portfolioVideoExtensions.includes(extension)
+  }
+}
+const portfolioItems = computed(() => (master.value?.portfolio || []).map((item) => ({
+  url: item,
+  isVideo: isVideoMedia(item),
+})))
 const masterTopServices = computed(() =>
   (master.value?.services || [])
     .slice(0, 3)
@@ -305,9 +323,9 @@ const activeCertificate = computed(() => {
   if (certificateLightboxIndex.value === null) return null
   return certificates.value[certificateLightboxIndex.value] || null
 })
-const activePortfolioImage = computed(() => {
+const activePortfolioItem = computed(() => {
   if (portfolioLightboxIndex.value === null) return null
-  return portfolioImages.value[portfolioLightboxIndex.value] || null
+  return portfolioItems.value[portfolioLightboxIndex.value] || null
 })
 
 const openCertificateLightbox = (idx: number) => {
@@ -337,13 +355,13 @@ const showNextCertificate = () => {
 }
 
 const showPrevPortfolio = () => {
-  if (portfolioLightboxIndex.value === null || portfolioImages.value.length < 2) return
-  portfolioLightboxIndex.value = (portfolioLightboxIndex.value - 1 + portfolioImages.value.length) % portfolioImages.value.length
+  if (portfolioLightboxIndex.value === null || portfolioItems.value.length < 2) return
+  portfolioLightboxIndex.value = (portfolioLightboxIndex.value - 1 + portfolioItems.value.length) % portfolioItems.value.length
 }
 
 const showNextPortfolio = () => {
-  if (portfolioLightboxIndex.value === null || portfolioImages.value.length < 2) return
-  portfolioLightboxIndex.value = (portfolioLightboxIndex.value + 1) % portfolioImages.value.length
+  if (portfolioLightboxIndex.value === null || portfolioItems.value.length < 2) return
+  portfolioLightboxIndex.value = (portfolioLightboxIndex.value + 1) % portfolioItems.value.length
 }
 
 const onKeydown = (event: KeyboardEvent) => {
@@ -477,7 +495,7 @@ onBeforeUnmount(() => {
 
           <component
             :is="isTor ? 'article' : Card"
-            v-if="portfolioImages.length"
+            v-if="portfolioItems.length"
             class="rounded-3xl p-5 sm:p-6"
             :class="isTor
               ? 'border border-white/10 !bg-[#121212] text-stone-100 shadow-[0_22px_60px_rgba(0,0,0,0.34)]'
@@ -494,7 +512,7 @@ onBeforeUnmount(() => {
                 class="rounded-full px-3 py-1 text-xs uppercase tracking-[0.24em]"
                 :class="isTor ? 'border border-[#d79a49]/30 bg-[#171717] text-[#d79a49]' : 'bg-sand-100 text-sand-700'"
               >
-                {{ portfolioImages.length }}
+                {{ portfolioItems.length }}
               </span>
             </div>
 
@@ -503,8 +521,8 @@ onBeforeUnmount(() => {
               :class="isTor ? 'sm:grid-cols-2 xl:grid-cols-3' : 'sm:grid-cols-2 xl:grid-cols-3'"
             >
               <article
-                v-for="(image, index) in portfolioImages"
-                :key="`${image}-${index}`"
+                v-for="(item, index) in portfolioItems"
+                :key="`${item.url}-${index}`"
                 class="group overflow-hidden"
                 :class="isTor ? 'rounded-[26px] border border-white/10 bg-[#181818] shadow-[0_18px_45px_rgba(0,0,0,0.3)]' : 'rounded-[26px] border border-sand-200 bg-white shadow-[0_16px_40px_rgba(98,73,42,0.08)]'"
               >
@@ -514,8 +532,17 @@ onBeforeUnmount(() => {
                   :class="isTor ? 'aspect-[5/6]' : 'aspect-[5/6]'"
                   @click="openPortfolioLightbox(index)"
                 >
+                  <video
+                    v-if="item.isVideo"
+                    :src="item.url"
+                    class="h-full w-full object-cover"
+                    preload="metadata"
+                    muted
+                    playsinline
+                  />
                   <img
-                    :src="image"
+                    v-else
+                    :src="item.url"
                     :alt="`${master.name} – portfolio photo ${index + 1}`"
                     class="h-full w-full cursor-zoom-in object-cover transition duration-500 group-hover:scale-[1.03]"
                     width="1000"
@@ -620,7 +647,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div
-          v-if="activePortfolioImage"
+          v-if="activePortfolioItem"
           class="fixed inset-0 z-[70] flex items-center justify-center bg-black/85 p-4"
           @click.self="closePortfolioLightbox"
         >
@@ -634,7 +661,7 @@ onBeforeUnmount(() => {
           </button>
 
           <button
-            v-if="portfolioImages.length > 1"
+            v-if="portfolioItems.length > 1"
             type="button"
             class="absolute left-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white"
             :aria-label="previousLabel"
@@ -647,8 +674,17 @@ onBeforeUnmount(() => {
             class="max-h-[90vh] w-full overflow-hidden rounded-[28px]"
             :class="isTor ? 'max-w-6xl border border-white/10 bg-[#111111]' : 'max-w-5xl bg-white'"
           >
+            <video
+              v-if="activePortfolioItem.isVideo"
+              :src="activePortfolioItem.url"
+              class="max-h-[78vh] w-full object-contain"
+              controls
+              autoplay
+              playsinline
+            />
             <img
-              :src="activePortfolioImage"
+              v-else
+              :src="activePortfolioItem.url"
               :alt="`${master?.name} – portfolio photo ${portfolioLightboxIndex !== null ? portfolioLightboxIndex + 1 : ''}`"
               class="max-h-[78vh] w-full object-contain"
               width="1200"
@@ -669,7 +705,7 @@ onBeforeUnmount(() => {
           </figure>
 
           <button
-            v-if="portfolioImages.length > 1"
+            v-if="portfolioItems.length > 1"
             type="button"
             class="absolute right-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white"
             :aria-label="nextLabel"
