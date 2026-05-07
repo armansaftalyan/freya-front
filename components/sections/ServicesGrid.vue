@@ -16,6 +16,25 @@ await useAsyncData(() => `home-services-${brand.value}-${locale.value}`, async (
   return true
 })
 
+const ensureHomeServices = async () => {
+  const hasBrandCategories = categories.value.some(category => category.brand === brand.value)
+  const hasBrandServices = services.value.some(service => service.brand === brand.value)
+
+  if (hasBrandCategories && hasBrandServices) {
+    return
+  }
+
+  await servicesStore.init()
+}
+
+onMounted(() => {
+  void ensureHomeServices()
+})
+
+watch([() => brand.value, () => locale.value], () => {
+  void ensureHomeServices()
+})
+
 const grouped = computed(() =>
   categories.value
     .filter((category) => category.brand === brand.value)

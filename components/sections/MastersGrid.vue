@@ -15,6 +15,38 @@ await useAsyncData(() => `home-masters-${brand.value}-${locale.value}`, async ()
   return true
 })
 
+const ensureHomeMasters = async () => {
+  const hasBrandMasters = masters.value.some((master) => {
+    const masterServices = master.services || []
+
+    if (!masterServices.length) {
+      return true
+    }
+
+    return masterServices.some((service) => {
+      if (brand.value === 'tor') {
+        return service.category_name?.toLowerCase().includes('tor') || false
+      }
+
+      return !service.category_name?.toLowerCase().includes('tor')
+    })
+  })
+
+  if (hasBrandMasters) {
+    return
+  }
+
+  await mastersStore.fetchMasters(undefined, undefined, brand.value)
+}
+
+onMounted(() => {
+  void ensureHomeMasters()
+})
+
+watch([() => brand.value, () => locale.value], () => {
+  void ensureHomeMasters()
+})
+
 const filteredMasters = computed(() =>
   masters.value.filter((master) => {
     const services = master.services || []

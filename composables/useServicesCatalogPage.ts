@@ -49,6 +49,31 @@ export const useServicesCatalogPage = async (options?: {
     })
   }
 
+  const ensureCatalogStore = async () => {
+    if (mode !== 'store') {
+      return
+    }
+
+    const hasBrandCategories = storeCategories.value.some(category => category.brand === brand.value)
+    const hasBrandServices = storeServices.value.some(service => service.brand === brand.value)
+
+    if (hasBrandCategories && hasBrandServices) {
+      return
+    }
+
+    await servicesStore.init()
+  }
+
+  if (mode === 'store') {
+    onMounted(() => {
+      void ensureCatalogStore()
+    })
+
+    watch([brand, () => locale.value], () => {
+      void ensureCatalogStore()
+    })
+  }
+
   const categories = computed(() => {
     const items = mode === 'api'
       ? data?.data.value?.categories || []
