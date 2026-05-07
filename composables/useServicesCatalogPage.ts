@@ -65,6 +65,8 @@ export const useServicesCatalogPage = async (options?: {
   }
 
   if (mode === 'store') {
+    await ensureCatalogStore()
+
     onMounted(() => {
       void ensureCatalogStore()
     })

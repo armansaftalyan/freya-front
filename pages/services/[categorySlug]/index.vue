@@ -221,11 +221,9 @@ useStructuredData(() => {
           :promo-price-label="isPromoVisible ? promoPricingFor(service, selectedMaster).promoLabel : ''"
           :promo-badge="isPromoVisible ? promoCopy.badge : ''"
           :promo-disclaimer="isPromoVisible ? promoCopy.disclaimer : ''"
-          :action-label="isTor ? pageCopy.primaryAction : pageCopy.primaryAction"
-          :action-to="isTor
-            ? localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id), ...(selectedMaster ? { master_id: String(selectedMaster.id) } : {}) } }) as string
-            : localePath({ path: `${servicesPath}/${category?.slug}/${service.slug}`, query: selectedMaster ? { master_id: String(selectedMaster.id) } : undefined }) as string"
-          :card-to="isTor ? { path: `${servicesPath}/${category?.slug}/${service.slug}`, query: selectedMaster ? { master_id: String(selectedMaster.id) } : undefined } : ''"
+          :action-label="pageCopy.primaryAction"
+          :action-to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id), ...(selectedMaster ? { master_id: String(selectedMaster.id) } : {}) } }) as string"
+          :card-to="{ path: `${servicesPath}/${category?.slug}/${service.slug}`, query: selectedMaster ? { master_id: String(selectedMaster.id) } : undefined }"
         />
       </div>
 
