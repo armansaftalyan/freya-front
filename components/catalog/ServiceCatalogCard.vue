@@ -3,7 +3,7 @@ import type { RouteLocationRaw } from 'vue-router'
 
 const props = withDefaults(defineProps<{
   name: string
-  description?: string
+  description?: string|undefined|null
   durationMinutes: number
   durationLabel: string
   priceLabel: string
