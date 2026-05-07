@@ -6,6 +6,7 @@ import Card from "~/components/base/Card.vue";
 const { t, locale } = useLocale()
 const api = useApi()
 const route = useRoute()
+const config = useRuntimeConfig()
 const { siteUrl, defaultImageUrl } = useSiteMeta()
 const { localePath } = useLocalizedPath()
 const { isTor, brand, bookingPath, mastersPath } = useBrandContext()
@@ -49,6 +50,34 @@ const certificates = computed(() =>
     Boolean(certificate.image || certificate.title || certificate.issuer || certificate.year),
   ),
 )
+const backendBaseUrl = computed(() => String(config.public.apiBase || '').replace(/\/api\/?$/, ''))
+const resolveMediaUrl = (value: string | null | undefined) => {
+  if (!value) return null
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      const parsed = new URL(value)
+      const backend = backendBaseUrl.value ? new URL(backendBaseUrl.value) : null
+
+      if (
+        backend
+        && parsed.origin !== backend.origin
+        && (parsed.pathname.startsWith('/storage/') || parsed.pathname.startsWith('/masters/'))
+      ) {
+        return `${backend.origin}${parsed.pathname}${parsed.search}`
+      }
+    }
+    catch {
+      return value
+    }
+
+    return value
+  }
+  if (value.startsWith('/')) {
+    return backendBaseUrl.value ? `${backendBaseUrl.value}${value}` : value
+  }
+
+  return backendBaseUrl.value ? `${backendBaseUrl.value}/${value.replace(/^\/+/, '')}` : value
+}
 const portfolioVideoExtensions = ['mp4', 'webm', 'mov', 'm4v', 'ogv', 'ogg', 'avi', 'mkv']
 const isVideoMedia = (value: string | null | undefined) => {
   if (!value) return false
@@ -64,10 +93,14 @@ const isVideoMedia = (value: string | null | undefined) => {
     return portfolioVideoExtensions.includes(extension)
   }
 }
-const portfolioItems = computed(() => (master.value?.portfolio || []).map((item) => ({
-  url: item,
-  isVideo: isVideoMedia(item),
-})))
+const portfolioItems = computed(() => (master.value?.portfolio || []).map((item) => {
+  const url = resolveMediaUrl(item) || item
+
+  return {
+    url,
+    isVideo: isVideoMedia(url),
+  }
+}))
 const masterTopServices = computed(() =>
   (master.value?.services || [])
     .slice(0, 3)
@@ -536,6 +569,8 @@ onBeforeUnmount(() => {
                     v-if="item.isVideo"
                     :src="item.url"
                     class="h-full w-full object-cover"
+                    autoplay
+                    loop
                     preload="metadata"
                     muted
                     playsinline
