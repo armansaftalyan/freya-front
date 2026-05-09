@@ -75,8 +75,8 @@ const isActive = (path: string) => {
                   ? 'bg-white/[0.09] text-[#d79a49]'
                   : 'bg-white text-sand-900 shadow-sm'
                 : isTor
-                  ? 'text-stone-400 hover:bg-white/[0.06] hover:text-stone-100'
-                  : 'text-sand-600 hover:bg-white/80 hover:text-sand-900',
+                  ? 'text-stone-400'
+                  : 'text-sand-600',
           ]"
           :aria-current="isActive(item.to) ? 'page' : undefined"
         >
@@ -102,11 +102,13 @@ const isActive = (path: string) => {
               <circle cx="18" cy="20" r="1" />
               <path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 7H7.4" />
             </svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M6 21a6 6 0 0 1 12 0" />
-              <path d="M17 8a3 3 0 0 1 3 3" />
-              <path d="M4 11a3 3 0 0 1 3-3" />
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M8.8 8.8 17 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M15.2 8.8 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="7" cy="7" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8" />
+              <circle cx="17" cy="7" r="2.6" fill="none" stroke="currentColor" stroke-width="1.8" />
+              <path d="M8.8 8.8 12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+              <path d="M15.2 8.8 12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
             </svg>
 
             <span
