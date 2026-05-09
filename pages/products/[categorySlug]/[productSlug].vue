@@ -19,28 +19,36 @@ const productSlug = computed(() => String(route.params.productSlug || '').trim()
 
 const quantity = ref(1)
 
-const { data } = await useAsyncData(() => `product-${brand.value}-${categorySlug.value}-${productSlug.value}-${locale.value}`, async () => {
+const { data, error } = await useAsyncData(() => `product-${brand.value}-${categorySlug.value}-${productSlug.value}-${locale.value}`, async () => {
   const [categoriesResponse, productsResponse] = await Promise.all([
     api.get<ApiListResponse<ProductCategory>>('/product-categories', { brand: brand.value }, { skipErrorToast: true }),
     api.get<ApiListResponse<Product>>('/products', { brand: brand.value }, { skipErrorToast: true }),
   ])
 
-  const category = categoriesResponse.data.find(item => item.slug === categorySlug.value) || null
+  const category = categoriesResponse.data.find(item => item.slug === categorySlug.value && item.is_active !== false) || null
   if (!category) {
     throw createError({ statusCode: 404, statusMessage: 'Product category not found' })
   }
 
-  const product = productsResponse.data.find(item => item.category_id === category.id && item.slug === productSlug.value) || null
+  const product = productsResponse.data.find(item => item.category_id === category.id && item.slug === productSlug.value && item.is_active !== false) || null
   if (!product) {
     throw createError({ statusCode: 404, statusMessage: 'Product not found' })
   }
 
   const relatedProducts = productsResponse.data
-    .filter(item => item.category_id === category.id && item.id !== product.id)
+    .filter(item => item.category_id === category.id && item.id !== product.id && item.is_active !== false)
     .slice(0, 4)
 
   return { category, product, relatedProducts }
 })
+
+if (error.value) {
+  throw createError({
+    statusCode: error.value.statusCode || 404,
+    statusMessage: error.value.statusMessage || 'Product not found',
+    fatal: true,
+  })
+}
 
 const category = computed(() => data.value?.category || null)
 const product = computed(() => data.value?.product || null)

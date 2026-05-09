@@ -15,22 +15,30 @@ const localizedPath = (target: string) => localePath(target) as string
 
 const categorySlug = computed(() => String(route.params.categorySlug || '').trim())
 
-const { data } = await useAsyncData(() => `product-category-${brand.value}-${categorySlug.value}-${locale.value}`, async () => {
+const { data, error } = await useAsyncData(() => `product-category-${brand.value}-${categorySlug.value}-${locale.value}`, async () => {
   const [categoriesResponse, productsResponse] = await Promise.all([
     api.get<ApiListResponse<ProductCategory>>('/product-categories', { brand: brand.value }, { skipErrorToast: true }),
     api.get<ApiListResponse<Product>>('/products', { brand: brand.value }, { skipErrorToast: true }),
   ])
 
-  const category = categoriesResponse.data.find(item => item.slug === categorySlug.value) || null
+  const category = categoriesResponse.data.find(item => item.slug === categorySlug.value && item.is_active !== false) || null
 
   if (!category) {
     throw createError({ statusCode: 404, statusMessage: 'Product category not found' })
   }
 
-  const products = productsResponse.data.filter(item => item.category_id === category.id)
+  const products = productsResponse.data.filter(item => item.category_id === category.id && item.is_active !== false)
 
   return { category, products }
 })
+
+if (error.value) {
+  throw createError({
+    statusCode: error.value.statusCode || 404,
+    statusMessage: error.value.statusMessage || 'Product category not found',
+    fatal: true,
+  })
+}
 
 const category = computed(() => data.value?.category || null)
 const products = computed(() => data.value?.products || [])
