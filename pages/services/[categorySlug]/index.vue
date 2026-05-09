@@ -20,7 +20,7 @@ const selectedMasterId = computed(() => {
   return Number.isInteger(raw) && raw > 0 ? raw : null
 })
 
-const { data } = await useAsyncData(() => `service-category-${brand.value}-${categorySlug.value}-${locale.value}-${selectedMasterId.value ?? 'none'}`, async () => {
+const { data, error } = await useAsyncData(() => `service-category-${brand.value}-${categorySlug.value}-${locale.value}-${selectedMasterId.value ?? 'none'}`, async () => {
   const [categoriesResponse, servicesResponse, selectedMasterResponse] = await Promise.all([
     api.get<ApiListResponse<Category>>('/categories', { brand: brand.value }, { skipErrorToast: true }),
     api.get<ApiListResponse<Service>>('/services', { brand: brand.value }, { skipErrorToast: true }),
@@ -29,15 +29,15 @@ const { data } = await useAsyncData(() => `service-category-${brand.value}-${cat
       : Promise.resolve(null),
   ])
 
-  const category = categoriesResponse.data.find((item) => item.slug === categorySlug.value) || null
+  const category = categoriesResponse.data.find((item) => item.slug === categorySlug.value && item.is_active !== false) || null
 
   if (!category) {
     throw createError({ statusCode: 404, statusMessage: 'Category not found' })
   }
 
-  const services = servicesResponse.data.filter((item) => item.category_id === category.id)
+  const services = servicesResponse.data.filter((item) => item.category_id === category.id && item.is_active !== false)
   const suggestions = servicesResponse.data
-    .filter((item) => item.category_id !== category.id)
+    .filter((item) => item.category_id !== category.id && item.is_active !== false)
     .sort((left, right) => left.id - right.id)
     .slice(0, 3)
 
@@ -49,6 +49,14 @@ const { data } = await useAsyncData(() => `service-category-${brand.value}-${cat
     selectedMaster: selectedMasterResponse?.data ?? null,
   }
 })
+
+if (error.value) {
+  throw createError({
+    statusCode: error.value.statusCode || 404,
+    statusMessage: error.value.statusMessage || 'Category not found',
+    fatal: true,
+  })
+}
 
 const category = computed(() => data.value?.category || null)
 const services = computed(() => data.value?.services || [])

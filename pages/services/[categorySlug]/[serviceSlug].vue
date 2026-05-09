@@ -23,7 +23,7 @@ const selectedMasterId = computed(() => {
   return Number.isInteger(raw) && raw > 0 ? raw : null
 })
 
-const { data } = await useAsyncData(() => `service-detail-${brand.value}-${categorySlug.value}-${serviceSlug.value}-${locale.value}-${selectedMasterId.value ?? 'none'}`, async () => {
+const { data, error } = await useAsyncData(() => `service-detail-${brand.value}-${categorySlug.value}-${serviceSlug.value}-${locale.value}-${selectedMasterId.value ?? 'none'}`, async () => {
   const [categoriesResponse, servicesResponse, selectedMasterResponse] = await Promise.all([
     api.get<ApiListResponse<Category>>('/categories', { brand: brand.value }, { skipErrorToast: true }),
     api.get<ApiListResponse<Service>>('/services', { brand: brand.value }, { skipErrorToast: true }),
@@ -32,20 +32,20 @@ const { data } = await useAsyncData(() => `service-detail-${brand.value}-${categ
       : Promise.resolve(null),
   ])
 
-  const category = categoriesResponse.data.find((item) => item.slug === categorySlug.value) || null
+  const category = categoriesResponse.data.find((item) => item.slug === categorySlug.value && item.is_active !== false) || null
 
   if (!category) {
     throw createError({ statusCode: 404, statusMessage: 'Category not found' })
   }
 
-  const service = servicesResponse.data.find((item) => item.category_id === category.id && item.slug === serviceSlug.value) || null
+  const service = servicesResponse.data.find((item) => item.category_id === category.id && item.slug === serviceSlug.value && item.is_active !== false) || null
 
   if (!service) {
     throw createError({ statusCode: 404, statusMessage: 'Service not found' })
   }
 
   const relatedServices = servicesResponse.data
-    .filter((item) => item.category_id === category.id && item.id !== service.id)
+    .filter((item) => item.category_id === category.id && item.id !== service.id && item.is_active !== false)
     .slice(0, 6)
 
   return {
@@ -55,6 +55,14 @@ const { data } = await useAsyncData(() => `service-detail-${brand.value}-${categ
     selectedMaster: selectedMasterResponse?.data ?? null,
   }
 })
+
+if (error.value) {
+  throw createError({
+    statusCode: error.value.statusCode || 404,
+    statusMessage: error.value.statusMessage || 'Service not found',
+    fatal: true,
+  })
+}
 
 const category = computed(() => data.value?.category || null)
 const service = computed(() => data.value?.service || null)
