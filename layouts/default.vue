@@ -194,7 +194,7 @@ useHead(() => ({
     class="flex min-h-screen flex-col"
     :class="[
       { 'locale-hy': locale === 'hy' },
-      showMobileBottomNav ? 'pb-[calc(5.25rem+env(safe-area-inset-bottom))] lg:pb-0' : '',
+      showMobileBottomNav ? 'pb-[calc(4.65rem+env(safe-area-inset-bottom))] lg:pb-0' : '',
     ]"
   >
     <SharedToastStack />
@@ -343,8 +343,8 @@ useHead(() => ({
       <slot />
     </main>
 
-    <footer class="border-t border-sand-200 py-8">
-      <div class="container-shell flex flex-col gap-4 text-sm text-[var(--muted)]">
+    <footer class="overflow-x-clip border-t border-sand-200 py-8">
+      <div class="container-shell min-w-0 flex flex-col gap-4 text-sm text-[var(--muted)]">
         <PaymentMethodIcons />
 
         <div class="rounded-2xl border border-sand-200 bg-sand-50/70 p-4 text-sand-900">
@@ -356,14 +356,14 @@ useHead(() => ({
           <p class="mt-1">Daily: 10:00-19:00</p>
         </div>
 
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <p class="shrink-0">© {{ new Date().getFullYear() }} {{ brandName }}</p>
-        <div class="grid grid-cols-2 gap-x-4 gap-y-2 sm:flex sm:flex-wrap sm:justify-end">
-          <NuxtLink :to="localePath(blogPath)" class="whitespace-nowrap hover:text-sand-800">{{ blogLabel }}</NuxtLink>
-          <NuxtLink :to="localePath(contactsPath)" class="whitespace-nowrap hover:text-sand-800">{{ t('nav.contacts') }}</NuxtLink>
-          <NuxtLink :to="localePath(legalPath)" class="whitespace-nowrap hover:text-sand-800">{{ legalLabel }}</NuxtLink>
-          <NuxtLink :to="localePath(privacyPolicyPath)" class="whitespace-nowrap hover:text-sand-800">{{ privacyPolicyLabel }}</NuxtLink>
-          <NuxtLink :to="localePath(allPagesPath)" class="whitespace-nowrap hover:text-sand-800">{{ allPagesLabel }}</NuxtLink>
+        <div class="min-w-0 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p class="min-w-0 shrink-0">© {{ new Date().getFullYear() }} {{ brandName }}</p>
+        <div class="grid min-w-0 grid-cols-2 gap-x-4 gap-y-2 sm:flex sm:flex-wrap sm:justify-end">
+          <NuxtLink :to="localePath(blogPath)" class="min-w-0 break-words hover:text-sand-800 sm:whitespace-nowrap">{{ blogLabel }}</NuxtLink>
+          <NuxtLink :to="localePath(contactsPath)" class="min-w-0 break-words hover:text-sand-800 sm:whitespace-nowrap">{{ t('nav.contacts') }}</NuxtLink>
+          <NuxtLink :to="localePath(legalPath)" class="min-w-0 break-words hover:text-sand-800 sm:whitespace-nowrap">{{ legalLabel }}</NuxtLink>
+          <NuxtLink :to="localePath(privacyPolicyPath)" class="min-w-0 break-words hover:text-sand-800 sm:whitespace-nowrap">{{ privacyPolicyLabel }}</NuxtLink>
+          <NuxtLink :to="localePath(allPagesPath)" class="min-w-0 break-words hover:text-sand-800 sm:whitespace-nowrap">{{ allPagesLabel }}</NuxtLink>
         </div>
         </div>
       </div>

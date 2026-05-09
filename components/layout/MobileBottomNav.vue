@@ -56,13 +56,10 @@ const isActive = (path: string) => {
 
 <template>
   <nav
-    class="pointer-events-none fixed inset-x-0 top-0 z-50 h-screen h-[100dvh] lg:hidden"
+    class="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 items-end gap-1 border-t px-2 pb-[calc(0.45rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-18px_45px_rgba(56,38,20,0.14)] backdrop-blur-xl transform-gpu lg:hidden"
+    :class="isTor ? 'border-white/10 bg-[#090909]/92 shadow-[0_-18px_45px_rgba(0,0,0,0.4)]' : 'border-sand-200/80 bg-[#fffaf2]/94'"
     aria-label="Mobile primary navigation"
   >
-    <div
-      class="grid grid-cols-5 items-end gap-1 pointer-events-auto absolute inset-x-0 bottom-0 w-full border-t px-2 pb-[calc(0.45rem+env(safe-area-inset-bottom))] pt-2 shadow-[0_-18px_45px_rgba(56,38,20,0.14)] backdrop-blur-xl"
-      :class="isTor ? 'border-white/10 bg-[#090909]/92 shadow-[0_-18px_45px_rgba(0,0,0,0.4)]' : 'border-sand-200/80 bg-[#fffaf2]/94'"
-    >
         <NuxtLink
           v-for="item in items"
           :key="item.key"
@@ -122,6 +119,5 @@ const isActive = (path: string) => {
           </span>
           <span class="block max-w-full truncate whitespace-nowrap">{{ item.label }}</span>
         </NuxtLink>
-    </div>
   </nav>
 </template>

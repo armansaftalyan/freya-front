@@ -12,6 +12,8 @@
     "cap:open:ios": "npx cap open ios",
     "cap:sync": "npm run build:mobile:web && npx cap sync",
     "dev": "nuxt dev",
+    "dev:host": "nuxt dev --host 0.0.0.0",
+    "dev:phone": "nuxt dev --host 0.0.0.0 --port 4300",
     "generate": "nuxt generate",
     "pm2:logs": "PM2_HOME=.pm2 pm2 logs beauty-salon-web",
     "pm2:restart": "PM2_HOME=.pm2 pm2 restart ecosystem.config.cjs --only beauty-salon-web --update-env",

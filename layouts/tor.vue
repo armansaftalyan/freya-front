@@ -203,7 +203,7 @@ useHead(() => ({
     class="tor-shell flex min-h-screen flex-col"
     :class="[
       { 'locale-hy': locale === 'hy' },
-      showMobileBottomNav ? 'pb-[calc(5.25rem+env(safe-area-inset-bottom))] lg:pb-0' : '',
+      showMobileBottomNav ? 'pb-[calc(4.65rem+env(safe-area-inset-bottom))] lg:pb-0' : '',
     ]"
   >
     <SharedToastStack />
@@ -346,8 +346,8 @@ useHead(() => ({
       <slot />
     </main>
 
-    <footer class="border-t border-white/10 bg-black py-8">
-      <div class="container-shell flex flex-col gap-4 text-sm text-stone-400">
+    <footer class="overflow-x-clip border-t border-white/10 bg-black py-8">
+      <div class="container-shell min-w-0 flex flex-col gap-4 text-sm text-stone-400">
         <PaymentMethodIcons dark />
 
         <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-stone-200">
@@ -359,17 +359,17 @@ useHead(() => ({
           <p class="mt-1">Daily: 10:00-19:00</p>
         </div>
 
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+        <div class="min-w-0 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div class="min-w-0">
             <p class="font-semibold uppercase tracking-[0.22em] text-stone-200">© {{ new Date().getFullYear() }} Tor Barbershop</p>
             <p class="mt-1">{{ copy.tagline }}</p>
           </div>
-          <div class="grid grid-cols-2 gap-x-4 gap-y-2 sm:flex sm:flex-wrap sm:justify-end">
-            <NuxtLink :to="localePath(blogPath)" class="whitespace-nowrap transition hover:text-[#d79a49]">{{ blogLabel }}</NuxtLink>
-            <NuxtLink :to="localePath(contactsPath)" class="whitespace-nowrap transition hover:text-[#d79a49]">{{ locale === 'ru' ? 'Контакты' : locale === 'en' ? 'Contacts' : 'Կոնտակտներ' }}</NuxtLink>
-            <NuxtLink :to="localePath(legalPath)" class="whitespace-nowrap transition hover:text-[#d79a49]">{{ legalLabel }}</NuxtLink>
-            <NuxtLink :to="localePath(privacyPolicyPath)" class="whitespace-nowrap transition hover:text-[#d79a49]">{{ privacyPolicyLabel }}</NuxtLink>
-            <NuxtLink :to="localePath('/tor/all-pages')" class="whitespace-nowrap transition hover:text-[#d79a49]">{{ allPagesLabel }}</NuxtLink>
+          <div class="grid min-w-0 grid-cols-2 gap-x-4 gap-y-2 sm:flex sm:flex-wrap sm:justify-end">
+            <NuxtLink :to="localePath(blogPath)" class="min-w-0 break-words transition hover:text-[#d79a49] sm:whitespace-nowrap">{{ blogLabel }}</NuxtLink>
+            <NuxtLink :to="localePath(contactsPath)" class="min-w-0 break-words transition hover:text-[#d79a49] sm:whitespace-nowrap">{{ locale === 'ru' ? 'Контакты' : locale === 'en' ? 'Contacts' : 'Կոնտակտներ' }}</NuxtLink>
+            <NuxtLink :to="localePath(legalPath)" class="min-w-0 break-words transition hover:text-[#d79a49] sm:whitespace-nowrap">{{ legalLabel }}</NuxtLink>
+            <NuxtLink :to="localePath(privacyPolicyPath)" class="min-w-0 break-words transition hover:text-[#d79a49] sm:whitespace-nowrap">{{ privacyPolicyLabel }}</NuxtLink>
+            <NuxtLink :to="localePath('/tor/all-pages')" class="min-w-0 break-words transition hover:text-[#d79a49] sm:whitespace-nowrap">{{ allPagesLabel }}</NuxtLink>
           </div>
         </div>
       </div>
