@@ -3,6 +3,7 @@ import SharedLanguageSwitcher from '~/components/shared/LanguageSwitcher.vue'
 import SharedCartBadge from '~/components/shared/CartBadge.vue'
 import SharedToastStack from "~/components/shared/ToastStack.vue";
 import PaymentMethodIcons from '~/components/layout/PaymentMethodIcons.vue'
+import MobileBottomNav from '~/components/layout/MobileBottomNav.vue'
 
 const auth = useAuthStore()
 const { t, locale, locales } = useLocale()
@@ -16,6 +17,10 @@ const { localePath } = useLocalizedPath()
 const localizedPath = computed(() => withLocalePath(stripLocalePrefix(route.path), normalizeLocale(locale.value)))
 const canonicalUrl = computed(() => `${siteUrl.value}${localizedPath.value}`)
 const brandName = computed(() => brand.value === 'tor' ? torSalonName : salonName)
+const showMobileBottomNav = computed(() => {
+  const normalizedPath = stripLocalePrefix(route.path)
+  return normalizedPath !== '/booking' && normalizedPath !== '/tor/booking'
+})
 const allPagesPath = computed(() => `${rootPath.value}/all-pages`)
 const alternateLinks = computed(() => locales.map(item => ({
   rel: 'alternate',
@@ -185,7 +190,13 @@ useHead(() => ({
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col" :class="{ 'locale-hy': locale === 'hy' }">
+  <div
+    class="flex min-h-screen flex-col"
+    :class="[
+      { 'locale-hy': locale === 'hy' },
+      showMobileBottomNav ? 'pb-[calc(5.25rem+env(safe-area-inset-bottom))] lg:pb-0' : '',
+    ]"
+  >
     <SharedToastStack />
     <header class="sticky top-0 z-40 border-b border-sand-100 bg-[var(--bg)]/85 backdrop-blur">
       <div class="container-shell flex min-h-16 items-center justify-between gap-2 py-2">
@@ -260,7 +271,6 @@ useHead(() => ({
         </div>
 
         <div class="flex shrink-0 items-center gap-2 lg:hidden">
-          <SharedCartBadge compact />
           <button
             type="button"
             class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-sand-200 bg-white text-sand-900"
@@ -346,18 +356,19 @@ useHead(() => ({
           <p class="mt-1">Daily: 10:00-19:00</p>
         </div>
 
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p>© {{ new Date().getFullYear() }} {{ brandName }}</p>
-        <div class="flex gap-4">
-          <NuxtLink :to="localePath(blogPath)" class="hover:text-sand-800">{{ blogLabel }}</NuxtLink>
-          <NuxtLink :to="localePath(contactsPath)" class="hover:text-sand-800">{{ t('nav.contacts') }}</NuxtLink>
-          <NuxtLink :to="localePath(legalPath)" class="hover:text-sand-800">{{ legalLabel }}</NuxtLink>
-          <NuxtLink :to="localePath(privacyPolicyPath)" class="hover:text-sand-800">{{ privacyPolicyLabel }}</NuxtLink>
-          <NuxtLink :to="localePath(allPagesPath)" class="hover:text-sand-800">{{ allPagesLabel }}</NuxtLink>
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p class="shrink-0">© {{ new Date().getFullYear() }} {{ brandName }}</p>
+        <div class="grid grid-cols-2 gap-x-4 gap-y-2 sm:flex sm:flex-wrap sm:justify-end">
+          <NuxtLink :to="localePath(blogPath)" class="whitespace-nowrap hover:text-sand-800">{{ blogLabel }}</NuxtLink>
+          <NuxtLink :to="localePath(contactsPath)" class="whitespace-nowrap hover:text-sand-800">{{ t('nav.contacts') }}</NuxtLink>
+          <NuxtLink :to="localePath(legalPath)" class="whitespace-nowrap hover:text-sand-800">{{ legalLabel }}</NuxtLink>
+          <NuxtLink :to="localePath(privacyPolicyPath)" class="whitespace-nowrap hover:text-sand-800">{{ privacyPolicyLabel }}</NuxtLink>
+          <NuxtLink :to="localePath(allPagesPath)" class="whitespace-nowrap hover:text-sand-800">{{ allPagesLabel }}</NuxtLink>
         </div>
         </div>
       </div>
     </footer>
+    <MobileBottomNav v-if="showMobileBottomNav" />
   </div>
 </template>
 

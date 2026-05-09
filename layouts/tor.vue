@@ -3,6 +3,7 @@ import SharedLanguageSwitcher from '~/components/shared/LanguageSwitcher.vue'
 import SharedCartBadge from '~/components/shared/CartBadge.vue'
 import SharedToastStack from '~/components/shared/ToastStack.vue'
 import PaymentMethodIcons from '~/components/layout/PaymentMethodIcons.vue'
+import MobileBottomNav from '~/components/layout/MobileBottomNav.vue'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -15,6 +16,10 @@ const { siteUrl, telephone } = useSiteMeta()
 const { rootPath, mastersPath, contactsPath, legalPath, privacyPolicyPath, giftCardsPath, authLoginPath, authProfilePath, blogPath } = useBrandContext()
 const { canonicalUrl, alternates } = useLocalizedSeo(() => route.path)
 const torLogoUrl = computed(() => `${siteUrl.value}/tor-logo.jpg`)
+const showMobileBottomNav = computed(() => {
+  const normalizedPath = stripLocalePrefix(route.path)
+  return normalizedPath !== '/booking' && normalizedPath !== '/tor/booking'
+})
 
 const navLinks = computed(() => [
   { to: `${rootPath.value}/services`, label: copy.value.services },
@@ -194,7 +199,13 @@ useHead(() => ({
 </script>
 
 <template>
-  <div class="tor-shell flex min-h-screen flex-col" :class="{ 'locale-hy': locale === 'hy' }">
+  <div
+    class="tor-shell flex min-h-screen flex-col"
+    :class="[
+      { 'locale-hy': locale === 'hy' },
+      showMobileBottomNav ? 'pb-[calc(5.25rem+env(safe-area-inset-bottom))] lg:pb-0' : '',
+    ]"
+  >
     <SharedToastStack />
 
     <header class="sticky top-0 z-40 border-b border-white/10 bg-[#0b0b0b]/90 backdrop-blur">
@@ -269,7 +280,6 @@ useHead(() => ({
         </div>
 
         <div class="flex shrink-0 items-center gap-2 lg:hidden">
-          <SharedCartBadge theme="dark" compact />
           <button
             type="button"
             class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-stone-100"
@@ -354,16 +364,17 @@ useHead(() => ({
             <p class="font-semibold uppercase tracking-[0.22em] text-stone-200">© {{ new Date().getFullYear() }} Tor Barbershop</p>
             <p class="mt-1">{{ copy.tagline }}</p>
           </div>
-          <div class="flex gap-4">
-            <NuxtLink :to="localePath(blogPath)" class="transition hover:text-[#d79a49]">{{ blogLabel }}</NuxtLink>
-            <NuxtLink :to="localePath(contactsPath)" class="transition hover:text-[#d79a49]">{{ locale === 'ru' ? 'Контакты' : locale === 'en' ? 'Contacts' : 'Կոնտակտներ' }}</NuxtLink>
-            <NuxtLink :to="localePath(legalPath)" class="transition hover:text-[#d79a49]">{{ legalLabel }}</NuxtLink>
-            <NuxtLink :to="localePath(privacyPolicyPath)" class="transition hover:text-[#d79a49]">{{ privacyPolicyLabel }}</NuxtLink>
-            <NuxtLink :to="localePath('/tor/all-pages')" class="transition hover:text-[#d79a49]">{{ allPagesLabel }}</NuxtLink>
+          <div class="grid grid-cols-2 gap-x-4 gap-y-2 sm:flex sm:flex-wrap sm:justify-end">
+            <NuxtLink :to="localePath(blogPath)" class="whitespace-nowrap transition hover:text-[#d79a49]">{{ blogLabel }}</NuxtLink>
+            <NuxtLink :to="localePath(contactsPath)" class="whitespace-nowrap transition hover:text-[#d79a49]">{{ locale === 'ru' ? 'Контакты' : locale === 'en' ? 'Contacts' : 'Կոնտակտներ' }}</NuxtLink>
+            <NuxtLink :to="localePath(legalPath)" class="whitespace-nowrap transition hover:text-[#d79a49]">{{ legalLabel }}</NuxtLink>
+            <NuxtLink :to="localePath(privacyPolicyPath)" class="whitespace-nowrap transition hover:text-[#d79a49]">{{ privacyPolicyLabel }}</NuxtLink>
+            <NuxtLink :to="localePath('/tor/all-pages')" class="whitespace-nowrap transition hover:text-[#d79a49]">{{ allPagesLabel }}</NuxtLink>
           </div>
         </div>
       </div>
     </footer>
+    <MobileBottomNav v-if="showMobileBottomNav" />
   </div>
 </template>
 
