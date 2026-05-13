@@ -71,6 +71,8 @@ export default defineEventHandler(async (event) => {
 
     return ''
   }
+  const isValidSlug = (value: string | null | undefined) =>
+    typeof value === 'string' && value.trim() === value && value !== '' && !/[\s/]/.test(value)
 
   const staticRoutes = [
     '/',
@@ -97,11 +99,15 @@ export default defineEventHandler(async (event) => {
 
   const routes = new Set<string>()
 
+  const addRoute = (route: string, locale: typeof locales[number], lastmod?: string) => {
+    const localizedRoute = route === '/' ? `/${locale}` : `/${locale}${route}`
+    routes.add(localizedRoute)
+    routeLastmod.set(localizedRoute, lastmod || (route === '/' ? homepageLastmod : weeklyLastmod))
+  }
+
   const addLocalizedRoute = (route: string) => {
     for (const locale of locales) {
-      const localizedRoute = route === '/' ? `/${locale}` : `/${locale}${route}`
-      routes.add(localizedRoute)
-      routeLastmod.set(localizedRoute, route === '/' ? homepageLastmod : weeklyLastmod)
+      addRoute(route, locale)
     }
   }
 
@@ -111,105 +117,35 @@ export default defineEventHandler(async (event) => {
 
   if (apiBase) {
     try {
-      const [
-        freyaCategoriesResponse,
-        freyaBlogArticlesResponse,
-        freyaServicesResponse,
-        freyaMastersResponse,
-        freyaProductCategoriesResponse,
-        freyaProductsResponse,
-        torCategoriesResponse,
-        torBlogArticlesResponse,
-        torServicesResponse,
-        torMastersResponse,
-        torProductCategoriesResponse,
-        torProductsResponse,
-      ] = await Promise.all([
-        $fetch<ApiListResponse<SitemapCategory>>(`${apiBase}/categories`, { query: { brand: 'freya' } }),
-        $fetch<ApiListResponse<SitemapBlogArticle>>(`${apiBase}/blog`, { query: { brand: 'freya', limit: 100 } }),
-        $fetch<ApiListResponse<SitemapService>>(`${apiBase}/services`, { query: { brand: 'freya' } }),
-        $fetch<ApiListResponse<SitemapMaster>>(`${apiBase}/masters`, { query: { brand: 'freya' } }),
-        $fetch<ApiListResponse<SitemapProductCategory>>(`${apiBase}/product-categories`, { query: { brand: 'freya' } }),
-        $fetch<ApiListResponse<SitemapProduct>>(`${apiBase}/products`, { query: { brand: 'freya' } }),
-        $fetch<ApiListResponse<SitemapCategory>>(`${apiBase}/categories`, { query: { brand: 'tor' } }),
-        $fetch<ApiListResponse<SitemapBlogArticle>>(`${apiBase}/blog`, { query: { brand: 'tor', limit: 100 } }),
-        $fetch<ApiListResponse<SitemapService>>(`${apiBase}/services`, { query: { brand: 'tor' } }),
-        $fetch<ApiListResponse<SitemapMaster>>(`${apiBase}/masters`, { query: { brand: 'tor' } }),
-        $fetch<ApiListResponse<SitemapProductCategory>>(`${apiBase}/product-categories`, { query: { brand: 'tor' } }),
-        $fetch<ApiListResponse<SitemapProduct>>(`${apiBase}/products`, { query: { brand: 'tor' } }),
-      ])
+      const fetchLocalized = <T>(path: string, locale: typeof locales[number], query: Record<string, string | number>) =>
+        $fetch<ApiListResponse<T>>(`${apiBase}${path}`, {
+          query: { ...query, lang: locale },
+          headers: {
+            'Accept-Language': locale,
+            'X-Locale': locale,
+          },
+        })
 
       const addServiceRoutes = (
         categoriesResponse: ApiListResponse<SitemapCategory>,
         servicesResponse: ApiListResponse<SitemapService>,
         basePath: '/services' | '/tor/services',
+        locale: typeof locales[number],
       ) => {
-        const activeCategories = (categoriesResponse.data || []).filter(category => category.is_active !== false)
+        const activeCategories = (categoriesResponse.data || []).filter(category => category.is_active !== false && isValidSlug(category.slug))
         const categorySlugById = new Map<number, string>()
 
         for (const category of activeCategories) {
           categorySlugById.set(category.id, category.slug)
-          addLocalizedRoute(`${basePath}/${category.slug}`)
+          addRoute(`${basePath}/${category.slug}`, locale)
         }
 
-        for (const service of (servicesResponse.data || []).filter(service => service.is_active !== false)) {
+        for (const service of (servicesResponse.data || []).filter(service => service.is_active !== false && isValidSlug(service.slug))) {
           const categorySlug = categorySlugById.get(service.category_id)
           if (!categorySlug) continue
           const route = `${basePath}/${categorySlug}/${service.slug}`
-          addLocalizedRoute(route)
           const lastmod = normalizeLastmod(service.updated_at)
-          if (lastmod) {
-            for (const locale of locales) {
-              routeLastmod.set(`/${locale}${route}`, lastmod)
-            }
-          }
-        }
-      }
-
-      addServiceRoutes(freyaCategoriesResponse, freyaServicesResponse, '/services')
-      addServiceRoutes(torCategoriesResponse, torServicesResponse, '/tor/services')
-
-      for (const article of (freyaBlogArticlesResponse.data || []).filter(article => article.is_published !== false)) {
-        const route = `/blog/${article.slug}`
-        addLocalizedRoute(route)
-        const lastmod = normalizeLastmod(article.updated_at, article.published_at)
-        if (lastmod) {
-          for (const locale of locales) {
-            routeLastmod.set(`/${locale}${route}`, lastmod)
-          }
-        }
-      }
-
-      for (const article of (torBlogArticlesResponse.data || []).filter(article => article.is_published !== false)) {
-        const route = `/tor/blog/${article.slug}`
-        addLocalizedRoute(route)
-        const lastmod = normalizeLastmod(article.updated_at, article.published_at)
-        if (lastmod) {
-          for (const locale of locales) {
-            routeLastmod.set(`/${locale}${route}`, lastmod)
-          }
-        }
-      }
-
-      for (const master of (freyaMastersResponse.data || []).filter(master => master.is_active !== false && master.slug)) {
-        const route = `/masters/${master.slug}`
-        addLocalizedRoute(route)
-        const lastmod = normalizeLastmod(master.updated_at)
-        if (lastmod) {
-          for (const locale of locales) {
-            routeLastmod.set(`/${locale}${route}`, lastmod)
-          }
-        }
-      }
-
-      for (const master of (torMastersResponse.data || []).filter(master => master.is_active !== false && master.slug)) {
-        const route = `/tor/masters/${master.slug}`
-        addLocalizedRoute(route)
-        const lastmod = normalizeLastmod(master.updated_at)
-        if (lastmod) {
-          for (const locale of locales) {
-            routeLastmod.set(`/${locale}${route}`, lastmod)
-          }
+          addRoute(route, locale, lastmod || undefined)
         }
       }
 
@@ -217,31 +153,90 @@ export default defineEventHandler(async (event) => {
         categoriesResponse: ApiListResponse<SitemapProductCategory>,
         productsResponse: ApiListResponse<SitemapProduct>,
         basePath: '/products' | '/tor/products',
+        locale: typeof locales[number],
       ) => {
-        const activeProductCategories = (categoriesResponse.data || []).filter(category => category.is_active !== false)
+        const activeProducts = (productsResponse.data || []).filter(product => product.is_active !== false && isValidSlug(product.slug))
+        const productCountByCategoryId = activeProducts.reduce((counts, product) => {
+          counts.set(product.category_id, (counts.get(product.category_id) || 0) + 1)
+          return counts
+        }, new Map<number, number>())
+        const activeProductCategories = (categoriesResponse.data || [])
+          .filter(category => category.is_active !== false && isValidSlug(category.slug) && (productCountByCategoryId.get(category.id) || 0) > 0)
         const productCategorySlugById = new Map<number, string>()
 
         for (const category of activeProductCategories) {
           productCategorySlugById.set(category.id, category.slug)
-          addLocalizedRoute(`${basePath}/${category.slug}`)
+          addRoute(`${basePath}/${category.slug}`, locale)
         }
 
-        for (const product of (productsResponse.data || []).filter(product => product.is_active !== false)) {
+        for (const product of activeProducts) {
           const categorySlug = productCategorySlugById.get(product.category_id)
           if (!categorySlug) continue
           const route = `${basePath}/${categorySlug}/${product.slug}`
-          addLocalizedRoute(route)
           const lastmod = normalizeLastmod(product.updated_at)
-          if (lastmod) {
-            for (const locale of locales) {
-              routeLastmod.set(`/${locale}${route}`, lastmod)
-            }
-          }
+          addRoute(route, locale, lastmod || undefined)
         }
       }
 
-      addProductRoutes(freyaProductCategoriesResponse, freyaProductsResponse, '/products')
-      addProductRoutes(torProductCategoriesResponse, torProductsResponse, '/tor/products')
+      for (const locale of locales) {
+        const [
+          freyaCategoriesResponse,
+          freyaBlogArticlesResponse,
+          freyaServicesResponse,
+          freyaMastersResponse,
+          freyaProductCategoriesResponse,
+          freyaProductsResponse,
+          torCategoriesResponse,
+          torBlogArticlesResponse,
+          torServicesResponse,
+          torMastersResponse,
+          torProductCategoriesResponse,
+          torProductsResponse,
+        ] = await Promise.all([
+          fetchLocalized<SitemapCategory>('/categories', locale, { brand: 'freya' }),
+          fetchLocalized<SitemapBlogArticle>('/blog', locale, { brand: 'freya', limit: 100 }),
+          fetchLocalized<SitemapService>('/services', locale, { brand: 'freya' }),
+          fetchLocalized<SitemapMaster>('/masters', locale, { brand: 'freya' }),
+          fetchLocalized<SitemapProductCategory>('/product-categories', locale, { brand: 'freya' }),
+          fetchLocalized<SitemapProduct>('/products', locale, { brand: 'freya' }),
+          fetchLocalized<SitemapCategory>('/categories', locale, { brand: 'tor' }),
+          fetchLocalized<SitemapBlogArticle>('/blog', locale, { brand: 'tor', limit: 100 }),
+          fetchLocalized<SitemapService>('/services', locale, { brand: 'tor' }),
+          fetchLocalized<SitemapMaster>('/masters', locale, { brand: 'tor' }),
+          fetchLocalized<SitemapProductCategory>('/product-categories', locale, { brand: 'tor' }),
+          fetchLocalized<SitemapProduct>('/products', locale, { brand: 'tor' }),
+        ])
+
+        addServiceRoutes(freyaCategoriesResponse, freyaServicesResponse, '/services', locale)
+        addServiceRoutes(torCategoriesResponse, torServicesResponse, '/tor/services', locale)
+
+        for (const article of (freyaBlogArticlesResponse.data || []).filter(article => article.is_published !== false && isValidSlug(article.slug))) {
+          const route = `/blog/${article.slug}`
+          const lastmod = normalizeLastmod(article.updated_at, article.published_at)
+          addRoute(route, locale, lastmod || undefined)
+        }
+
+        for (const article of (torBlogArticlesResponse.data || []).filter(article => article.is_published !== false && isValidSlug(article.slug))) {
+          const route = `/tor/blog/${article.slug}`
+          const lastmod = normalizeLastmod(article.updated_at, article.published_at)
+          addRoute(route, locale, lastmod || undefined)
+        }
+
+        for (const master of (freyaMastersResponse.data || []).filter(master => master.is_active !== false && isValidSlug(master.slug))) {
+          const route = `/masters/${master.slug}`
+          const lastmod = normalizeLastmod(master.updated_at)
+          addRoute(route, locale, lastmod || undefined)
+        }
+
+        for (const master of (torMastersResponse.data || []).filter(master => master.is_active !== false && isValidSlug(master.slug))) {
+          const route = `/tor/masters/${master.slug}`
+          const lastmod = normalizeLastmod(master.updated_at)
+          addRoute(route, locale, lastmod || undefined)
+        }
+
+        addProductRoutes(freyaProductCategoriesResponse, freyaProductsResponse, '/products', locale)
+        addProductRoutes(torProductCategoriesResponse, torProductsResponse, '/tor/products', locale)
+      }
     }
     catch (error) {
       console.error('Failed to build dynamic sitemap URLs', error)

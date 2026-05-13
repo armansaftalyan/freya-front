@@ -29,6 +29,10 @@ const { data, error } = await useAsyncData(() => `product-category-${brand.value
 
   const products = productsResponse.data.filter(item => item.category_id === category.id && item.is_active !== false)
 
+  if (products.length === 0) {
+    throw createError({ statusCode: 404, statusMessage: 'Product category has no visible products' })
+  }
+
   return { category, products }
 })
 
