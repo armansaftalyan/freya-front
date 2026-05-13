@@ -465,7 +465,13 @@ onBeforeUnmount(() => {
             </p>
           </div>
 
-          <NuxtLink :to="localePath(bookingPath)" class="master-book-cta mt-4 block sm:mt-6 sm:inline-block">
+          <NuxtLink
+            :to="localePath({
+              path: bookingPath,
+              query: { master_id: String(master.id) },
+            })"
+            class="master-book-cta mt-4 block sm:mt-6 sm:inline-block"
+          >
             <BaseButton :theme="isTor ? 'tor' : 'default'" class="w-full sm:w-auto">{{ t('mastersPage.bookWithMaster') }}</BaseButton>
           </NuxtLink>
         </Card>

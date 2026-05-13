@@ -289,6 +289,13 @@ const selectedMaster = (line: BookingLine): Master | undefined => {
     || (isMasterUser.value && currentMasterProfile.value?.id === line.masterId ? currentMasterProfile.value : undefined)
 }
 
+const selectedMasterServiceIds = (line: BookingLine): Set<number> | null => {
+  const master = selectedMaster(line)
+  if (!line.masterId || !master?.services?.length) return null
+
+  return new Set(master.services.map(item => item.id))
+}
+
 const scrollMobileStepCardIntoView = async () => {
   if (!import.meta.client) return
 
@@ -347,7 +354,9 @@ const goToNextMobileStep = () => {
     return
   }
 
-  mobileStep.value = Math.min(4, mobileStep.value + 1)
+  mobileStep.value = mobileStep.value === 1 && activeLine.value.masterId
+    ? 3
+    : Math.min(4, mobileStep.value + 1)
   void scrollMobileStepCardIntoView()
 }
 
@@ -396,9 +405,9 @@ const linePromoTotal = (line: BookingLine) => {
 const bookingOriginalTotal = computed(() => lines.value.reduce((total, line) => total + lineOriginalTotal(line), 0))
 const bookingPromoTotal = computed(() => lines.value.reduce((total, line) => total + linePromoTotal(line), 0))
 
-const hydrateMasterForLine = async (line: BookingLine, masterId: number) => {
+const hydrateMasterForLine = async (line: BookingLine, masterId: number, force = false) => {
   const existing = line.masters.find(master => master.id === masterId)
-  if (existing?.services?.length) {
+  if (existing?.services?.length && !force) {
     return existing
   }
 
@@ -424,17 +433,20 @@ const selectMasterForLine = async (line: BookingLine, masterId: number | null) =
   line.masterId = masterId
 
   if (masterId) {
-    await hydrateMasterForLine(line, masterId)
+    await hydrateMasterForLine(line, masterId, true)
   }
 
   fetchSlotsForLine(line)
 }
 
 const servicesForLine = (line: BookingLine) => {
+  const masterServiceIds = selectedMasterServiceIds(line)
+
   if (!line.categoryId) return []
   return services.value.filter((item) => {
     if (item.category_id !== line.categoryId) return false
     if (isRestrictedToMasterServices.value && !allowedMasterServiceIds.value.has(item.id)) return false
+    if (masterServiceIds && !masterServiceIds.has(item.id)) return false
     return true
   })
 }
@@ -523,14 +535,6 @@ useStructuredData(() => ({
   ],
 }))
 
-const toggleServiceForLine = (line: BookingLine, service: Service) => {
-  if (isServiceDisabledForLine(line, service)) return
-  line.serviceIds = line.serviceIds.includes(service.id)
-    ? line.serviceIds.filter(id => id !== service.id)
-    : [...line.serviceIds, service.id]
-  fetchMastersForLine(line)
-}
-
 const setLineCategory = async (line: BookingLine, categoryId: number) => {
   if (!visibleCategories.value.some(category => category.id === categoryId)) return
   line.categoryId = categoryId
@@ -538,7 +542,7 @@ const setLineCategory = async (line: BookingLine, categoryId: number) => {
   // If no services are selected yet, category switch invalidates downstream selections.
   if (!line.serviceIds.length) {
     line.serviceIds = []
-    line.masterId = currentMasterProfile.value?.id ?? null
+    line.masterId = line.masterId ?? currentMasterProfile.value?.id ?? null
     line.slot = null
     line.masters = []
     line.mastersResolved = false
@@ -563,6 +567,34 @@ const clearLineNetworkState = (lineId: number) => {
   slotsAbortControllers.get(lineId)?.abort()
   mastersAbortControllers.delete(lineId)
   slotsAbortControllers.delete(lineId)
+}
+
+const refreshLineAfterServicesChanged = async (line: BookingLine) => {
+  line.slot = null
+  line.slots = []
+
+  if (!line.masterId) {
+    fetchMastersForLine(line)
+    return
+  }
+
+  await hydrateMasterForLine(line, line.masterId)
+  fetchSlotsForLine(line)
+}
+
+const toggleServiceForLine = (line: BookingLine, service: Service) => {
+  if (isServiceDisabledForLine(line, service)) return
+  const hadServices = line.serviceIds.length > 0
+  line.serviceIds = line.serviceIds.includes(service.id)
+    ? line.serviceIds.filter(id => id !== service.id)
+    : [...line.serviceIds, service.id]
+
+  if (line.id === activeLine.value?.id && mobileStep.value === 1 && line.masterId && !hadServices && line.serviceIds.length) {
+    mobileStep.value = 3
+    void scrollMobileStepCardIntoView()
+  }
+
+  void refreshLineAfterServicesChanged(line)
 }
 
 const fetchMastersForLineNow = async (line: BookingLine) => {
@@ -603,6 +635,9 @@ const fetchMastersForLineNow = async (line: BookingLine) => {
 
     if (line.masterId && !line.masters.some(master => master.id === line.masterId)) {
       line.masterId = null
+    }
+    else if (line.masterId) {
+      await hydrateMasterForLine(line, line.masterId, true)
     }
   }
   catch (error: any) {
@@ -858,12 +893,22 @@ const bootstrapBookingFlow = async () => {
   const line = createEmptyLine({ categoryId: categoryId ?? defaultCategoryId.value ?? undefined, serviceId: serviceId ?? undefined, masterId: masterId ?? undefined })
   lines.value = [line]
 
-  if (line.serviceIds.length) {
+  if (line.masterId) {
+    await hydrateMasterForLine(line, line.masterId, true)
+    line.mastersResolved = true
+  }
+
+  if (line.serviceIds.length && line.masterId) {
+    await fetchSlotsForLine(line, true)
+    mobileStep.value = 3
+  }
+  else if (line.serviceIds.length) {
     await fetchMastersForLine(line, true)
     if (line.masterId && !line.masters.some(master => master.id === line.masterId)) {
       line.masterId = null
     }
     await fetchSlotsForLine(line, true)
+    mobileStep.value = line.masterId ? 3 : 2
   }
 }
 
@@ -1389,7 +1434,7 @@ onMounted(() => {
                         :class="isTor
                           ? 'border-white/10 bg-white/[0.04] text-stone-100 hover:border-[#d79a49]/50'
                           : 'border-sand-300 bg-white text-sand-800 hover:border-sand-600'"
-                        @click="line.serviceIds = line.serviceIds.filter(id => id !== item.id); fetchMastersForLine(line)"
+                        @click="line.serviceIds = line.serviceIds.filter(id => id !== item.id); refreshLineAfterServicesChanged(line)"
                       >
                         <span>{{ item.name }}</span>
                         <span class="text-base font-bold leading-none">×</span>
