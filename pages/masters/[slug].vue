@@ -435,22 +435,26 @@ onBeforeUnmount(() => {
       </Card>
 
       <div v-else-if="master" class="grid gap-6 lg:grid-cols-[360px,1fr]">
-        <Card class="h-fit" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
-          <img
-            :src="masterAvatarSrc(master.avatar, master.name)"
-            :alt="`${master.name} – ${brand.value === 'tor' ? 'Tor specialist' : 'Freya beauty specialist'}`"
-            class="h-80 w-full rounded-2xl object-cover"
-            width="720"
-            height="320"
-            loading="eager"
-            fetchpriority="high"
-            decoding="async"
-            @error="onMasterAvatarError($event, master.name)"
-          >
-          <h1 class="mt-4 text-3xl sm:text-4xl">{{ master.name }}</h1>
-          <p class="mt-3 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ master.bio || t('mastersPage.fallbackBio') }}</p>
+        <Card class="h-fit !p-3 sm:!p-6" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
+          <div class="grid grid-cols-[88px,1fr] gap-3 sm:block">
+            <img
+              :src="masterAvatarSrc(master.avatar, master.name)"
+              :alt="`${master.name} – ${brand.value === 'tor' ? 'Tor specialist' : 'Freya beauty specialist'}`"
+              class="h-24 w-24 rounded-2xl object-cover sm:h-80 sm:w-full"
+              width="720"
+              height="320"
+              loading="eager"
+              fetchpriority="high"
+              decoding="async"
+              @error="onMasterAvatarError($event, master.name)"
+            >
+            <div class="min-w-0">
+              <h1 class="text-xl leading-tight sm:mt-4 sm:text-4xl">{{ master.name }}</h1>
+            </div>
+          </div>
+          <p class="mt-3 text-sm leading-6" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ master.bio || t('mastersPage.fallbackBio') }}</p>
 
-          <div class="mt-5 grid gap-2 text-sm">
+          <div class="mt-4 grid gap-2 text-sm sm:mt-5">
             <p v-if="master.experience_duration_years !== null && master.experience_duration_years !== undefined">
               <span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('mastersPage.experience') }}:</span>
               <span class="font-semibold"> {{ master.experience_duration_years }} {{ t('mastersPage.years') }}</span>
@@ -461,12 +465,86 @@ onBeforeUnmount(() => {
             </p>
           </div>
 
-          <NuxtLink :to="localePath(bookingPath)" class="mt-6 inline-block">
-            <BaseButton :theme="isTor ? 'tor' : 'default'">{{ t('mastersPage.bookWithMaster') }}</BaseButton>
+          <NuxtLink :to="localePath(bookingPath)" class="master-book-cta mt-4 block sm:mt-6 sm:inline-block">
+            <BaseButton :theme="isTor ? 'tor' : 'default'" class="w-full sm:w-auto">{{ t('mastersPage.bookWithMaster') }}</BaseButton>
           </NuxtLink>
         </Card>
 
         <div class="space-y-6">
+          <component
+            :is="isTor ? 'article' : Card"
+            v-if="portfolioItems.length"
+            class="rounded-2xl p-3 sm:rounded-3xl sm:p-6"
+            :class="isTor
+              ? 'border border-white/10 !bg-[#121212] text-stone-100 shadow-[0_22px_60px_rgba(0,0,0,0.34)]'
+              : 'bg-[linear-gradient(180deg,#fffdf9_0%,#fff7ef_100%)]'"
+            :style="isTor ? { background: '#121212' } : undefined"
+          >
+            <div class="flex items-end justify-between gap-3 sm:gap-4">
+              <div>
+                <p v-if="isTor" class="text-[11px] uppercase tracking-[0.22em] text-[#d79a49]">{{ master.name }}</p>
+                <h2 class="text-xl sm:text-2xl" :class="isTor ? 'text-white' : ''">{{ t('mastersPage.portfolioTitle') }}</h2>
+                <p class="mt-1 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ master.name }}</p>
+              </div>
+              <span
+                class="rounded-full px-3 py-1 text-xs uppercase tracking-[0.24em]"
+                :class="isTor ? 'border border-[#d79a49]/30 bg-[#171717] text-[#d79a49]' : 'bg-sand-100 text-sand-700'"
+              >
+                {{ portfolioItems.length }}
+              </span>
+            </div>
+
+            <div
+              class="mt-4 grid grid-cols-2 gap-3 sm:mt-5 sm:gap-4"
+              :class="isTor ? 'xl:grid-cols-3' : 'xl:grid-cols-3'"
+            >
+              <article
+                v-for="(item, index) in portfolioItems"
+                :key="`${item.url}-${index}`"
+                class="group overflow-hidden"
+                :class="isTor ? 'rounded-2xl border border-white/10 bg-[#181818] shadow-[0_18px_45px_rgba(0,0,0,0.3)] sm:rounded-[26px]' : 'rounded-2xl border border-sand-200 bg-white shadow-[0_16px_40px_rgba(98,73,42,0.08)] sm:rounded-[26px]'"
+              >
+                <button
+                  type="button"
+                  class="block w-full overflow-hidden text-left"
+                  :class="isTor ? 'aspect-[4/5] sm:aspect-[5/6]' : 'aspect-[4/5] sm:aspect-[5/6]'"
+                  @click="openPortfolioLightbox(index)"
+                >
+                  <video
+                    v-if="item.isVideo"
+                    :src="item.url"
+                    class="h-full w-full object-cover"
+                    autoplay
+                    loop
+                    preload="metadata"
+                    muted
+                    playsinline
+                  />
+                  <img
+                    v-else
+                    :src="item.url"
+                    :alt="`${master.name} – portfolio photo ${index + 1}`"
+                    class="h-full w-full cursor-zoom-in object-cover transition duration-500 group-hover:scale-[1.03]"
+                    width="1000"
+                    height="1200"
+                    loading="lazy"
+                    decoding="async"
+                  >
+                </button>
+                <div
+                  class="flex items-center justify-between px-3 py-2 text-xs sm:px-4 sm:py-3 sm:text-sm"
+                  :class="isTor ? 'border-t border-white/10 bg-[#141414] text-stone-300' : 'text-sand-700'"
+                >
+                  <div>
+                    <span class="block truncate">{{ master.name }}</span>
+                    <span v-if="isTor" class="mt-1 block text-[11px] uppercase tracking-[0.18em] text-[#d79a49]">{{ t('mastersPage.portfolioTitle') }}</span>
+                  </div>
+                  <span :class="isTor ? 'text-[#d79a49]' : 'text-sand-500'">0{{ index + 1 }}</span>
+                </div>
+              </article>
+            </div>
+          </component>
+
           <Card v-if="master.specialties.length" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100' : ''">
             <h2 class="text-2xl">{{ t('mastersPage.specialties') }}</h2>
             <div class="mt-4 flex flex-wrap gap-2">
@@ -525,80 +603,6 @@ onBeforeUnmount(() => {
               </NuxtLink>
             </div>
           </Card>
-
-          <component
-            :is="isTor ? 'article' : Card"
-            v-if="portfolioItems.length"
-            class="rounded-3xl p-5 sm:p-6"
-            :class="isTor
-              ? 'border border-white/10 !bg-[#121212] text-stone-100 shadow-[0_22px_60px_rgba(0,0,0,0.34)]'
-              : 'bg-[linear-gradient(180deg,#fffdf9_0%,#fff7ef_100%)]'"
-            :style="isTor ? { background: '#121212' } : undefined"
-          >
-            <div class="flex items-end justify-between gap-4">
-              <div>
-                <p v-if="isTor" class="text-[11px] uppercase tracking-[0.22em] text-[#d79a49]">{{ master.name }}</p>
-                <h2 class="text-2xl" :class="isTor ? 'text-white' : ''">{{ t('mastersPage.portfolioTitle') }}</h2>
-                <p class="mt-1 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ master.name }}</p>
-              </div>
-              <span
-                class="rounded-full px-3 py-1 text-xs uppercase tracking-[0.24em]"
-                :class="isTor ? 'border border-[#d79a49]/30 bg-[#171717] text-[#d79a49]' : 'bg-sand-100 text-sand-700'"
-              >
-                {{ portfolioItems.length }}
-              </span>
-            </div>
-
-            <div
-              class="mt-5 grid gap-4"
-              :class="isTor ? 'sm:grid-cols-2 xl:grid-cols-3' : 'sm:grid-cols-2 xl:grid-cols-3'"
-            >
-              <article
-                v-for="(item, index) in portfolioItems"
-                :key="`${item.url}-${index}`"
-                class="group overflow-hidden"
-                :class="isTor ? 'rounded-[26px] border border-white/10 bg-[#181818] shadow-[0_18px_45px_rgba(0,0,0,0.3)]' : 'rounded-[26px] border border-sand-200 bg-white shadow-[0_16px_40px_rgba(98,73,42,0.08)]'"
-              >
-                <button
-                  type="button"
-                  class="block w-full overflow-hidden text-left"
-                  :class="isTor ? 'aspect-[5/6]' : 'aspect-[5/6]'"
-                  @click="openPortfolioLightbox(index)"
-                >
-                  <video
-                    v-if="item.isVideo"
-                    :src="item.url"
-                    class="h-full w-full object-cover"
-                    autoplay
-                    loop
-                    preload="metadata"
-                    muted
-                    playsinline
-                  />
-                  <img
-                    v-else
-                    :src="item.url"
-                    :alt="`${master.name} – portfolio photo ${index + 1}`"
-                    class="h-full w-full cursor-zoom-in object-cover transition duration-500 group-hover:scale-[1.03]"
-                    width="1000"
-                    height="1200"
-                    loading="lazy"
-                    decoding="async"
-                  >
-                </button>
-                <div
-                  class="flex items-center justify-between px-4 py-3 text-sm"
-                  :class="isTor ? 'border-t border-white/10 bg-[#141414] text-stone-300' : 'text-sand-700'"
-                >
-                  <div>
-                    <span class="block">{{ master.name }}</span>
-                    <span v-if="isTor" class="mt-1 block text-[11px] uppercase tracking-[0.18em] text-[#d79a49]">{{ t('mastersPage.portfolioTitle') }}</span>
-                  </div>
-                  <span :class="isTor ? 'text-[#d79a49]' : 'text-sand-500'">0{{ index + 1 }}</span>
-                </div>
-              </article>
-            </div>
-          </component>
 
           <Card v-if="master.certificates.length" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100' : ''">
             <h2 class="text-2xl">{{ t('mastersPage.certificatesTitle') }}</h2>
@@ -753,3 +757,41 @@ onBeforeUnmount(() => {
     </div>
   </section>
 </template>
+
+<style scoped>
+.master-book-cta {
+  animation: master-cta-bounce 2.6s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+
+@keyframes master-cta-bounce {
+  0%,
+  58%,
+  100% {
+    transform: translateY(0);
+  }
+
+  66% {
+    transform: translateY(-7px);
+  }
+
+  74% {
+    transform: translateY(0);
+  }
+
+  82% {
+    transform: translateY(-4px);
+  }
+
+  90% {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .master-book-cta {
+    animation: none;
+  }
+}
+</style>
