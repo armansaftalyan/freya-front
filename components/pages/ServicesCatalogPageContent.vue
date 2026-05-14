@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import type { Category } from '~/types/category'
 import type { Service } from '~/types/service'
+import type { SupportedLocale } from '~/composables/useLocalizedPath'
 import ServiceCatalogCard from '~/components/catalog/ServiceCatalogCard.vue'
 import FaqSection from '~/components/sections/FaqSection.vue'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
@@ -13,7 +15,7 @@ const props = withDefaults(defineProps<{
   backTo?: string
   categoryCta: string
   actionLabel: string
-  grouped: Array<{ category: { id: number; name: string; slug: string }; items: Service[] }>
+  grouped: Array<{ category: Pick<Category, 'id' | 'name' | 'slug' | 'slug_i18n'>; items: Service[] }>
   loading?: boolean
   bookingPath: string
   servicesPath: string
@@ -38,12 +40,13 @@ const props = withDefaults(defineProps<{
 })
 
 const { localePath } = useLocalizedPath()
+const { locale } = useLocale()
 const { formatPriceLabel } = useServicePricing()
 const { isVisible: isPromoVisible, promoCopy, promoPricingFor } = useFirstBookingPromo()
 const isTor = computed(() => props.theme === 'tor')
 
-const detailPathFor = (categorySlug: string, service: Service) =>
-  localePath(`${props.servicesPath}/${categorySlug}/${service.slug}`) as string
+const detailPathFor = (category: Pick<Category, 'slug' | 'slug_i18n'>, service: Service) =>
+  localePath(`${props.servicesPath}/${localizedSlugFor(category, locale.value as SupportedLocale)}/${localizedSlugFor(service, locale.value as SupportedLocale)}`) as string
 </script>
 
 <template>
@@ -104,7 +107,7 @@ const detailPathFor = (categorySlug: string, service: Service) =>
               {{ entry.category.name }}
             </h2>
             <NuxtLink
-              :to="localePath(`${servicesPath}/${entry.category.slug}`)"
+              :to="localePath(`${servicesPath}/${localizedSlugFor(entry.category, locale)}`)"
               class="inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition"
               :class="isTor
                 ? 'border border-white/10 bg-white/[0.03] text-[#d8a15a] hover:border-[#c58a3a]/40 hover:text-[#efbf7f]'
@@ -130,7 +133,7 @@ const detailPathFor = (categorySlug: string, service: Service) =>
               :promo-disclaimer="isPromoVisible ? promoCopy.disclaimer : ''"
               :action-label="actionLabel"
               :action-to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } }) as string"
-              :card-to="detailPathFor(entry.category.slug, service)"
+              :card-to="detailPathFor(entry.category, service)"
             />
           </div>
         </div>

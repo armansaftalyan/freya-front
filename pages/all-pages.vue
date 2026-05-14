@@ -5,6 +5,7 @@ import type { Category } from '~/types/category'
 import type { Master } from '~/types/master'
 import type { Product, ProductCategory } from '~/types/product'
 import type { Service } from '~/types/service'
+import type { SupportedLocale } from '~/composables/useLocalizedPath'
 
 type BrandCatalog = {
   articles: BlogArticleCard[]
@@ -206,6 +207,7 @@ const buildBrandSections = (brand: 'freya' | 'tor'): SitemapSection[] => {
 
   const categoryById = new Map(catalog.categories.map((item) => [item.id, item]))
   const productCategoryById = new Map(catalog.productCategories.map((item) => [item.id, item]))
+  const productCategoryIdsWithProducts = new Set(catalog.products.map((item) => item.category_id))
 
   return [
     staticSections.value[brand],
@@ -213,7 +215,7 @@ const buildBrandSections = (brand: 'freya' | 'tor'): SitemapSection[] => {
       title: copy.value.serviceCategories,
       links: catalog.categories.map((category) => ({
         title: category.name,
-        to: `${baseServicesPath}/${category.slug}`,
+        to: `${baseServicesPath}/${localizedSlugFor(category, locale.value as SupportedLocale)}`,
         description: category.description,
       })),
     },
@@ -226,7 +228,7 @@ const buildBrandSections = (brand: 'freya' | 'tor'): SitemapSection[] => {
 
           return {
             title: service.name,
-            to: `${baseServicesPath}/${category.slug}/${service.slug}`,
+            to: `${baseServicesPath}/${localizedSlugFor(category, locale.value as SupportedLocale)}/${localizedSlugFor(service, locale.value as SupportedLocale)}`,
             description: service.description,
           }
         })
@@ -234,11 +236,13 @@ const buildBrandSections = (brand: 'freya' | 'tor'): SitemapSection[] => {
     },
     {
       title: copy.value.productCategories,
-      links: catalog.productCategories.map((category) => ({
-        title: category.name,
-        to: `${baseProductsPath}/${category.slug}`,
-        description: category.description,
-      })),
+      links: catalog.productCategories
+        .filter((category) => productCategoryIdsWithProducts.has(category.id))
+        .map((category) => ({
+          title: category.name,
+          to: `${baseProductsPath}/${localizedSlugFor(category, locale.value as SupportedLocale)}`,
+          description: category.description,
+        })),
     },
     {
       title: copy.value.products,
@@ -249,7 +253,7 @@ const buildBrandSections = (brand: 'freya' | 'tor'): SitemapSection[] => {
 
           return {
             title: product.name,
-            to: `${baseProductsPath}/${category.slug}/${product.slug}`,
+            to: `${baseProductsPath}/${localizedSlugFor(category, locale.value as SupportedLocale)}/${localizedSlugFor(product, locale.value as SupportedLocale)}`,
             description: product.description,
           }
         })

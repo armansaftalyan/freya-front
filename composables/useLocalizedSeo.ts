@@ -1,21 +1,29 @@
 import { defaultLocale, stripLocalePrefix, supportedLocales, withLocalePath, type SupportedLocale } from '~/composables/useLocalizedPath'
 
-export const useLocalizedSeo = (path?: MaybeRefOrGetter<string>) => {
+type LocalizedPathMap = Partial<Record<SupportedLocale, string>>
+type LocalizedSeoPath = string | LocalizedPathMap
+
+const resolveLocalizedSeoPath = (path: LocalizedSeoPath, targetLocale: SupportedLocale) => {
+  if (typeof path === 'string') {
+    return path
+  }
+
+  return path[targetLocale] || path[defaultLocale] || '/'
+}
+
+export const useLocalizedSeo = (path?: MaybeRefOrGetter<LocalizedSeoPath>) => {
   const route = useRoute()
   const { locale } = useLocale()
   const { siteUrl } = useSiteMeta()
 
-  const normalizedPath = computed(() => {
-    const rawPath = path ? toValue(path) : route.path
-    return stripLocalePrefix(rawPath || '/')
-  })
-
   const canonicalLocale = computed(() => locale.value || defaultLocale)
+  const rawPath = computed<LocalizedSeoPath>(() => path ? toValue(path) : route.path)
+  const normalizedPath = computed(() => stripLocalePrefix(resolveLocalizedSeoPath(rawPath.value, canonicalLocale.value as SupportedLocale) || '/'))
   const canonicalUrl = computed(() => `${siteUrl.value}${withLocalePath(normalizedPath.value, canonicalLocale.value as SupportedLocale)}`)
   const alternates = computed(() =>
-    supportedLocales.map((locale) => ({
-      locale,
-      href: `${siteUrl.value}${withLocalePath(normalizedPath.value, locale)}`,
+    supportedLocales.map((targetLocale) => ({
+      locale: targetLocale,
+      href: `${siteUrl.value}${withLocalePath(stripLocalePrefix(resolveLocalizedSeoPath(rawPath.value, targetLocale) || '/'), targetLocale)}`,
     })),
   )
 
@@ -33,7 +41,7 @@ export const useLocalizedSeo = (path?: MaybeRefOrGetter<string>) => {
       {
         rel: 'alternate',
         hreflang: 'x-default',
-        href: `${siteUrl.value}${withLocalePath(normalizedPath.value, defaultLocale as SupportedLocale)}`,
+        href: `${siteUrl.value}${withLocalePath(stripLocalePrefix(resolveLocalizedSeoPath(rawPath.value, defaultLocale as SupportedLocale) || '/'), defaultLocale as SupportedLocale)}`,
       },
     ],
   }))

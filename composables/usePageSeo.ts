@@ -1,3 +1,5 @@
+import type { SupportedLocale } from '~/composables/useLocalizedPath'
+
 type SeoInput = {
   title: string | (() => string)
   description: string | (() => string)
@@ -8,6 +10,7 @@ type SeoInput = {
   image?: string | (() => string | undefined)
   noindex?: boolean | (() => boolean)
   ogType?: 'website' | 'article' | 'profile' | 'product'
+  localizedPaths?: () => Partial<Record<SupportedLocale, string>>
 }
 
 const ogLocaleMap: Record<string, string> = {
@@ -33,7 +36,7 @@ export const usePageSeo = (input: SeoInput) => {
   const { defaultImageUrl } = useSiteMeta()
   const route = useRoute()
   const { locale } = useLocale()
-  const { canonicalUrl } = useLocalizedSeo(() => route.path)
+  const { canonicalUrl } = useLocalizedSeo(() => input.localizedPaths ? input.localizedPaths() : route.path)
 
   const imageUrl = computed(() => {
     const value = typeof input.image === 'function' ? input.image() : input.image

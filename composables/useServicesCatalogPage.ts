@@ -2,6 +2,7 @@ import { storeToRefs } from 'pinia'
 import type { ApiListResponse } from '~/types/api'
 import type { Category } from '~/types/category'
 import type { Service } from '~/types/service'
+import type { SupportedLocale } from '~/composables/useLocalizedPath'
 
 export const useServicesCatalogPage = async (options?: {
   mode?: 'store' | 'api'
@@ -114,7 +115,7 @@ export const useServicesCatalogPage = async (options?: {
           itemListElement: services.value.map((service, index) => ({
             '@type': 'ListItem',
             position: index + 1,
-            url: `${siteUrl.value}${brandContext.servicesPath.value}/${categoryById.value.get(service.category_id)?.slug || 'category'}/${service.slug}`,
+            url: `${siteUrl.value}${brandContext.servicesPath.value}/${localizedSlugFor(categoryById.value.get(service.category_id), locale.value as SupportedLocale) || 'category'}/${localizedSlugFor(service, locale.value as SupportedLocale)}`,
             name: service.name,
           })),
         },

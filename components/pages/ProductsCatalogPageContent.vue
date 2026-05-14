@@ -62,7 +62,7 @@ const decreaseFromCart = (productId: number) => cart.decreaseItem(productId, 1)
         <NuxtLink
           v-for="category in groupedProducts"
           :key="category.id"
-          :to="localePath(`${productsPath}/${category.slug}`)"
+          :to="localePath(`${productsPath}/${localizedSlugFor(category, locale)}`)"
           :class="isTor
             ? 'inline-flex items-center rounded-full border border-[#c58a3a]/25 bg-white/[0.03] px-4 py-2 text-sm font-semibold uppercase tracking-[0.16em] text-stone-200 transition hover:border-[#c58a3a]/55 hover:bg-white/[0.06] hover:text-[#d79a49]'
             : ''"
@@ -82,7 +82,7 @@ const decreaseFromCart = (productId: number) => cart.decreaseItem(productId, 1)
           :title="category.name"
           :description="category.description"
           :action-label="locale === 'ru' ? 'Открыть категорию' : locale === 'en' ? 'Open category' : 'Բացել կատեգորիան'"
-          :action-to="localizedPath(`${productsPath}/${category.slug}`)"
+          :action-to="localizedPath(`${productsPath}/${localizedSlugFor(category, locale)}`)"
         >
           <div :class="isTor ? 'grid gap-4 md:grid-cols-2 xl:grid-cols-4' : 'grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'">
             <ProductCard

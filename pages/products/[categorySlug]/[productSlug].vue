@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ApiListResponse } from '~/types/api'
 import type { Product, ProductCategory } from '~/types/product'
+import { supportedLocales, type SupportedLocale } from '~/composables/useLocalizedPath'
 
 const api = useApi()
 const route = useRoute()
@@ -25,12 +26,12 @@ const { data, error } = await useAsyncData(() => `product-${brand.value}-${categ
     api.get<ApiListResponse<Product>>('/products', { brand: brand.value }, { skipErrorToast: true }),
   ])
 
-  const category = categoriesResponse.data.find(item => item.slug === categorySlug.value && item.is_active !== false) || null
+  const category = categoriesResponse.data.find(item => slugMatches(item, categorySlug.value) && item.is_active !== false) || null
   if (!category) {
     throw createError({ statusCode: 404, statusMessage: 'Product category not found' })
   }
 
-  const product = productsResponse.data.find(item => item.category_id === category.id && item.slug === productSlug.value && item.is_active !== false) || null
+  const product = productsResponse.data.find(item => item.category_id === category.id && slugMatches(item, productSlug.value) && item.is_active !== false) || null
   if (!product) {
     throw createError({ statusCode: 404, statusMessage: 'Product not found' })
   }
@@ -56,8 +57,25 @@ const relatedProducts = computed(() => data.value?.relatedProducts || [])
 const cartQuantity = computed(() => product.value ? cart.getItemQuantity(product.value.id) : 0)
 const selectedQuantity = computed(() => cartQuantity.value || Math.max(1, Number(quantity.value || 1)))
 const orderTotal = computed(() => (product.value?.price || 0) * selectedQuantity.value)
+const currentLocale = computed(() => locale.value as SupportedLocale)
+const localizedProductPaths = computed(() => Object.fromEntries(
+  supportedLocales.map((targetLocale) => [
+    targetLocale,
+    `${productsPath.value}/${localizedSlugFor(category.value, targetLocale)}/${localizedSlugFor(product.value, targetLocale)}`,
+  ]),
+) as Partial<Record<SupportedLocale, string>>)
+const canonicalProductPath = computed(() => `${productsPath.value}/${localizedSlugFor(category.value, currentLocale.value)}/${localizedSlugFor(product.value, currentLocale.value)}`)
+
+if (
+  category.value
+  && product.value
+  && (categorySlug.value !== localizedSlugFor(category.value, currentLocale.value) || productSlug.value !== localizedSlugFor(product.value, currentLocale.value))
+) {
+  await navigateTo(localePath(canonicalProductPath.value), { redirectCode: 301 })
+}
 
 usePageSeo({
+  localizedPaths: () => localizedProductPaths.value,
   title: () => {
     if (product.value?.seo_title) return product.value.seo_title
     const productName = product.value?.name || t('nav.products')
@@ -118,7 +136,7 @@ useStructuredData(() => {
             '@type': 'ListItem',
             position: 3,
             name: category.value.name,
-            item: `${siteUrl.value}${productsPath.value}/${category.value.slug}`,
+            item: `${siteUrl.value}${productsPath.value}/${localizedSlugFor(category.value, currentLocale.value)}`,
           },
           {
             '@type': 'ListItem',
@@ -166,7 +184,7 @@ const buyNow = async () => {
     <div class="container-shell space-y-8">
       <NuxtLink
         v-if="category"
-        :to="localePath(`${productsPath}/${category.slug}`)"
+        :to="localePath(`${productsPath}/${localizedSlugFor(category, currentLocale)}`)"
         class="inline-flex items-center text-sm"
         :class="isTor ? 'text-stone-300 hover:text-white' : 'text-sand-700 hover:text-sand-900'"
       >
@@ -306,7 +324,7 @@ const buyNow = async () => {
           <NuxtLink
             v-for="item in relatedProducts"
             :key="item.id"
-            :to="localePath(`${productsPath}/${category.slug}/${item.slug}`)"
+            :to="localePath(`${productsPath}/${localizedSlugFor(category, currentLocale)}/${localizedSlugFor(item, currentLocale)}`)"
             class="rounded-3xl p-4 transition hover:-translate-y-0.5"
             :class="isTor
               ? 'border border-white/10 bg-white/[0.03] shadow-[0_20px_50px_rgba(0,0,0,0.18)] hover:border-[#c58a3a]/40'

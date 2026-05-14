@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Product } from '~/types/product'
+import type { SupportedLocale } from '~/composables/useLocalizedPath'
 import ProductsCatalogPageContent from '~/components/pages/ProductsCatalogPageContent.vue'
 
 const { t, locale } = useLocale()
@@ -56,7 +57,7 @@ usePageSeo({
   ogType: 'website',
 })
 
-const productPath = (product: Product) => localePath(`${productsPath.value}/${categoryById.value.get(product.category_id)?.slug || (brand.value === 'tor' ? 'beard-care' : 'catalog')}/${product.slug}`) as string
+const productPath = (product: Product) => localePath(`${productsPath.value}/${localizedSlugFor(categoryById.value.get(product.category_id), locale.value as SupportedLocale) || (brand.value === 'tor' ? 'beard-care' : 'catalog')}/${localizedSlugFor(product, locale.value as SupportedLocale)}`) as string
 
 useStructuredData(() => brand.value === 'tor'
   ? {

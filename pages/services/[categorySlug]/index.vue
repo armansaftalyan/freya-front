@@ -3,6 +3,7 @@ import type { ApiListResponse } from '~/types/api'
 import type { Category } from '~/types/category'
 import type { Master } from '~/types/master'
 import type { Service } from '~/types/service'
+import { supportedLocales, type SupportedLocale } from '~/composables/useLocalizedPath'
 import ServiceCatalogCard from '~/components/catalog/ServiceCatalogCard.vue'
 
 const api = useApi()
@@ -29,7 +30,7 @@ const { data, error } = await useAsyncData(() => `service-category-${brand.value
       : Promise.resolve(null),
   ])
 
-  const category = categoriesResponse.data.find((item) => item.slug === categorySlug.value && item.is_active !== false) || null
+  const category = categoriesResponse.data.find((item) => slugMatches(item, categorySlug.value) && item.is_active !== false) || null
 
   if (!category) {
     throw createError({ statusCode: 404, statusMessage: 'Category not found' })
@@ -63,6 +64,18 @@ const services = computed(() => data.value?.services || [])
 const suggestions = computed(() => data.value?.suggestions || [])
 const categories = computed(() => data.value?.categories || [])
 const selectedMaster = computed(() => data.value?.selectedMaster || null)
+const currentLocale = computed(() => locale.value as SupportedLocale)
+const localizedCategoryPaths = computed(() => Object.fromEntries(
+  supportedLocales.map((targetLocale) => [
+    targetLocale,
+    `${servicesPath.value}/${localizedSlugFor(category.value, targetLocale)}`,
+  ]),
+) as Partial<Record<SupportedLocale, string>>)
+const canonicalCategoryPath = computed(() => `${servicesPath.value}/${localizedSlugFor(category.value, currentLocale.value)}`)
+
+if (category.value && categorySlug.value !== localizedSlugFor(category.value, currentLocale.value)) {
+  await navigateTo(localePath(canonicalCategoryPath.value), { redirectCode: 301 })
+}
 const servicesCollectionLabel = computed(() => {
   if (brand.value !== 'tor') {
     return t('nav.services')
@@ -134,6 +147,7 @@ const pageCopy = computed(() => {
 })
 
 usePageSeo({
+  localizedPaths: () => localizedCategoryPaths.value,
   title: () => {
     if (category.value?.seo_title) return category.value.seo_title
     const categoryName = category.value?.name || t('nav.services')
@@ -185,7 +199,7 @@ useStructuredData(() => {
       itemListElement: services.value.map((service, index) => ({
         '@type': 'ListItem',
         position: index + 1,
-        url: `${config.public.siteUrl}${servicesPath.value}/${category.value?.slug}/${service.slug}`,
+        url: `${config.public.siteUrl}${servicesPath.value}/${localizedSlugFor(category.value, currentLocale.value)}/${localizedSlugFor(service, currentLocale.value)}`,
         name: service.name,
       })),
     },
@@ -231,7 +245,7 @@ useStructuredData(() => {
           :promo-disclaimer="isPromoVisible ? promoCopy.disclaimer : ''"
           :action-label="pageCopy.primaryAction"
           :action-to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id), ...(selectedMaster ? { master_id: String(selectedMaster.id) } : {}) } }) as string"
-          :card-to="{ path: `${servicesPath}/${category?.slug}/${service.slug}`, query: selectedMaster ? { master_id: String(selectedMaster.id) } : undefined }"
+          :card-to="{ path: `${servicesPath}/${localizedSlugFor(category, currentLocale)}/${localizedSlugFor(service, currentLocale)}`, query: selectedMaster ? { master_id: String(selectedMaster.id) } : undefined }"
         />
       </div>
 

@@ -1,5 +1,6 @@
 import type { ApiListResponse } from '~/types/api'
 import type { Product, ProductCategory } from '~/types/product'
+import type { SupportedLocale } from '~/composables/useLocalizedPath'
 
 export const useProductsCatalogPage = async (options?: {
   brand?: 'freya' | 'tor'
@@ -59,7 +60,7 @@ export const useProductsCatalogPage = async (options?: {
           itemListElement: products.value.map((product, index) => ({
             '@type': 'ListItem',
             position: index + 1,
-            url: `${siteUrl.value}${productsPath.value}/${categoryById.value.get(product.category_id)?.slug || 'catalog'}/${product.slug}`,
+            url: `${siteUrl.value}${productsPath.value}/${localizedSlugFor(categoryById.value.get(product.category_id), locale.value as SupportedLocale) || 'catalog'}/${localizedSlugFor(product, locale.value as SupportedLocale)}`,
             name: product.name,
           })),
         },

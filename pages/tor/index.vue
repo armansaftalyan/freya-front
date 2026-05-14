@@ -4,6 +4,7 @@ import type { Category } from '~/types/category'
 import type { Master } from '~/types/master'
 import type { Product, ProductCategory } from '~/types/product'
 import type { Service } from '~/types/service'
+import type { SupportedLocale } from '~/composables/useLocalizedPath'
 import ServiceCatalogCard from '~/components/catalog/ServiceCatalogCard.vue'
 import FaqSection from '~/components/sections/FaqSection.vue'
 
@@ -165,8 +166,8 @@ const torProducts = computed(() => {
   return products.value.slice(0, 4)
 })
 const torMasters = computed(() => masters.value.slice(0, 3))
-const productPath = (product: Product) => localizedPath(`${productsPath.value}/${productCategoryById.value.get(product.category_id)?.slug || 'beard-care'}/${product.slug}`)
-const servicePath = (service: Service) => localizedPath(`${servicesPath.value}/${serviceCategoryById.value.get(service.category_id)?.slug || 'men-hair'}/${service.slug}`)
+const productPath = (product: Product) => localizedPath(`${productsPath.value}/${localizedSlugFor(productCategoryById.value.get(product.category_id), locale.value as SupportedLocale) || 'beard-care'}/${localizedSlugFor(product, locale.value as SupportedLocale)}`)
+const servicePath = (service: Service) => localizedPath(`${servicesPath.value}/${localizedSlugFor(serviceCategoryById.value.get(service.category_id), locale.value as SupportedLocale) || 'men-hair'}/${localizedSlugFor(service, locale.value as SupportedLocale)}`)
 const productQuantity = (productId: number) => cart.getItemQuantity(productId)
 const addToCart = (product: Product) => cart.addItem(product, 1)
 const decreaseFromCart = (productId: number) => cart.decreaseItem(productId, 1)

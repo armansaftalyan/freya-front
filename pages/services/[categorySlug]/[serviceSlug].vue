@@ -4,6 +4,7 @@ import type { BlogArticleCard } from '~/types/blog'
 import type { Category } from '~/types/category'
 import type { Master } from '~/types/master'
 import type { Service } from '~/types/service'
+import { supportedLocales, type SupportedLocale } from '~/composables/useLocalizedPath'
 import ServiceCatalogCard from '~/components/catalog/ServiceCatalogCard.vue'
 import BlogArticleCardComponent from '~/components/blog/BlogArticleCard.vue'
 
@@ -32,13 +33,13 @@ const { data, error } = await useAsyncData(() => `service-detail-${brand.value}-
       : Promise.resolve(null),
   ])
 
-  const category = categoriesResponse.data.find((item) => item.slug === categorySlug.value && item.is_active !== false) || null
+  const category = categoriesResponse.data.find((item) => slugMatches(item, categorySlug.value) && item.is_active !== false) || null
 
   if (!category) {
     throw createError({ statusCode: 404, statusMessage: 'Category not found' })
   }
 
-  const service = servicesResponse.data.find((item) => item.category_id === category.id && item.slug === serviceSlug.value && item.is_active !== false) || null
+  const service = servicesResponse.data.find((item) => item.category_id === category.id && slugMatches(item, serviceSlug.value) && item.is_active !== false) || null
 
   if (!service) {
     throw createError({ statusCode: 404, statusMessage: 'Service not found' })
@@ -68,6 +69,22 @@ const category = computed(() => data.value?.category || null)
 const service = computed(() => data.value?.service || null)
 const relatedServices = computed(() => data.value?.relatedServices || [])
 const selectedMaster = computed(() => data.value?.selectedMaster || null)
+const currentLocale = computed(() => locale.value as SupportedLocale)
+const localizedServicePaths = computed(() => Object.fromEntries(
+  supportedLocales.map((targetLocale) => [
+    targetLocale,
+    `${servicesPath.value}/${localizedSlugFor(category.value, targetLocale)}/${localizedSlugFor(service.value, targetLocale)}`,
+  ]),
+) as Partial<Record<SupportedLocale, string>>)
+const canonicalServicePath = computed(() => `${servicesPath.value}/${localizedSlugFor(category.value, currentLocale.value)}/${localizedSlugFor(service.value, currentLocale.value)}`)
+
+if (
+  category.value
+  && service.value
+  && (categorySlug.value !== localizedSlugFor(category.value, currentLocale.value) || serviceSlug.value !== localizedSlugFor(service.value, currentLocale.value))
+) {
+  await navigateTo(localePath(canonicalServicePath.value), { redirectCode: 301 })
+}
 const { data: relatedArticles } = await useAsyncData(
   () => `service-articles-${brand.value}-${serviceSlug.value}-${locale.value}`,
   async () => {
@@ -124,6 +141,7 @@ const pageCopy = computed(() => {
 })
 
 usePageSeo({
+  localizedPaths: () => localizedServicePaths.value,
   title: () => {
     if (service.value?.seo_title) return service.value.seo_title
     const serviceName = service.value?.name || t('nav.services')
@@ -181,7 +199,7 @@ useStructuredData(() => {
             '@type': 'ListItem',
             position: 2,
             name: category.value.name,
-            item: `${config.public.siteUrl}${servicesPath.value}/${category.value.slug}`,
+            item: `${config.public.siteUrl}${servicesPath.value}/${localizedSlugFor(category.value, currentLocale.value)}`,
           },
           {
             '@type': 'ListItem',
@@ -201,7 +219,7 @@ useStructuredData(() => {
     <div :class="isTor ? 'space-y-8' : 'container-shell space-y-8'">
       <NuxtLink
         v-if="category"
-        :to="localePath(`${servicesPath}/${category.slug}`)"
+        :to="localePath(`${servicesPath}/${localizedSlugFor(category, currentLocale)}`)"
         class="inline-flex items-center text-sm"
         :class="isTor ? 'text-[#c58a3a] hover:text-[#efbf7f]' : 'text-sand-700 hover:text-sand-900'"
       >

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ApiListResponse } from '~/types/api'
 import type { Product, ProductCategory } from '~/types/product'
+import { supportedLocales, type SupportedLocale } from '~/composables/useLocalizedPath'
 import ProductCard from '~/components/product/ProductCard.vue'
 
 const api = useApi()
@@ -21,7 +22,7 @@ const { data, error } = await useAsyncData(() => `product-category-${brand.value
     api.get<ApiListResponse<Product>>('/products', { brand: brand.value }, { skipErrorToast: true }),
   ])
 
-  const category = categoriesResponse.data.find(item => item.slug === categorySlug.value && item.is_active !== false) || null
+  const category = categoriesResponse.data.find(item => slugMatches(item, categorySlug.value) && item.is_active !== false) || null
 
   if (!category) {
     throw createError({ statusCode: 404, statusMessage: 'Product category not found' })
@@ -46,12 +47,25 @@ if (error.value) {
 
 const category = computed(() => data.value?.category || null)
 const products = computed(() => data.value?.products || [])
-const productPath = (categorySlugValue: string, productSlugValue: string) => localizedPath(`${productsPath.value}/${categorySlugValue}/${productSlugValue}`)
+const currentLocale = computed(() => locale.value as SupportedLocale)
+const localizedCategoryPaths = computed(() => Object.fromEntries(
+  supportedLocales.map((targetLocale) => [
+    targetLocale,
+    `${productsPath.value}/${localizedSlugFor(category.value, targetLocale)}`,
+  ]),
+) as Partial<Record<SupportedLocale, string>>)
+const canonicalCategoryPath = computed(() => `${productsPath.value}/${localizedSlugFor(category.value, currentLocale.value)}`)
+const productPath = (product: Product) => localizedPath(`${productsPath.value}/${localizedSlugFor(category.value, currentLocale.value)}/${localizedSlugFor(product, currentLocale.value)}`)
 const productQuantity = (productId: number) => cart.getItemQuantity(productId)
 const addToCart = (product: Product) => cart.addItem(product, 1)
 const decreaseFromCart = (productId: number) => cart.decreaseItem(productId, 1)
 
+if (category.value && categorySlug.value !== localizedSlugFor(category.value, currentLocale.value)) {
+  await navigateTo(localePath(canonicalCategoryPath.value), { redirectCode: 301 })
+}
+
 usePageSeo({
+  localizedPaths: () => localizedCategoryPaths.value,
   title: () => {
     if (category.value?.seo_title) return category.value.seo_title
     const categoryName = category.value?.name || t('nav.products')
@@ -84,7 +98,7 @@ useStructuredData(() => {
           itemListElement: products.value.map((product, index) => ({
             '@type': 'ListItem',
             position: index + 1,
-            url: `${siteUrl.value}${route.path}/${product.slug}`,
+            url: `${siteUrl.value}${canonicalCategoryPath.value}/${localizedSlugFor(product, currentLocale.value)}`,
             name: product.name,
           })),
         },
@@ -141,7 +155,7 @@ useStructuredData(() => {
           v-for="product in products"
           :key="product.id"
           :product="product"
-          :to="productPath(category?.slug || '', product.slug)"
+          :to="productPath(product)"
           :quantity="productQuantity(product.id)"
           :theme="isTor ? 'tor' : 'default'"
           compact
