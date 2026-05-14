@@ -13,7 +13,8 @@ const { localePath } = useLocalizedPath()
 const route = useRoute()
 const { siteUrl, salonName, telephone, address, openingHoursSpecification, sameAs, defaultImageUrl } = useSiteMeta()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
-const { faqCopy } = usePageFaqContent('freya', 'home')
+const { pageContent, faqCopy } = await usePageFaqContent('freya', 'home')
+const heroSlides = computed(() => pageContent.value?.hero_slides || [])
 const showGiftPromo = ref(false)
 const giftPromoStorageKey = 'freya_gift_promo_seen_session_v1'
 
@@ -130,7 +131,7 @@ useStructuredData(() => ({
         </div>
       </div>
     </BaseModal>
-    <HeroSection />
+    <HeroSection :slides="heroSlides" />
     <ServicesGrid />
     <MastersGrid />
     <HowToBookSection />

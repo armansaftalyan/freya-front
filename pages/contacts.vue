@@ -91,7 +91,7 @@ const mapButtonCopy = computed(() => {
   return { yandex: 'Բացել Yandex-ում', google: 'Բացել Google-ում' }
 })
 
-const { faqCopy } = usePageFaqContent(brand.value, 'contacts')
+const { faqCopy } = await usePageFaqContent(brand.value, 'contacts')
 
 const seoTitle = computed(() => {
   if (brand.value === 'tor') {

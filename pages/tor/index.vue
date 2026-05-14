@@ -21,7 +21,7 @@ const { bookingPath, productsPath, mastersPath, servicesPath } = useBrandContext
 const { formatPriceLabel } = useServicePricing()
 const cart = useCartStore()
 const localizedPath = (target: string) => localePath(target) as string
-const { faqCopy } = usePageFaqContent('tor', 'home')
+const { faqCopy } = await usePageFaqContent('tor', 'home')
 
 const copy = computed(() => {
   if (locale.value === 'ru') {

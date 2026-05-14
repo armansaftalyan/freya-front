@@ -7,7 +7,7 @@ import BlogArticleCardComponent from '~/components/blog/BlogArticleCard.vue'
 const api = useApi()
 const { t, locale } = useLocale()
 const { brand, isTor, bookingPath, servicesPath, blogPath } = useBrandContext()
-const { faqCopy } = usePageFaqContent(brand.value, 'services')
+const { faqCopy } = await usePageFaqContent(brand.value, 'services')
 const { grouped, loading, structuredData } = await useServicesCatalogPage({
   mode: brand.value === 'tor' ? 'api' : 'store',
   brand: brand.value,

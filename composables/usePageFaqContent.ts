@@ -1,19 +1,6 @@
-import type { PageContentResponse } from '~/types/page-content'
-
-export const usePageFaqContent = (brand: 'freya' | 'tor', pageKey: 'home' | 'contacts' | 'masters' | 'privacy-policy' | 'services' | 'booking') => {
-  const api = useApi()
-  const { locale } = useLocale()
+export const usePageFaqContent = async (brand: 'freya' | 'tor', pageKey: 'home' | 'contacts' | 'masters' | 'privacy-policy' | 'services' | 'booking') => {
   const fallbackFaqCopy = useBrandFaqFallback(brand, pageKey)
-
-  const { data: pageContent } = useAsyncData(() => `${brand}-${pageKey}-faq-${locale.value}`, async () => {
-    try {
-      const response = await api.get<PageContentResponse>(`/page-content/${pageKey}`, { brand }, { skipErrorToast: true })
-      return response.data
-    }
-    catch {
-      return null
-    }
-  })
+  const { pageContent } = await usePageContent(brand, pageKey)
 
   const faqCopy = computed(() => {
     const fallback = fallbackFaqCopy.value
@@ -32,6 +19,7 @@ export const usePageFaqContent = (brand: 'freya' | 'tor', pageKey: 'home' | 'con
   })
 
   return {
+    pageContent,
     faqCopy,
   }
 }

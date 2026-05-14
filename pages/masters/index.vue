@@ -11,7 +11,7 @@ const { isTor, brand, bookingPath, mastersPath } = useBrandContext()
 const { masterAvatarSrc, onMasterAvatarError } = useMasterAvatar()
 const route = useRoute()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
-const { faqCopy } = usePageFaqContent(isTor.value ? 'tor' : 'freya', 'masters')
+const { faqCopy } = await usePageFaqContent(isTor.value ? 'tor' : 'freya', 'masters')
 const brandOgImage = computed(() => brand.value === 'tor' ? `${siteUrl.value}/tor-logo.jpg` : defaultImageUrl.value)
 
 const seoCopy = computed(() => {

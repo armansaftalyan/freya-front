@@ -6,7 +6,7 @@ const { siteUrl, defaultImageUrl } = useSiteMeta()
 const { brand, isTor } = useBrandContext()
 const route = useRoute()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
-const { faqCopy } = usePageFaqContent(brand.value, 'privacy-policy')
+const { faqCopy } = await usePageFaqContent(brand.value, 'privacy-policy')
 const brandOgImage = computed(() => brand.value === 'tor' ? `${siteUrl.value}/tor-logo.jpg` : defaultImageUrl.value)
 
 usePageSeo({
