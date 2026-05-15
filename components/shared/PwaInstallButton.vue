@@ -16,14 +16,16 @@ const { locale } = useLocale()
 const deferredPrompt = ref<BeforeInstallPromptEvent | null>(null)
 const isStandalone = ref(false)
 const isIos = ref(false)
-const showIosHelp = ref(false)
+const isAndroid = ref(false)
+const showInstallHelp = ref(false)
 
 const copy = computed(() => {
   if (locale.value === 'ru') {
     return {
       label: 'Установить',
       title: 'Установка приложения',
-      text: 'На iPhone откройте сайт в Safari, нажмите кнопку “Поделиться” и выберите “На экран Домой”.',
+      iosText: 'На iPhone откройте сайт в Safari, нажмите кнопку “Поделиться” и выберите “На экран Домой”.',
+      androidText: 'На Android откройте меню Chrome ⋮ и выберите “Добавить на главный экран” или “Установить приложение”.',
       close: 'Понятно',
     }
   }
@@ -32,7 +34,8 @@ const copy = computed(() => {
     return {
       label: 'Install',
       title: 'Install app',
-      text: 'On iPhone, open the site in Safari, tap Share, then choose Add to Home Screen.',
+      iosText: 'On iPhone, open the site in Safari, tap Share, then choose Add to Home Screen.',
+      androidText: 'On Android, open the Chrome menu ⋮ and choose Add to Home screen or Install app.',
       close: 'Got it',
     }
   }
@@ -40,12 +43,14 @@ const copy = computed(() => {
   return {
     label: 'Տեղադրել',
     title: 'Տեղադրել հավելվածը',
-    text: 'iPhone-ում բացեք կայքը Safari-ով, սեղմեք Share և ընտրեք Add to Home Screen։',
+    iosText: 'iPhone-ում բացեք կայքը Safari-ով, սեղմեք Share և ընտրեք Add to Home Screen։',
+    androidText: 'Android-ում բացեք Chrome-ի ⋮ մենյուն և ընտրեք Add to Home screen կամ Install app։',
     close: 'Հասկացա',
   }
 })
 
-const canShow = computed(() => !isStandalone.value && (deferredPrompt.value || isIos.value))
+const helpText = computed(() => isIos.value ? copy.value.iosText : copy.value.androidText)
+const canShow = computed(() => !isStandalone.value && (deferredPrompt.value || isIos.value || isAndroid.value))
 
 const buttonClass = computed(() => [
   'inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition',
@@ -64,8 +69,8 @@ const install = async () => {
     return
   }
 
-  if (isIos.value) {
-    showIosHelp.value = true
+  if (isIos.value || isAndroid.value) {
+    showInstallHelp.value = true
   }
 }
 
@@ -74,6 +79,7 @@ onMounted(() => {
     || Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone)
 
   isIos.value = /iphone|ipad|ipod/i.test(window.navigator.userAgent)
+  isAndroid.value = /android/i.test(window.navigator.userAgent)
 
   const handleBeforeInstallPrompt = (event: Event) => {
     event.preventDefault()
@@ -113,9 +119,9 @@ onMounted(() => {
   <Teleport to="body">
     <Transition name="fade">
       <div
-        v-if="showIosHelp"
+        v-if="showInstallHelp"
         class="fixed inset-0 z-[70] flex items-center justify-center bg-black/45 p-4"
-        @click="showIosHelp = false"
+        @click="showInstallHelp = false"
       >
         <div
           class="w-full max-w-sm rounded-3xl p-5 shadow-soft"
@@ -124,14 +130,14 @@ onMounted(() => {
         >
           <div class="flex items-start justify-between gap-4">
             <h3 class="text-xl font-semibold">{{ copy.title }}</h3>
-            <button type="button" class="text-2xl leading-none opacity-70" @click="showIosHelp = false">×</button>
+            <button type="button" class="text-2xl leading-none opacity-70" @click="showInstallHelp = false">×</button>
           </div>
-          <p class="mt-3 text-sm leading-6" :class="theme === 'tor' ? 'text-stone-300' : 'text-sand-700'">{{ copy.text }}</p>
+          <p class="mt-3 text-sm leading-6" :class="theme === 'tor' ? 'text-stone-300' : 'text-sand-700'">{{ helpText }}</p>
           <button
             type="button"
             class="mt-5 inline-flex w-full items-center justify-center rounded-full px-4 py-3 text-sm font-semibold"
             :class="theme === 'tor' ? 'bg-[#d79a49] text-black' : 'bg-sand-900 text-white'"
-            @click="showIosHelp = false"
+            @click="showInstallHelp = false"
           >
             {{ copy.close }}
           </button>
