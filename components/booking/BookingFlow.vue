@@ -36,7 +36,7 @@ const { siteUrl } = useSiteMeta()
 const { isTor, brand, authAppointmentsPath } = useBrandContext()
 const route = useRoute()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
-const { faqCopy } = usePageFaqContent(isTor.value ? 'tor' : 'freya', 'booking')
+const { faqCopy } = await usePageFaqContent(isTor.value ? 'tor' : 'freya', 'booking')
 const hasQueryParams = computed(() => Object.keys(route.query).length > 0)
 
 const bookingBrandName = computed(() => (isTor.value ? 'Tor' : 'Freya'))
