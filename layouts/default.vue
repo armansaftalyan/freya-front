@@ -2,6 +2,7 @@
 import SharedLanguageSwitcher from '~/components/shared/LanguageSwitcher.vue'
 import SharedCartBadge from '~/components/shared/CartBadge.vue'
 import SharedToastStack from "~/components/shared/ToastStack.vue";
+import PwaInstallButton from '~/components/shared/PwaInstallButton.vue'
 import PaymentMethodIcons from '~/components/layout/PaymentMethodIcons.vue'
 import MobileBottomNav from '~/components/layout/MobileBottomNav.vue'
 
@@ -261,6 +262,7 @@ useHead(() => ({
 
         <div class="hidden shrink-0 items-center gap-2 lg:flex">
           <SharedLanguageSwitcher />
+          <PwaInstallButton />
           <NuxtLink :to="localePath('/booking')">
             <BaseButton size="sm">{{ bookingCta }}</BaseButton>
           </NuxtLink>
@@ -290,9 +292,12 @@ useHead(() => ({
       <Transition name="fade">
         <div
           v-if="isMobileMenuOpen"
-          class="absolute left-0 right-0 top-full z-50 border-b border-t border-sand-200 bg-[var(--bg)] shadow-soft lg:hidden"
+          class="absolute left-0 right-0 top-full z-50 max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-t border-sand-200 bg-[var(--bg)] shadow-soft lg:hidden"
         >
-          <div class="container-shell space-y-4 py-4">
+          <div
+            class="container-shell space-y-4 pt-4"
+            :class="showMobileBottomNav ? 'pb-[calc(5.5rem+env(safe-area-inset-bottom))]' : 'pb-4'"
+          >
             <nav class="grid gap-2">
               <NuxtLink
                 v-for="link in links"
@@ -318,11 +323,7 @@ useHead(() => ({
 
             <div class="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
               <SharedLanguageSwitcher />
-              <NuxtLink :to="localePath('/booking')" class="flex-1">
-                <BaseButton size="sm" block>
-                  {{ bookingCta }}
-                </BaseButton>
-              </NuxtLink>
+              <PwaInstallButton block />
               <NuxtLink :to="localePath('/cart')" class="flex-1">
                 <BaseButton variant="secondary" size="sm" block>
                   {{ t('nav.cart') }}
