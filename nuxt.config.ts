@@ -174,6 +174,10 @@ export default defineNuxtConfig({
           content: 'Premium beauty salon with online booking, top masters, and elegant service.',
         },
         { name: 'format-detection', content: 'telephone=no' },
+        { key: 'app-mobile-capable', name: 'mobile-web-app-capable', content: 'yes' },
+        { key: 'app-apple-capable', name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { key: 'app-apple-status-bar', name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
+        { key: 'app-theme-color', name: 'theme-color', content: '#fbf8f4' },
         { key: 'app-mobile-title', name: 'apple-mobile-web-app-title', content: 'Freya' },
       ],
       link: [

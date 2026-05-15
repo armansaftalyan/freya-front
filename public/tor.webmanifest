@@ -1,6 +1,10 @@
 {
   "name": "Tor Barbershop",
   "short_name": "Tor",
+  "id": "/tor",
+  "start_url": "/hy/tor?source=pwa",
+  "scope": "/",
+  "description": "Tor Barbershop online booking, services, masters, and products.",
   "icons": [
     {
       "src": "/tor-apple-touch-icon.png",
@@ -17,5 +21,6 @@
   ],
   "theme_color": "#0b0b0b",
   "background_color": "#0b0b0b",
-  "display": "standalone"
+  "display": "standalone",
+  "orientation": "portrait"
 }
