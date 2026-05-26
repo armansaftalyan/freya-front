@@ -59,6 +59,7 @@ export interface ProductOrder {
   delivery_fee: number
   total_price: number
   paid_at: string | null
+  payment_token?: string | null
   items?: ProductOrderItem[]
   created_at: string
 }
@@ -68,8 +69,8 @@ export interface ProductOrderPayment {
   message: string
   payload?: {
     action: string
-    method: 'POST'
-    fields: Record<string, string | null>
+    method?: 'GET' | 'POST'
+    fields: Record<string, string | number | null | undefined>
   } | null
 }
 

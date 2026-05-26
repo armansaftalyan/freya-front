@@ -27,12 +27,14 @@ const form = reactive({
 })
 
 const creating = ref(false)
+const paymentStatusLoading = ref(false)
+const paymentStatusLookupFailed = ref(false)
 const createdOrder = ref<any | null>(null)
 const issuedCard = ref<GiftCard | null>(null)
 const payment = ref<{ status: string, message: string, payload?: any } | null>(null)
 const presetAmounts = [10000, 20000, 50000, 100000, 200000]
 const selectedTheme = ref<'gold' | 'black' | 'rose'>('gold')
-const paymentProvider = ref<'idram' | 'manual'>('idram')
+const paymentProvider = ref<'idram' | 'bank_card'>('bank_card')
 const idramFormRef = ref<HTMLFormElement | null>(null)
 const cardThemes = computed(() => (isTor.value ? ['gold', 'black'] : ['gold', 'black', 'rose']) as Array<'gold' | 'black' | 'rose'>)
 const torCardLabel = computed(() => {
@@ -139,6 +141,56 @@ const idramPayload = computed(() => {
   return payment.value.payload
 })
 
+const returnPaymentStatus = computed(() => {
+  const value = Array.isArray(route.query.payment_status) ? route.query.payment_status[0] : route.query.payment_status
+  return typeof value === 'string' ? value : ''
+})
+
+const returnPaymentNotice = computed(() => {
+  if (paymentStatusLoading.value) {
+    return {
+      title: t('giftCards.paymentStatusLoading'),
+      text: '',
+      tone: 'pending',
+    }
+  }
+
+  if (paymentStatusLookupFailed.value) {
+    return {
+      title: t('giftCards.paymentStatusUnavailable'),
+      text: t('giftCards.paymentPendingText'),
+      tone: 'pending',
+    }
+  }
+
+  const status = payment.value?.status || returnPaymentStatus.value
+  if (status === 'success' || status === 'paid') {
+    return {
+      title: t('giftCards.paymentSuccessTitle'),
+      text: t('giftCards.paymentSuccessText'),
+      tone: 'success',
+    }
+  }
+
+  if (status === 'fail' || status === 'failed') {
+    return {
+      title: t('giftCards.paymentFailTitle'),
+      text: t('giftCards.paymentFailText'),
+      tone: 'fail',
+    }
+  }
+
+  if (status === 'pending') {
+    return {
+      title: t('giftCards.paymentPendingTitle'),
+      text: t('giftCards.paymentPendingText'),
+      tone: 'pending',
+    }
+  }
+
+  return null
+})
+
 const formatMoney = (value: number, currency: string) => {
   if (currency === 'AMD')
     return formatAmd(value)
@@ -154,15 +206,55 @@ const normalizePhone = (value: string) => {
   const digits = (value || '').replace(/\D+/g, '')
   return digits ? `+${digits}` : ''
 }
+const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 
 const buildFullName = (firstName: string, lastName: string) => {
   return [firstName.trim(), lastName.trim()].filter(Boolean).join(' ')
+}
+
+const queryValue = (value: unknown) => Array.isArray(value) ? String(value[0] || '') : String(value || '')
+
+const loadReturnedPaymentStatus = async () => {
+  const orderId = queryValue(route.query.order_id)
+  const token = queryValue(route.query.payment_token)
+
+  if (!orderId || !token)
+    return
+
+  paymentStatusLoading.value = true
+  paymentStatusLookupFailed.value = false
+
+  try {
+    const response = await api.get<any>(`/gift-cards/orders/${encodeURIComponent(orderId)}/payment-status?token=${encodeURIComponent(token)}`)
+    createdOrder.value = response?.data || null
+    issuedCard.value = response?.data?.gift_card || null
+    payment.value = response?.payment || {
+      status: returnPaymentStatus.value || 'pending',
+      message: '',
+      payload: null,
+    }
+  }
+  catch {
+    paymentStatusLookupFailed.value = true
+    payment.value = {
+      status: returnPaymentStatus.value || 'pending',
+      message: '',
+      payload: null,
+    }
+  }
+  finally {
+    paymentStatusLoading.value = false
+  }
 }
 
 watch(isTor, (torMode) => {
   if (torMode && selectedTheme.value === 'rose')
     selectedTheme.value = 'gold'
 }, { immediate: true })
+
+onMounted(() => {
+  loadReturnedPaymentStatus()
+})
 
 useStructuredData(() => ({
   '@context': 'https://schema.org',
@@ -221,8 +313,16 @@ const submit = async () => {
     return
   }
 
-  if (!form.recipient_phone.trim()) {
+  const recipientEmail = form.recipient_email.trim()
+  const senderEmail = form.sender_email.trim()
+
+  if (!recipientEmail || !isValidEmail(recipientEmail)) {
     toast.push({ type: 'error', title: t('giftCards.recipientRequiredError') })
+    return
+  }
+
+  if (senderEmail && !isValidEmail(senderEmail)) {
+    toast.push({ type: 'error', title: t('productsPage.invalidEmailError') })
     return
   }
 
@@ -243,10 +343,10 @@ const submit = async () => {
         brand: brand.value,
       },
       recipient_name: buildFullName(form.recipient_first_name, form.recipient_last_name) || undefined,
-      recipient_email: form.recipient_email.trim() || undefined,
+      recipient_email: recipientEmail,
       recipient_phone: normalizePhone(form.recipient_phone) || undefined,
       sender_name: buildFullName(form.sender_first_name, form.sender_last_name) || undefined,
-      sender_email: form.sender_email.trim() || undefined,
+      sender_email: senderEmail || undefined,
       sender_phone: normalizePhone(form.sender_phone) || undefined,
       message: form.message.trim() || undefined,
     })
@@ -262,6 +362,10 @@ const submit = async () => {
         idramFormRef.value?.submit()
       })
     }
+
+    if (paymentProvider.value === 'bank_card' && payment.value?.status === 'redirect' && payment.value?.payload?.action) {
+      await navigateTo(String(payment.value.payload.action), { external: true })
+    }
   }
   finally {
     creating.value = false
@@ -276,6 +380,13 @@ const submit = async () => {
         <h1 class="text-3xl sm:text-5xl">{{ t('giftCards.buyTitle') }}</h1>
         <p class="mt-2 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ seoCopy.lead }}</p>
       </div>
+
+      <Card v-if="returnPaymentNotice" class="space-y-2" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100' : ''">
+        <p class="text-base font-semibold" :class="returnPaymentNotice.tone === 'success' ? (isTor ? 'text-[#d79a49]' : 'text-emerald-700') : returnPaymentNotice.tone === 'fail' ? 'text-red-600' : (isTor ? 'text-stone-100' : 'text-sand-900')">
+          {{ returnPaymentNotice.title }}
+        </p>
+        <p v-if="returnPaymentNotice.text" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ returnPaymentNotice.text }}</p>
+      </Card>
 
       <Card :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_20px_50px_rgba(0,0,0,0.18)]' : ''">
         <div class="grid gap-4">
@@ -344,10 +455,10 @@ const submit = async () => {
               <button
                 type="button"
                 class="rounded-xl border px-3 py-2 text-sm font-semibold transition"
-                :class="paymentProvider === 'manual'
+                :class="paymentProvider === 'bank_card'
                   ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
                   : (isTor ? 'border-white/10 bg-white/[0.04] text-stone-100 hover:border-[#c58a3a]/50' : 'border-sand-200 bg-white text-sand-900 hover:border-sand-600')"
-                @click="paymentProvider = 'manual'"
+                @click="paymentProvider = 'bank_card'"
               >
                 {{ t('giftCards.paymentProviderBankCard') }}
               </button>
@@ -385,7 +496,7 @@ const submit = async () => {
         <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.status') }}: <span class="font-semibold" :class="isTor ? 'text-stone-100' : 'text-sand-900'">{{ createdOrder.status }}</span></p>
         <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.amount') }}: {{ formatMoney(createdOrder.amount, createdOrder.currency) }}</p>
         <p v-if="payment" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.payment') }}: <span class="font-semibold" :class="isTor ? 'text-stone-100' : 'text-sand-900'">{{ payment.status }}</span> — {{ payment.message }}</p>
-        <form v-if="idramPayload" ref="idramFormRef" :action="idramPayload.action" method="POST" class="space-y-3 rounded-2xl p-4" :class="isTor ? 'border border-white/10 bg-white/[0.04]' : 'border border-sand-200'">
+        <form v-if="idramPayload" ref="idramFormRef" :action="idramPayload.action" :method="idramPayload.method || 'POST'" class="space-y-3 rounded-2xl p-4" :class="isTor ? 'border border-white/10 bg-white/[0.04]' : 'border border-sand-200'">
           <input v-for="(value, key) in idramPayload.fields" :key="String(key)" type="hidden" :name="String(key)" :value="String(value ?? '')">
           <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.idramReady') }}</p>
           <BaseButton type="submit" size="sm">{{ t('giftCards.continueToIdram') }}</BaseButton>

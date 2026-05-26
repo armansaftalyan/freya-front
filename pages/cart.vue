@@ -60,10 +60,11 @@ const form = reactive({
 })
 
 const ordering = ref(false)
+const paymentStatusLoading = ref(false)
+const paymentStatusLookupFailed = ref(false)
 const orderQuote = ref<ProductOrderQuote | null>(null)
 const createdOrder = ref<ProductOrder | null>(null)
 const payment = ref<ProductOrderPayment | null>(null)
-const idramFormRef = ref<HTMLFormElement | null>(null)
 
 useNoindexSeoMeta({
   title: () => isTor.value
@@ -129,6 +130,7 @@ const paymentOptions = computed(() => [
   { value: 'bank_card', label: t('productsPage.paymentProviderBankCard') },
 ])
 const paymentStatusLabel = computed(() => {
+  if (paymentStatusLoading.value) return t('productsPage.paymentStatusLoading')
   if (createdOrder.value?.paid_at) return t('productsPage.paymentStatusPaid')
   if (payment.value?.status === 'failed') return t('productsPage.paymentStatusFailed')
   return t('productsPage.paymentStatusPending')
@@ -139,13 +141,83 @@ const createdOrderPaymentLabel = computed(() => {
   return t('productsPage.paymentProviderBankCard')
 })
 
+const redirectToPayment = (payload: ProductOrderPayment['payload']) => {
+  if (!payload?.action) return
+
+  const method = (payload.method || 'POST').toUpperCase()
+  const fields = payload.fields || {}
+
+  if (method === 'GET' && !Object.keys(fields).length) {
+    window.location.assign(payload.action)
+    return
+  }
+
+  const formElement = document.createElement('form')
+  formElement.method = method === 'GET' ? 'GET' : 'POST'
+  formElement.action = payload.action
+  formElement.style.display = 'none'
+
+  Object.entries(fields).forEach(([name, value]) => {
+    if (value === null || value === undefined) return
+
+    const input = document.createElement('input')
+    input.type = 'hidden'
+    input.name = name
+    input.value = String(value)
+    formElement.appendChild(input)
+  })
+
+  document.body.appendChild(formElement)
+  formElement.submit()
+}
+
+const normalizePhone = (value: string) => {
+  const digits = (value || '').replace(/\D+/g, '')
+  if (!digits) return ''
+  if (digits.startsWith('374')) return `+${digits}`
+  if (digits.startsWith('0') && digits.length === 9) return `+374${digits.slice(1)}`
+  if (!digits.startsWith('0') && digits.length === 8) return `+374${digits}`
+  return `+${digits}`
+}
+
+const isValidPhone = (value: string) => /^\+[1-9]\d{7,14}$/.test(value)
+const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+const queryValue = (value: unknown) => Array.isArray(value) ? String(value[0] || '') : String(value || '')
+
+const loadReturnedPaymentStatus = async () => {
+  const orderId = queryValue(route.query.order_id)
+  const token = queryValue(route.query.payment_token)
+
+  if (!orderId || !token) return
+
+  paymentStatusLoading.value = true
+  paymentStatusLookupFailed.value = false
+
+  try {
+    const response = await api.get<ApiItemResponse<ProductOrder> & { payment?: ProductOrderPayment }>(`/product-orders/${encodeURIComponent(orderId)}/payment-status?token=${encodeURIComponent(token)}`)
+    createdOrder.value = response.data
+    payment.value = response.payment || null
+
+    if (response.data?.paid_at) {
+      cart.clear()
+    }
+  }
+  catch {
+    paymentStatusLookupFailed.value = true
+    payment.value = {
+      status: queryValue(route.query.payment_status) === 'fail' ? 'failed' : 'pending',
+      message: t('productsPage.paymentStatusUnavailable'),
+      payload: null,
+    }
+  }
+  finally {
+    paymentStatusLoading.value = false
+  }
+}
+
 onMounted(() => {
   uiReady.value = true
-})
-
-const idramPayload = computed(() => {
-  if (payment.value?.status !== 'redirect' || !payment.value.payload?.fields) return null
-  return payment.value.payload
+  loadReturnedPaymentStatus()
 })
 
 watch(
@@ -189,6 +261,34 @@ watch(
 const submit = async () => {
   if (!cart.items.length) return
 
+  if (form.customer_first_name.trim().length < 2) {
+    toast.push({ type: 'error', title: t('productsPage.firstNameRequiredError') })
+    return
+  }
+
+  if (form.customer_last_name.trim().length < 2) {
+    toast.push({ type: 'error', title: t('productsPage.lastNameRequiredError') })
+    return
+  }
+
+  const normalizedPhone = normalizePhone(form.customer_phone)
+  if (!isValidPhone(normalizedPhone)) {
+    toast.push({ type: 'error', title: t('productsPage.invalidPhoneError') })
+    return
+  }
+  form.customer_phone = normalizedPhone
+
+  const normalizedEmail = form.customer_email.trim()
+  if (normalizedEmail && !isValidEmail(normalizedEmail)) {
+    toast.push({ type: 'error', title: t('productsPage.invalidEmailError') })
+    return
+  }
+
+  if (form.delivery_type === 'courier' && form.address_line.trim().length < 3) {
+    toast.push({ type: 'error', title: t('productsPage.addressRequiredError') })
+    return
+  }
+
   ordering.value = true
   try {
     const response = await api.post<ApiItemResponse<ProductOrder> & { payment?: ProductOrderPayment }>('/product-orders', {
@@ -198,8 +298,8 @@ const submit = async () => {
       })),
       customer_first_name: form.customer_first_name.trim(),
       customer_last_name: form.customer_last_name.trim(),
-      customer_phone: form.customer_phone.trim(),
-      customer_email: form.customer_email.trim() || undefined,
+      customer_phone: normalizedPhone,
+      customer_email: normalizedEmail || undefined,
       delivery_type: form.delivery_type,
       payment_provider: form.payment_provider,
       city: form.delivery_type === 'courier' ? 'Yerevan' : form.city.trim() || 'Yerevan',
@@ -210,21 +310,18 @@ const submit = async () => {
       },
     })
 
+    if (response.payment?.status === 'redirect') {
+      redirectToPayment(response.payment.payload)
+      return
+    }
+
     createdOrder.value = response.data
     payment.value = response.payment || null
-
     toast.push({
       type: 'success',
       title: t('productsPage.orderCreated'),
       description: `${t('productsPage.orderNumber')} #${response.data.id}`,
     })
-
-    if (response.payment?.status === 'redirect') {
-      toast.push({
-        type: 'success',
-        title: t('productsPage.idramReady'),
-      })
-    }
 
     cart.clear()
     form.customer_first_name = ''
@@ -237,11 +334,6 @@ const submit = async () => {
     form.address_line = ''
     form.comment = ''
 
-    if (response.payment?.status === 'redirect' && idramPayload.value) {
-      nextTick(() => {
-        idramFormRef.value?.submit()
-      })
-    }
   }
   finally {
     ordering.value = false
@@ -300,13 +392,9 @@ const submit = async () => {
             <span class="text-sm font-medium" :class="isTor ? 'text-white' : 'text-sand-900'">{{ paymentStatusLabel }}</span>
           </div>
           <p v-if="payment?.message" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ payment.message }}</p>
+          <p v-if="paymentStatusLookupFailed" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('productsPage.paymentStatusUnavailable') }}</p>
         </div>
 
-        <form v-if="idramPayload" ref="idramFormRef" :action="idramPayload.action" method="POST" class="mt-4 space-y-3 rounded-2xl p-4" :class="isTor ? 'border border-white/10 bg-white/[0.04]' : 'border border-sand-200 bg-white'">
-          <input v-for="(value, key) in idramPayload.fields" :key="String(key)" type="hidden" :name="String(key)" :value="String(value ?? '')">
-          <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('productsPage.idramReady') }}</p>
-          <BaseButton type="submit">{{ t('productsPage.continueToIdram') }}</BaseButton>
-        </form>
       </div>
 
       <div
