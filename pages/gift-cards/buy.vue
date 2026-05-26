@@ -14,7 +14,7 @@ const { siteUrl, salonName, defaultImageUrl } = useSiteMeta()
 const { isTor, brand, authGiftCardScanBasePath } = useBrandContext()
 
 const form = reactive({
-  amount: '10000',
+  amount: '10',
   recipient_first_name: '',
   recipient_last_name: '',
   recipient_email: '',
@@ -125,8 +125,8 @@ usePageSeo({
 
 const selectedAmount = computed(() => {
   const parsed = Number(form.amount)
-  if (!Number.isFinite(parsed)) return 10000
-  return Math.min(200000, Math.max(10000, parsed))
+  if (!Number.isFinite(parsed)) return 10
+  return Math.min(200000, Math.max(10, parsed))
 })
 
 const qrUrl = computed(() => {
@@ -298,7 +298,7 @@ useStructuredData(() => ({
 
 const submit = async () => {
   const amount = Number(form.amount)
-  if (!Number.isFinite(amount) || amount < 10000 || amount > 200000) {
+  if (!Number.isFinite(amount) || amount < 10 || amount > 200000) {
     toast.push({ type: 'error', title: t('giftCards.amountRangeError') })
     return
   }
@@ -438,7 +438,7 @@ const submit = async () => {
             </div>
           </div>
 
-          <BaseInput v-model="form.amount" type="number" min="10000" max="200000" step="1000" :label="t('giftCards.amountLabel')" :theme="isTor ? 'dark' : 'light'" />
+          <BaseInput v-model="form.amount" type="number" min="10" max="200000" step="10" :label="t('giftCards.amountLabel')" :theme="isTor ? 'dark' : 'light'" />
           <div class="grid gap-1">
             <span class="text-sm" :class="isTor ? 'text-stone-300' : 'text-sand-700'">{{ t('giftCards.paymentProviderTitle') }}</span>
             <div class="grid grid-cols-2 gap-2">
