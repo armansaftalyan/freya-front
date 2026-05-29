@@ -62,6 +62,7 @@ const form = reactive({
 const ordering = ref(false)
 const paymentStatusLoading = ref(false)
 const paymentStatusLookupFailed = ref(false)
+const paymentReturnToastShown = ref(false)
 const orderQuote = ref<ProductOrderQuote | null>(null)
 const createdOrder = ref<ProductOrder | null>(null)
 const payment = ref<ProductOrderPayment | null>(null)
@@ -184,11 +185,33 @@ const isValidPhone = (value: string) => /^\+[1-9]\d{7,14}$/.test(value)
 const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 const queryValue = (value: unknown) => Array.isArray(value) ? String(value[0] || '') : String(value || '')
 
+const showPaymentReturnToast = (status: string) => {
+  if (paymentReturnToastShown.value) return
+
+  if (status === 'success' || status === 'paid') {
+    paymentReturnToastShown.value = true
+    toast.push({ type: 'success', title: t('productsPage.paymentReturnSuccess') })
+    return
+  }
+
+  if (status === 'fail' || status === 'failed') {
+    paymentReturnToastShown.value = true
+    toast.push({ type: 'error', title: t('productsPage.paymentReturnFail') })
+  }
+}
+
+const showPaymentReturnToastFromQuery = () => {
+  showPaymentReturnToast(queryValue(route.query.payment_status))
+}
+
 const loadReturnedPaymentStatus = async () => {
   const orderId = queryValue(route.query.order_id)
   const token = queryValue(route.query.payment_token)
 
-  if (!orderId || !token) return
+  if (!orderId || !token) {
+    showPaymentReturnToastFromQuery()
+    return
+  }
 
   paymentStatusLoading.value = true
   paymentStatusLookupFailed.value = false
@@ -200,7 +223,11 @@ const loadReturnedPaymentStatus = async () => {
 
     if (response.data?.paid_at) {
       cart.clear()
+      showPaymentReturnToast('success')
+      return
     }
+
+    showPaymentReturnToast(payment.value?.status === 'failed' ? 'fail' : queryValue(route.query.payment_status))
   }
   catch {
     paymentStatusLookupFailed.value = true
@@ -209,6 +236,7 @@ const loadReturnedPaymentStatus = async () => {
       message: t('productsPage.paymentStatusUnavailable'),
       payload: null,
     }
+    showPaymentReturnToastFromQuery()
   }
   finally {
     paymentStatusLoading.value = false
@@ -239,20 +267,6 @@ watch(
 
     if (!form.customer_email.trim()) {
       form.customer_email = user.email || ''
-    }
-  },
-  { immediate: true },
-)
-
-watch(
-  () => route.query.payment_status,
-  (status) => {
-    if (status === 'success') {
-      toast.push({ type: 'success', title: t('productsPage.paymentReturnSuccess') })
-    }
-
-    if (status === 'fail') {
-      toast.push({ type: 'error', title: t('productsPage.paymentReturnFail') })
     }
   },
   { immediate: true },
