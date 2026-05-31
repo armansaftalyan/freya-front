@@ -8,10 +8,15 @@ export const useAuthStore = defineStore('authStore', () => {
   const loading = ref(false)
   let fetchMePromise: Promise<void> | null = null
   const storageKey = 'auth_token'
+  const tokenCookie = useCookie<string | null>('auth_token', {
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 365,
+  })
 
   const persistToken = (value: string | null) => {
-    if (!import.meta.client) return
+    tokenCookie.value = value
 
+    if (!import.meta.client) return
     if (value) {
       window.localStorage.setItem(storageKey, value)
     }
@@ -23,22 +28,29 @@ export const useAuthStore = defineStore('authStore', () => {
   const migrateLegacyCookieToken = () => {
     if (!import.meta.client || token.value) return
 
-    const legacyToken = useCookie<string | null>('auth_token', { sameSite: 'lax', secure: false })
-    if (!legacyToken.value) return
+    if (!tokenCookie.value) return
 
-    token.value = legacyToken.value
-    persistToken(legacyToken.value)
-    legacyToken.value = null
+    token.value = tokenCookie.value
+    persistToken(tokenCookie.value)
   }
 
   const hydrateToken = () => {
-    if (!import.meta.client) return
-
     if (token.value) return
+
+    if (tokenCookie.value) {
+      token.value = tokenCookie.value
+      if (import.meta.client) {
+        persistToken(tokenCookie.value)
+      }
+      return
+    }
+
+    if (!import.meta.client) return
 
     const storedToken = window.localStorage.getItem(storageKey)
     if (storedToken) {
       token.value = storedToken
+      persistToken(storedToken)
       return
     }
 

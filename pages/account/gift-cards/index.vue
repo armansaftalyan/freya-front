@@ -36,10 +36,10 @@ const qrUrl = (card: GiftCard) => {
   return `${backendBaseUrl}/mail/qr/${encodeURIComponent(scanUrl)}.png`
 }
 
-await useAsyncData('my-gift-cards', async () => {
+const { pending } = await useAsyncData('my-gift-cards', async () => {
   await store.fetchMine()
   return true
-})
+}, { server: false })
 </script>
 
 <template>
@@ -53,7 +53,7 @@ await useAsyncData('my-gift-cards', async () => {
         <AccountNav :show-master-profile="Boolean(auth.user?.roles?.includes('master'))" />
       </div>
 
-      <div v-if="loading" class="grid gap-4">
+      <div v-if="pending || loading" class="grid gap-4">
         <SkeletonBlock v-for="idx in 3" :key="idx" :theme="isTor ? 'dark' : 'light'" class="h-40" />
       </div>
 

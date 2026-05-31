@@ -36,13 +36,14 @@ const isActive = (target: string) => {
 </script>
 
 <template>
-  <div class="flex flex-wrap gap-2">
+  <div class="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
     <NuxtLink
       v-for="item in items"
       :key="item.to"
       :to="localePath(item.to)"
     >
       <BaseButton
+        class="whitespace-nowrap"
         :variant="isActive(item.to) ? 'primary' : 'secondary'"
         :theme="isTor ? 'tor' : 'default'"
       >
@@ -50,6 +51,7 @@ const isActive = (target: string) => {
       </BaseButton>
     </NuxtLink>
     <BaseButton
+      class="whitespace-nowrap"
       variant="secondary"
       :theme="isTor ? 'tor' : 'default'"
       @click="auth.logout"

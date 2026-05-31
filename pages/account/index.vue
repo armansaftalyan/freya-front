@@ -37,11 +37,12 @@ const { data: balanceTransactions, pending: balanceTransactionsPending } = await
     const response = await api.get<ApiListResponse<ClientBalanceTransaction>>('/client-balance/transactions')
     return response.data
   },
-  { default: () => [] },
+  { default: () => [], server: false },
 )
 
 const saving = ref(false)
 const uploadingAvatar = ref(false)
+const avatarVersion = ref(0)
 const form = reactive({
   first_name: auth.user?.first_name || '',
   last_name: auth.user?.last_name || '',
@@ -107,7 +108,14 @@ const avatarFallback = computed(() => `data:image/svg+xml;utf8,${encodeURICompon
   <path d="M190 575c36-92 114-138 170-138s134 46 170 138" fill="${isTor.value ? '#f5f5f4' : '#8a6a45'}" fill-opacity="0.9" />
 </svg>
 `)}`)
-const avatarPreview = computed(() => resolveMediaUrl(auth.user?.avatar) || avatarFallback.value)
+const avatarPreview = computed(() => {
+  const resolved = resolveMediaUrl(auth.user?.avatar)
+  if (!resolved) return avatarFallback.value
+  if (resolved.startsWith('data:')) return resolved
+
+  const separator = resolved.includes('?') ? '&' : '?'
+  return `${resolved}${separator}v=${avatarVersion.value}`
+})
 
 const onAvatarError = (event: Event) => {
   const target = event.target as HTMLImageElement | null
@@ -181,7 +189,11 @@ const onAvatarChange = async (event: Event) => {
   uploadingAvatar.value = true
   try {
     const response = await api.post<{ avatar: string, data: User }>('/auth/me/avatar', body, { skipErrorToast: true })
-    auth.setUser(response.data)
+    auth.setUser({
+      ...response.data,
+      avatar: response.avatar || response.data.avatar,
+    })
+    avatarVersion.value += 1
     toast.push({ type: 'success', title: t('account.avatarUpdated') })
   }
   catch (error: any) {
@@ -197,8 +209,9 @@ const onAvatarChange = async (event: Event) => {
 const removeAvatar = async () => {
   uploadingAvatar.value = true
   try {
-    const response = await api.delete<ApiItemResponse<User>>('/auth/me/avatar', undefined, { skipErrorToast: true })
+    const response = await api.del<ApiItemResponse<User>>('/auth/me/avatar', { skipErrorToast: true })
     auth.setUser(response.data)
+    avatarVersion.value += 1
     toast.push({ type: 'success', title: t('account.avatarUpdated') })
   }
   catch (error: any) {

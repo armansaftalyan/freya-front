@@ -45,7 +45,7 @@ await useAsyncData(`gift-card-${cardId.value}`, async () => {
   await store.fetchTransactions(cardId.value)
   loading.value = false
   return true
-})
+}, { server: false })
 </script>
 
 <template>

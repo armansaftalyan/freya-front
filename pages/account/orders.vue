@@ -47,7 +47,7 @@ const deliveryLabel = (type: string) => {
 const { data: orders, pending } = await useAsyncData('my-product-orders', async () => {
   const response = await api.get<ApiListResponse<ProductOrder>>('/product-orders/my')
   return response.data
-}, { default: () => [] })
+}, { default: () => [], server: false })
 </script>
 
 <template>

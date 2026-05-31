@@ -16,6 +16,7 @@ type ApiRequestOptions = {
 export const useApi = () => {
   const config = useRuntimeConfig()
   const token = useState<string | null>('auth_token_state', () => null)
+  const tokenCookie = useCookie<string | null>('auth_token', { sameSite: 'lax' })
   const { locale, t } = useLocale()
   const toast = useToast()
   const baseURL = config.public.apiBase
@@ -41,7 +42,10 @@ export const useApi = () => {
 
     try {
       if (import.meta.client && !token.value) {
-        token.value = window.localStorage.getItem('auth_token')
+        token.value = tokenCookie.value || window.localStorage.getItem('auth_token')
+      }
+      else if (!import.meta.client && !token.value) {
+        token.value = tokenCookie.value
       }
 
       const isFormData = typeof FormData !== 'undefined' && fetchOptions.body instanceof FormData

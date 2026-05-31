@@ -35,11 +35,11 @@ const visibleAppointments = computed(() => {
   )
 })
 
-await useAsyncData('my-appointments', async () => {
+const { pending } = await useAsyncData('my-appointments', async () => {
   await appointmentsStore.fetchMine()
 
   return true
-})
+}, { server: false })
 </script>
 
 <template>
@@ -53,7 +53,7 @@ await useAsyncData('my-appointments', async () => {
         <AccountNav :show-master-profile="Boolean(auth.user?.roles?.includes('master'))" />
       </div>
 
-      <div v-if="loading" class="grid gap-4">
+      <div v-if="pending || loading" class="grid gap-4">
         <SkeletonBlock v-for="idx in 3" :key="idx" :theme="isTor ? 'dark' : 'light'" class="h-32" />
       </div>
 
