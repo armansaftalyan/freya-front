@@ -79,7 +79,7 @@ const { pending } = await useAsyncData('my-gift-cards', async () => {
               <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.expires') }}: {{ card.expires_at ? formatYerevanDateTime(card.expires_at) : t('giftCards.noExpiration') }}</p>
               <div class="flex flex-wrap gap-2 pt-2">
                 <NuxtLink :to="localePath(`${authGiftCardsPath}/${card.id}`)"><BaseButton size="sm" variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('giftCards.viewTransactions') }}</BaseButton></NuxtLink>
-                <a :href="cardImageUrl(card)" :download="`${card.code}.png`">
+                <a :href="cardImageUrl(card)" download>
                   <BaseButton size="sm" variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('giftCards.saveCardImage') }}</BaseButton>
                 </a>
               </div>

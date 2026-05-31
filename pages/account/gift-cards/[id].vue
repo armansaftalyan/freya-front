@@ -76,7 +76,7 @@ await useAsyncData(`gift-card-${cardId.value}`, async () => {
               <p v-if="card.meta?.sender_name || card.meta?.sender_email" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('account.giftCardSender') }}: {{ [card.meta?.sender_name, card.meta?.sender_email].filter(Boolean).join(' · ') }}</p>
               <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.expires') }}: {{ card.expires_at ? formatYerevanDateTime(card.expires_at) : t('giftCards.noExpiration') }}</p>
               <div class="pt-2">
-                <a :href="cardImageUrl" :download="`${card.code}.png`">
+                <a :href="cardImageUrl" download>
                   <BaseButton size="sm" variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('giftCards.saveCardImage') }}</BaseButton>
                 </a>
               </div>
