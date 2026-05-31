@@ -62,7 +62,7 @@ const submit = async () => {
           </BaseButton>
         </form>
         <p class="mt-5 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">
-          <NuxtLink :to="localePath(authLoginPath.value)" :class="isTor ? 'text-[#d79a49] underline' : 'text-sand-700 underline'">{{ t('auth.backToLogin') }}</NuxtLink>
+          <NuxtLink :to="localePath(authLoginPath)" :class="isTor ? 'text-[#d79a49] underline' : 'text-sand-700 underline'">{{ t('auth.backToLogin') }}</NuxtLink>
         </p>
       </Card>
     </div>
