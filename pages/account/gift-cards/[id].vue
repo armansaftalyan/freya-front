@@ -39,6 +39,12 @@ const qrUrl = computed(() => {
   return `${backendBaseUrl}/mail/qr/${encodeURIComponent(scanUrl)}.png`
 })
 
+const cardImageUrl = computed(() => {
+  if (!card.value) return ''
+  const apiBase = String(config.public.apiBase).replace(/\/$/, '')
+  return `${apiBase}/gift-card-images/${encodeURIComponent(card.value.qr_token)}`
+})
+
 await useAsyncData(`gift-card-${cardId.value}`, async () => {
   if (!cardId.value) return true
   card.value = await store.fetchCard(cardId.value)
@@ -70,7 +76,7 @@ await useAsyncData(`gift-card-${cardId.value}`, async () => {
               <p v-if="card.meta?.sender_name || card.meta?.sender_email" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('account.giftCardSender') }}: {{ [card.meta?.sender_name, card.meta?.sender_email].filter(Boolean).join(' · ') }}</p>
               <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.expires') }}: {{ card.expires_at ? formatYerevanDateTime(card.expires_at) : t('giftCards.noExpiration') }}</p>
               <div class="pt-2">
-                <a :href="card.image_url" :download="`${card.code}.png`" target="_blank" rel="noopener noreferrer">
+                <a :href="cardImageUrl" :download="`${card.code}.png`" target="_blank" rel="noopener noreferrer">
                   <BaseButton size="sm" variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('giftCards.saveCardImage') }}</BaseButton>
                 </a>
               </div>

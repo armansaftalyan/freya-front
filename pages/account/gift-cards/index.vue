@@ -36,6 +36,11 @@ const qrUrl = (card: GiftCard) => {
   return `${backendBaseUrl}/mail/qr/${encodeURIComponent(scanUrl)}.png`
 }
 
+const cardImageUrl = (card: GiftCard) => {
+  const apiBase = String(config.public.apiBase).replace(/\/$/, '')
+  return `${apiBase}/gift-card-images/${encodeURIComponent(card.qr_token)}`
+}
+
 const { pending } = await useAsyncData('my-gift-cards', async () => {
   await store.fetchMine()
   return true
@@ -74,7 +79,7 @@ const { pending } = await useAsyncData('my-gift-cards', async () => {
               <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.expires') }}: {{ card.expires_at ? formatYerevanDateTime(card.expires_at) : t('giftCards.noExpiration') }}</p>
               <div class="flex flex-wrap gap-2 pt-2">
                 <NuxtLink :to="localePath(`${authGiftCardsPath}/${card.id}`)"><BaseButton size="sm" variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('giftCards.viewTransactions') }}</BaseButton></NuxtLink>
-                <a :href="card.image_url" :download="`${card.code}.png`" target="_blank" rel="noopener noreferrer">
+                <a :href="cardImageUrl(card)" :download="`${card.code}.png`" target="_blank" rel="noopener noreferrer">
                   <BaseButton size="sm" variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('giftCards.saveCardImage') }}</BaseButton>
                 </a>
               </div>

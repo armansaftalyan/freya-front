@@ -137,6 +137,12 @@ const qrUrl = computed(() => {
   return `${backendBaseUrl}/mail/qr/${encodeURIComponent(scanUrl)}.png`
 })
 
+const issuedCardImageUrl = computed(() => {
+  if (!issuedCard.value) return ''
+  const apiBase = String(config.public.apiBase).replace(/\/$/, '')
+  return `${apiBase}/gift-card-images/${encodeURIComponent(issuedCard.value.qr_token)}`
+})
+
 const idramPayload = computed(() => {
   if (payment.value?.status !== 'redirect' || !payment.value?.payload?.fields) return null
   return payment.value.payload
@@ -534,7 +540,7 @@ const submit = async () => {
             <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.balance') }}: {{ formatMoney(issuedCard.balance, issuedCard.currency) }}</p>
             <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.expires') }}: {{ issuedCard.expires_at ? formatYerevanDateTime(issuedCard.expires_at) : t('giftCards.noExpiration') }}</p>
             <div class="pt-2">
-              <a :href="issuedCard.image_url" :download="`${issuedCard.code}.png`" target="_blank" rel="noopener noreferrer">
+              <a :href="issuedCardImageUrl" :download="`${issuedCard.code}.png`" target="_blank" rel="noopener noreferrer">
                 <BaseButton size="sm" variant="secondary">{{ t('giftCards.saveCardImage') }}</BaseButton>
               </a>
             </div>
