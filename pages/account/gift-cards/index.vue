@@ -69,6 +69,8 @@ await useAsyncData('my-gift-cards', async () => {
               <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.status') }}: <span class="font-semibold" :class="isTor ? 'text-white' : 'text-sand-900'">{{ card.status }}</span></p>
               <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.balance') }}: <span class="font-semibold" :class="isTor ? 'text-white' : 'text-sand-900'">{{ formatMoney(card.balance, card.currency) }}</span></p>
               <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.initialAmount') }}: {{ formatMoney(card.initial_amount, card.currency) }}</p>
+              <p v-if="card.meta?.recipient_name || card.meta?.recipient_email" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('account.giftCardRecipient') }}: {{ [card.meta?.recipient_name, card.meta?.recipient_email].filter(Boolean).join(' · ') }}</p>
+              <p v-if="card.meta?.sender_name || card.meta?.sender_email" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('account.giftCardSender') }}: {{ [card.meta?.sender_name, card.meta?.sender_email].filter(Boolean).join(' · ') }}</p>
               <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('giftCards.expires') }}: {{ card.expires_at ? formatYerevanDateTime(card.expires_at) : t('giftCards.noExpiration') }}</p>
               <div class="flex flex-wrap gap-2 pt-2">
                 <NuxtLink :to="localePath(`${authGiftCardsPath}/${card.id}`)"><BaseButton size="sm" variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('giftCards.viewTransactions') }}</BaseButton></NuxtLink>

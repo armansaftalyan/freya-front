@@ -8,7 +8,7 @@ const props = withDefaults(defineProps<{
 const route = useRoute()
 const { t } = useLocale()
 const { localePath } = useLocalizedPath()
-const { isTor, authProfilePath, authAppointmentsPath, authGiftCardsPath, authMasterProfilePath } = useBrandContext()
+const { isTor, authProfilePath, authAppointmentsPath, authGiftCardsPath, authMasterProfilePath, authProductOrdersPath } = useBrandContext()
 const auth = useAuthStore()
 
 const items = computed(() => {
@@ -23,6 +23,7 @@ const items = computed(() => {
   links.push(
     { to: authAppointmentsPath.value, label: t('nav.myAppointments') },
     { to: authGiftCardsPath.value, label: t('account.giftCards') },
+    { to: authProductOrdersPath.value, label: t('account.productOrders') },
   )
 
   return links
