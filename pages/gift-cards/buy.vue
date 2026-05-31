@@ -10,6 +10,7 @@ const { formatYerevanDateTime } = useDateTime()
 const { locale, t } = useLocale()
 const { formatAmd } = useCurrency()
 const route = useRoute()
+const auth = useAuthStore()
 const { siteUrl, salonName, defaultImageUrl } = useSiteMeta()
 const { isTor, brand, authGiftCardScanBasePath } = useBrandContext()
 
@@ -255,6 +256,30 @@ watch(isTor, (torMode) => {
 onMounted(() => {
   loadReturnedPaymentStatus()
 })
+
+watch(
+  () => auth.user,
+  (user) => {
+    if (!user) return
+
+    if (!form.sender_first_name.trim()) {
+      form.sender_first_name = user.first_name || ''
+    }
+
+    if (!form.sender_last_name.trim()) {
+      form.sender_last_name = user.last_name || ''
+    }
+
+    if (!form.sender_phone.trim()) {
+      form.sender_phone = user.phone || ''
+    }
+
+    if (!form.sender_email.trim()) {
+      form.sender_email = user.email || ''
+    }
+  },
+  { immediate: true },
+)
 
 useStructuredData(() => ({
   '@context': 'https://schema.org',
