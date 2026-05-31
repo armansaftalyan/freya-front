@@ -31,6 +31,19 @@ const formatMoney = (value: number, currency: string) => {
   return `${value.toFixed(2)} ${currency}`
 }
 
+const transactionTypeLabel = (type: string) => {
+  const normalized = type.toLowerCase()
+  const keyByType: Record<string, string> = {
+    issue: 'giftCards.transactionIssue',
+    redeem: 'giftCards.transactionRedeem',
+    refund: 'giftCards.transactionRefund',
+    adjust: 'giftCards.transactionAdjust',
+    expire: 'giftCards.transactionExpire',
+  }
+
+  return t(keyByType[normalized] || 'giftCards.transactionAdjust')
+}
+
 const config = useRuntimeConfig()
 const qrUrl = computed(() => {
   if (!card.value) return ''
@@ -93,7 +106,7 @@ await useAsyncData(`gift-card-${cardId.value}`, async () => {
           <div v-else class="mt-4 space-y-3">
             <div v-for="item in store.transactions" :key="item.id" class="rounded-2xl p-4" :class="isTor ? 'border border-white/10 bg-white/[0.04]' : 'border border-sand-200'">
               <div class="flex flex-wrap items-center justify-between gap-2">
-                <p class="font-semibold uppercase">{{ item.type }}</p>
+                <p class="font-semibold">{{ transactionTypeLabel(item.type) }}</p>
                 <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ formatYerevanDateTime(item.created_at) }}</p>
               </div>
               <p class="mt-2 text-sm">{{ t('giftCards.amount') }}: <span class="font-semibold">{{ formatMoney(item.amount, card.currency) }}</span></p>
