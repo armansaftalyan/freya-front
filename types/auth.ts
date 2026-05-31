@@ -14,6 +14,8 @@ export interface RegisterPayload {
   birth_date?: string
   password: string
   password_confirmation: string
+  brand?: 'freya' | 'tor'
+  locale?: 'ru' | 'en' | 'hy'
 }
 
 export interface AuthResponse {

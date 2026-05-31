@@ -2,9 +2,9 @@
 import Card from "~/components/base/Card.vue";
 import { useNoindexSeoMeta } from '~/composables/useNoindexSeoMeta'
 
-const { t } = useLocale()
+const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
-const { isTor, authLoginPath, authAppointmentsPath, legalPath, privacyPolicyPath } = useBrandContext()
+const { isTor, brand, authLoginPath, authAppointmentsPath, legalPath, privacyPolicyPath } = useBrandContext()
 
 useNoindexSeoMeta({
   title: () => t('auth.registerTitle'),
@@ -98,6 +98,8 @@ const submit = async () => {
       gender: form.gender || undefined,
       birth_date: form.birth_date || undefined,
       password_confirmation: form.password_confirmation,
+      brand: brand.value,
+      locale: locale.value,
     })
     await navigateTo(localePath(authAppointmentsPath.value))
   }
