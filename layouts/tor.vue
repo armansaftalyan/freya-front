@@ -271,7 +271,6 @@ useHead(() => ({
 
         <div class="hidden items-center gap-1.5 lg:flex">
           <SharedLanguageSwitcher theme="dark" compact />
-          <PwaInstallButton theme="tor" />
           <NuxtLink :to="localePath('/tor/booking')">
             <BaseButton size="sm" theme="tor">{{ locale === 'ru' ? 'Записаться' : locale === 'en' ? 'Book now' : 'Ամրագրել' }}</BaseButton>
           </NuxtLink>

@@ -262,7 +262,6 @@ useHead(() => ({
 
         <div class="hidden shrink-0 items-center gap-2 lg:flex">
           <SharedLanguageSwitcher />
-          <PwaInstallButton />
           <NuxtLink :to="localePath('/booking')">
             <BaseButton size="sm">{{ bookingCta }}</BaseButton>
           </NuxtLink>
