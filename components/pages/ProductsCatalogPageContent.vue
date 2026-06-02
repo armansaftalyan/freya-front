@@ -10,7 +10,7 @@ const props = withDefaults(defineProps<{
   lead?: string
   backLabel?: string
   backTo?: string
-  groupedProducts: Array<ProductCategory & { products: Product[] }>
+  groupedProducts: Array<ProductCategory & { products: Product[], suggestedProducts?: Product[] }>
   productsPath: string
   productPath: (product: Product) => string
 }>(), {
@@ -96,6 +96,35 @@ const decreaseFromCart = (productId: number) => cart.decreaseItem(productId, 1)
               @add="addToCart"
               @decrease="decreaseFromCart"
             />
+          </div>
+
+          <div
+            v-if="category.products.length < 6 && category.suggestedProducts?.length"
+            class="mt-8 border-t pt-6"
+            :class="isTor ? 'border-white/10' : 'border-sand-200'"
+          >
+            <h3
+              class="text-xl"
+              :class="isTor ? 'font-black uppercase tracking-[0.05em] text-white' : 'leading-tight text-sand-900'"
+            >
+              {{ t('productsPage.youMayLike') }}
+            </h3>
+            <div
+              class="mt-5"
+              :class="isTor ? 'grid gap-4 md:grid-cols-2 xl:grid-cols-4' : 'grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4'"
+            >
+              <ProductCard
+                v-for="product in category.suggestedProducts"
+                :key="`suggested-${category.id}-${product.id}`"
+                :theme="theme"
+                :product="product"
+                :to="productPath(product)"
+                :quantity="productQuantity(product.id)"
+                :show-compare-price="!isTor"
+                @add="addToCart"
+                @decrease="decreaseFromCart"
+              />
+            </div>
           </div>
         </ProductCategorySection>
       </div>
