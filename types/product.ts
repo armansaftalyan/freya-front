@@ -27,6 +27,7 @@ export interface Product {
   seo_title: string | null
   seo_description: string | null
   brand: string | null
+  line_brand: string | null
   sku: string | null
   image_url: string | null
   gallery: any[]

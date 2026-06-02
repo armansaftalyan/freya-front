@@ -57,6 +57,7 @@ const relatedProducts = computed(() => data.value?.relatedProducts || [])
 const cartQuantity = computed(() => product.value ? cart.getItemQuantity(product.value.id) : 0)
 const selectedQuantity = computed(() => cartQuantity.value || Math.max(1, Number(quantity.value || 1)))
 const orderTotal = computed(() => (product.value?.price || 0) * selectedQuantity.value)
+const productLineBrand = computed(() => product.value?.line_brand || product.value?.brand || salonName)
 const currentLocale = computed(() => locale.value as SupportedLocale)
 const localizedProductPaths = computed(() => Object.fromEntries(
   supportedLocales.map((targetLocale) => [
@@ -104,7 +105,7 @@ useStructuredData(() => {
         description: product.value.seo_description || product.value.description || undefined,
         image: product.value.image_url || undefined,
         sku: product.value.sku || undefined,
-        brand: product.value.brand ? { '@type': 'Brand', name: product.value.brand } : undefined,
+        brand: productLineBrand.value ? { '@type': 'Brand', name: productLineBrand.value } : undefined,
         category: category.value.name,
         offers: {
           '@type': 'Offer',
@@ -195,7 +196,7 @@ const buyNow = async () => {
         <div class="space-y-5">
           <img
             :src="product.image_url || '/logo.png'"
-            :alt="[product.brand || salonName, product.name, product.volume_label].filter(Boolean).join(' ')"
+            :alt="[productLineBrand, product.name, product.volume_label].filter(Boolean).join(' ')"
             class="h-[420px] w-full rounded-[2rem] object-cover"
             :class="isTor ? 'border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.22)]' : 'border border-sand-200 shadow-soft'"
             loading="eager"
@@ -218,7 +219,7 @@ const buyNow = async () => {
             </div>
             <div class="rounded-3xl p-5" :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200 bg-white'">
               <p class="text-xs uppercase tracking-[0.14em]" :class="isTor ? 'text-[#c58a3a]' : 'text-sand-600'">{{ t('productsPage.brandLabel') }}</p>
-              <p class="mt-2 text-2xl">{{ product.brand || salonName }}</p>
+              <p class="mt-2 text-2xl">{{ productLineBrand }}</p>
             </div>
             <div class="rounded-3xl p-5" :class="isTor ? 'border border-white/10 bg-white/[0.03]' : 'border border-sand-200 bg-white'">
               <p class="text-xs uppercase tracking-[0.14em]" :class="isTor ? 'text-[#c58a3a]' : 'text-sand-600'">{{ t('productsPage.volumeLabel') }}</p>
@@ -330,7 +331,7 @@ const buyNow = async () => {
               ? 'border border-white/10 bg-white/[0.03] shadow-[0_20px_50px_rgba(0,0,0,0.18)] hover:border-[#c58a3a]/40'
               : 'border border-sand-200 bg-white shadow-soft hover:border-sand-300'"
           >
-            <img :src="item.image_url || '/logo.png'" :alt="[item.brand || salonName, item.name, item.volume_label].filter(Boolean).join(' ')" class="h-40 w-full rounded-2xl object-cover" loading="lazy" decoding="async">
+            <img :src="item.image_url || '/logo.png'" :alt="[item.line_brand || item.brand || salonName, item.name, item.volume_label].filter(Boolean).join(' ')" class="h-40 w-full rounded-2xl object-cover" loading="lazy" decoding="async">
             <p class="mt-3 text-lg">{{ item.name }}</p>
             <p class="mt-2 text-sm font-semibold" :class="isTor ? 'text-white' : 'text-sand-900'">{{ formatAmd(item.price) }}</p>
           </NuxtLink>

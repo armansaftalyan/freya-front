@@ -75,6 +75,7 @@ const quantityValueClass = computed(() => props.theme === 'tor'
   : 'text-sand-900')
 
 const imageHeightClass = computed(() => props.compact ? 'h-48' : 'h-52')
+const lineBrand = computed(() => props.product.line_brand || props.product.brand)
 </script>
 
 <template>
@@ -85,7 +86,7 @@ const imageHeightClass = computed(() => props.compact ? 'h-48' : 'h-52')
     <NuxtLink :to="to" class="block rounded-3xl focus-visible:outline-none">
       <img
         :src="product.image_url || '/logo.png'"
-        :alt="[product.brand, product.name, product.volume_label].filter(Boolean).join(' ')"
+        :alt="[lineBrand, product.name, product.volume_label].filter(Boolean).join(' ')"
         class="w-full rounded-2xl object-cover"
         :class="imageHeightClass"
         loading="lazy"
@@ -98,11 +99,11 @@ const imageHeightClass = computed(() => props.compact ? 'h-48' : 'h-52')
     </NuxtLink>
 
     <p
-      v-if="product.brand"
+      v-if="lineBrand"
       class="mt-1 text-xs uppercase tracking-[0.14em]"
       :class="brandClass"
     >
-      {{ product.brand }}
+      {{ lineBrand }}
     </p>
 
     <p class="mt-3 min-h-[4.5rem] text-sm leading-6" :class="descriptionClass">
