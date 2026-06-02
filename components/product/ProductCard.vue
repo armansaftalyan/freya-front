@@ -94,19 +94,19 @@ const lineBrand = computed(() => props.product.line_brand || props.product.brand
       >
     </NuxtLink>
 
-    <NuxtLink :to="to" class="mt-4 min-h-[3.25rem]" :class="titleClass">
+    <NuxtLink :to="to" class="mt-4 line-clamp-3 min-h-[4.75rem]" :class="titleClass">
       {{ product.name }}
     </NuxtLink>
 
     <p
       v-if="lineBrand"
-      class="mt-1 text-xs uppercase tracking-[0.14em]"
+      class="mt-1 truncate text-xs uppercase tracking-[0.14em]"
       :class="brandClass"
     >
       {{ lineBrand }}
     </p>
 
-    <p class="mt-3 min-h-[4.5rem] text-sm leading-6" :class="descriptionClass">
+    <p class="mt-3 line-clamp-5 min-h-[7.5rem] text-sm leading-6" :class="descriptionClass">
       {{ product.description || t('productsPage.defaultDescription') }}
     </p>
 
