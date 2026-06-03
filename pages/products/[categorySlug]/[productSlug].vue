@@ -26,21 +26,34 @@ const { data, error } = await useAsyncData(() => `product-${brand.value}-${categ
     api.get<ApiListResponse<Product>>('/products', { brand: brand.value }, { skipErrorToast: true }),
   ])
 
-  const category = categoriesResponse.data.find(item => slugMatches(item, categorySlug.value) && item.is_active !== false) || null
+  const category = categoriesResponse.data.find(item => slugMatches(item, categorySlug.value) && item.is_active) || null
   if (!category) {
     throw createError({ statusCode: 404, statusMessage: 'Product category not found' })
   }
 
-  const product = productsResponse.data.find(item => item.category_id === category.id && slugMatches(item, productSlug.value) && item.is_active !== false) || null
+  const product = productsResponse.data.find(item => item.category_id === category.id && slugMatches(item, productSlug.value) && item.is_active) || null
   if (!product) {
     throw createError({ statusCode: 404, statusMessage: 'Product not found' })
   }
 
   const relatedProducts = productsResponse.data
-    .filter(item => item.category_id === category.id && item.id !== product.id && item.is_active !== false)
+    .filter(item => item.category_id === category.id && item.id !== product.id && item.is_active)
     .slice(0, 4)
 
-  return { category, product, relatedProducts }
+  const relatedProductIds = new Set(relatedProducts.map(item => item.id))
+  const suggestedProducts = relatedProducts.length < 4
+    ? productsResponse.data
+        .filter(item => item.category_id !== category.id && item.id !== product.id && !relatedProductIds.has(item.id) && item.is_active)
+        .map(item => ({
+          product: item,
+          rank: stableProductRank(product.id, item.id),
+        }))
+        .sort((left, right) => left.rank - right.rank)
+        .slice(0, 8)
+        .map(item => item.product)
+    : []
+
+  return { categories: categoriesResponse.data, category, product, relatedProducts, suggestedProducts }
 })
 
 if (error.value) {
@@ -54,6 +67,8 @@ if (error.value) {
 const category = computed(() => data.value?.category || null)
 const product = computed(() => data.value?.product || null)
 const relatedProducts = computed(() => data.value?.relatedProducts || [])
+const categoryById = computed(() => new Map((data.value?.categories || []).map(category => [category.id, category])))
+const suggestedProducts = computed(() => data.value?.suggestedProducts || [])
 const cartQuantity = computed(() => product.value ? cart.getItemQuantity(product.value.id) : 0)
 const selectedQuantity = computed(() => cartQuantity.value || Math.max(1, Number(quantity.value || 1)))
 const orderTotal = computed(() => (product.value?.price || 0) * selectedQuantity.value)
@@ -66,6 +81,7 @@ const localizedProductPaths = computed(() => Object.fromEntries(
   ]),
 ) as Partial<Record<SupportedLocale, string>>)
 const canonicalProductPath = computed(() => `${productsPath.value}/${localizedSlugFor(category.value, currentLocale.value)}/${localizedSlugFor(product.value, currentLocale.value)}`)
+const productDetailPath = (item: Product) => `${productsPath.value}/${localizedSlugFor(categoryById.value.get(item.category_id) || category.value, currentLocale.value)}/${localizedSlugFor(item, currentLocale.value)}`
 
 if (
   category.value
@@ -325,7 +341,26 @@ const buyNow = async () => {
           <NuxtLink
             v-for="item in relatedProducts"
             :key="item.id"
-            :to="localePath(`${productsPath}/${localizedSlugFor(category, currentLocale)}/${localizedSlugFor(item, currentLocale)}`)"
+            :to="localePath(productDetailPath(item))"
+            class="rounded-3xl p-4 transition hover:-translate-y-0.5"
+            :class="isTor
+              ? 'border border-white/10 bg-white/[0.03] shadow-[0_20px_50px_rgba(0,0,0,0.18)] hover:border-[#c58a3a]/40'
+              : 'border border-sand-200 bg-white shadow-soft hover:border-sand-300'"
+          >
+            <img :src="item.image_url || '/logo.png'" :alt="[item.line_brand || item.brand || salonName, item.name, item.volume_label].filter(Boolean).join(' ')" class="h-40 w-full rounded-2xl object-cover" loading="lazy" decoding="async">
+            <p class="mt-3 text-lg">{{ item.name }}</p>
+            <p class="mt-2 text-sm font-semibold" :class="isTor ? 'text-white' : 'text-sand-900'">{{ formatAmd(item.price) }}</p>
+          </NuxtLink>
+        </div>
+      </div>
+
+      <div v-if="suggestedProducts.length" class="space-y-4">
+        <h2 class="text-2xl">{{ t('productsPage.youMayLike') }}</h2>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <NuxtLink
+            v-for="item in suggestedProducts"
+            :key="`suggested-${item.id}`"
+            :to="localePath(productDetailPath(item))"
             class="rounded-3xl p-4 transition hover:-translate-y-0.5"
             :class="isTor
               ? 'border border-white/10 bg-white/[0.03] shadow-[0_20px_50px_rgba(0,0,0,0.18)] hover:border-[#c58a3a]/40'
@@ -340,3 +375,14 @@ const buyNow = async () => {
     </div>
   </section>
 </template>
+
+<script lang="ts">
+const stableProductRank = (seedProductId: number, productId: number): number => {
+  let value = Math.imul(seedProductId + 29, 2654435761) ^ Math.imul(productId + 43, 1597334677)
+  value ^= value >>> 16
+  value = Math.imul(value, 2246822507)
+  value ^= value >>> 13
+
+  return value >>> 0
+}
+</script>

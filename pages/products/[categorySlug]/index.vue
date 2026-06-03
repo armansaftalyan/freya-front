@@ -22,19 +22,28 @@ const { data, error } = await useAsyncData(() => `product-category-${brand.value
     api.get<ApiListResponse<Product>>('/products', { brand: brand.value }, { skipErrorToast: true }),
   ])
 
-  const category = categoriesResponse.data.find(item => slugMatches(item, categorySlug.value) && item.is_active !== false) || null
+  const category = categoriesResponse.data.find(item => slugMatches(item, categorySlug.value) && item.is_active) || null
 
   if (!category) {
     throw createError({ statusCode: 404, statusMessage: 'Product category not found' })
   }
 
-  const products = productsResponse.data.filter(item => item.category_id === category.id && item.is_active !== false)
+  const products = productsResponse.data.filter(item => item.category_id === category.id && item.is_active)
+  const suggestedProducts = productsResponse.data
+    .filter(item => item.category_id !== category.id && item.is_active)
+    .map(product => ({
+      product,
+      rank: stableProductRank(category.id, product.id),
+    }))
+    .sort((left, right) => left.rank - right.rank)
+    .slice(0, 8)
+    .map(item => item.product)
 
   if (products.length === 0) {
     throw createError({ statusCode: 404, statusMessage: 'Product category has no visible products' })
   }
 
-  return { category, products }
+  return { categories: categoriesResponse.data, category, products, suggestedProducts }
 })
 
 if (error.value) {
@@ -47,6 +56,8 @@ if (error.value) {
 
 const category = computed(() => data.value?.category || null)
 const products = computed(() => data.value?.products || [])
+const categoryById = computed(() => new Map((data.value?.categories || []).map(category => [category.id, category])))
+const suggestedProducts = computed(() => products.value.length < 6 ? (data.value?.suggestedProducts || []) : [])
 const currentLocale = computed(() => locale.value as SupportedLocale)
 const localizedCategoryPaths = computed(() => Object.fromEntries(
   supportedLocales.map((targetLocale) => [
@@ -55,7 +66,7 @@ const localizedCategoryPaths = computed(() => Object.fromEntries(
   ]),
 ) as Partial<Record<SupportedLocale, string>>)
 const canonicalCategoryPath = computed(() => `${productsPath.value}/${localizedSlugFor(category.value, currentLocale.value)}`)
-const productPath = (product: Product) => localizedPath(`${productsPath.value}/${localizedSlugFor(category.value, currentLocale.value)}/${localizedSlugFor(product, currentLocale.value)}`)
+const productPath = (product: Product) => localizedPath(`${productsPath.value}/${localizedSlugFor(categoryById.value.get(product.category_id) || category.value, currentLocale.value)}/${localizedSlugFor(product, currentLocale.value)}`)
 const productQuantity = (productId: number) => cart.getItemQuantity(productId)
 const addToCart = (product: Product) => cart.addItem(product, 1)
 const decreaseFromCart = (productId: number) => cart.decreaseItem(productId, 1)
@@ -163,6 +174,44 @@ useStructuredData(() => {
           @decrease="decreaseFromCart"
         />
       </div>
+
+      <div
+        v-if="suggestedProducts.length"
+        class="border-t pt-8"
+        :class="isTor ? 'border-white/10' : 'border-sand-200'"
+      >
+        <h2
+          class="text-2xl"
+          :class="isTor ? 'font-black uppercase tracking-[0.05em] text-white' : 'leading-tight text-sand-900'"
+        >
+          {{ t('productsPage.youMayLike') }}
+        </h2>
+
+        <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ProductCard
+            v-for="product in suggestedProducts"
+            :key="`suggested-${product.id}`"
+            :product="product"
+            :to="productPath(product)"
+            :quantity="productQuantity(product.id)"
+            :theme="isTor ? 'tor' : 'default'"
+            compact
+            @add="addToCart"
+            @decrease="decreaseFromCart"
+          />
+        </div>
+      </div>
     </div>
   </section>
 </template>
+
+<script lang="ts">
+const stableProductRank = (categoryId: number, productId: number): number => {
+  let value = Math.imul(categoryId + 17, 2654435761) ^ Math.imul(productId + 31, 1597334677)
+  value ^= value >>> 16
+  value = Math.imul(value, 2246822507)
+  value ^= value >>> 13
+
+  return value >>> 0
+}
+</script>

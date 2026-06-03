@@ -39,22 +39,11 @@ export const useProductsCatalogPage = async (options?: {
   const categories = computed(() => (data.value?.categories || []).filter(category => category.brand === brand.value))
   const products = computed(() => (data.value?.products || []).filter(product => product.brand === brand.value))
   const categoryById = computed(() => new Map(categories.value.map(category => [category.id, category])))
-  const suggestedProductsForCategory = (categoryId: number) => products.value
-    .filter(product => product.category_id !== categoryId)
-    .map(product => ({
-      product,
-      rank: stableProductRank(categoryId, product.id),
-    }))
-    .sort((left, right) => left.rank - right.rank)
-    .slice(0, 8)
-    .map(item => item.product)
-
   const groupedProducts = computed(() =>
     categories.value
       .map(category => ({
         ...category,
         products: products.value.filter(product => product.category_id === category.id),
-        suggestedProducts: suggestedProductsForCategory(category.id),
       }))
       .filter(category => category.products.length > 0),
   )
@@ -104,13 +93,4 @@ export const useProductsCatalogPage = async (options?: {
     groupedProducts,
     structuredData,
   }
-}
-
-const stableProductRank = (categoryId: number, productId: number): number => {
-  let value = Math.imul(categoryId + 17, 2654435761) ^ Math.imul(productId + 31, 1597334677)
-  value ^= value >>> 16
-  value = Math.imul(value, 2246822507)
-  value ^= value >>> 13
-
-  return value >>> 0
 }
