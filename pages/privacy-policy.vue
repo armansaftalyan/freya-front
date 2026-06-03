@@ -93,8 +93,9 @@ useStructuredData(() => ({
         <p class="text-sm leading-7" :class="isTor ? 'text-stone-300' : 'text-sand-700'">{{ content.intro }}</p>
         <div class="mt-5 space-y-2 text-sm leading-7" :class="isTor ? 'text-stone-400' : 'text-sand-700'">
           <p>Phone: +374 44 733773</p>
+          <p>WhatsApp: https://wa.me/37444733773</p>
           <p>Email: support@freyabeauty.am</p>
-          <p>Telegram: https://t.me/freyabeauty</p>
+          <p>Telegram: https://t.me/freyabeautyam</p>
         </div>
       </div>
 

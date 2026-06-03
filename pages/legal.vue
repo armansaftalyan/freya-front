@@ -61,8 +61,9 @@ const content = computed(() => {
           title: '6. Контакты',
           body: [
             'Телефон: +374 44 733773',
+            'WhatsApp: https://wa.me/37444733773',
             'Email: support@freyabeauty.am',
-            'Telegram: https://t.me/freyabeauty',
+            'Telegram: https://t.me/freyabeautyam',
           ],
         },
       ],
@@ -117,8 +118,9 @@ const content = computed(() => {
           title: '6. Contacts',
           body: [
             'Phone: +374 44 733773',
+            'WhatsApp: https://wa.me/37444733773',
             'Email: support@freyabeauty.am',
-            'Telegram: https://t.me/freyabeauty',
+            'Telegram: https://t.me/freyabeautyam',
           ],
         },
       ],
@@ -172,8 +174,9 @@ const content = computed(() => {
         title: '6. Կոնտակտային տվյալներ',
         body: [
           'Հեռախոս՝ +374 44 733773',
+          'WhatsApp՝ https://wa.me/37444733773',
           'Email՝ support@freyabeauty.am',
-          'Telegram՝ https://t.me/freyabeauty',
+          'Telegram՝ https://t.me/freyabeautyam',
         ],
       },
     ],

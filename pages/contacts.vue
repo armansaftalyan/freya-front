@@ -5,7 +5,7 @@ import FaqSection from '~/components/sections/FaqSection.vue'
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
 const route = useRoute()
-const { siteUrl, defaultImageUrl, telephone, address, openingHoursSpecification, sameAs } = useSiteMeta()
+const { siteUrl, defaultImageUrl, telephone, telephoneHref, whatsappUrl, telegramUrl, address, openingHoursSpecification, sameAs } = useSiteMeta()
 const { brand, isTor, bookingPath } = useBrandContext()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const brandOgImage = computed(() => brand.value === 'tor' ? `${siteUrl.value}/tor-logo.jpg` : defaultImageUrl.value)
@@ -184,7 +184,13 @@ useStructuredData(() => ({
           <div class="grid gap-6 lg:grid-cols-[1fr,auto] lg:items-start">
             <div class="min-w-0">
               <p class="mt-1 break-words text-sm leading-6" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ fixedAddress }}</p>
-              <p class="mt-1 break-all text-sm leading-6" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ fixedPhone }}</p>
+              <p class="mt-1 break-all text-sm leading-6" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">
+                <a :href="telephoneHref" :class="isTor ? 'transition hover:text-[#d79a49]' : 'hover:text-sand-700'">{{ fixedPhone }}</a>
+              </p>
+              <div class="mt-3 flex flex-wrap gap-3 text-sm">
+                <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" :class="isTor ? 'text-stone-200 transition hover:text-[#d79a49]' : 'text-sand-800 hover:text-sand-600'">WhatsApp</a>
+                <a :href="telegramUrl" target="_blank" rel="noopener noreferrer" :class="isTor ? 'text-stone-200 transition hover:text-[#d79a49]' : 'text-sand-800 hover:text-sand-600'">Telegram</a>
+              </div>
               <p class="mt-4 text-xs uppercase tracking-[0.15em]" :class="isTor ? 'text-[#c58a3a]' : 'text-sand-600'">{{ copy.scheduleLabel }}</p>
               <p class="mt-2 rounded-xl p-3 text-sm" :class="isTor ? 'bg-white/[0.06] text-stone-200' : 'bg-sand-50 text-sand-700'">{{ fixedSchedule }}</p>
             </div>

@@ -3,6 +3,7 @@ import Card from "~/components/base/Card.vue";
 
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
+const { telephoneHref, whatsappUrl, telegramUrl } = useSiteMeta()
 const fixedAddress = computed(() => {
   if (locale.value === 'ru') return 'Азатутян 21, Ереван'
   if (locale.value === 'en') return '21 Azatutyan, Yerevan'
@@ -36,7 +37,13 @@ const fixedSchedule = computed(() => {
       <div class="grid gap-4">
         <Card class="fade-in">
           <p class="mt-2 break-words text-sm text-[var(--muted)]">{{ fixedAddress }}</p>
-          <p class="mt-2 break-all text-sm text-[var(--muted)]">{{ fixedPhone }}</p>
+          <p class="mt-2 break-all text-sm text-[var(--muted)]">
+            <a :href="telephoneHref" class="hover:text-sand-700">{{ fixedPhone }}</a>
+          </p>
+          <div class="mt-3 flex flex-wrap gap-3 text-sm">
+            <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" class="text-sand-800 hover:text-sand-600">WhatsApp</a>
+            <a :href="telegramUrl" target="_blank" rel="noopener noreferrer" class="text-sand-800 hover:text-sand-600">Telegram</a>
+          </div>
           <p class="mt-2 text-sm text-[var(--muted)]">{{ fixedSchedule }}</p>
           <NuxtLink :to="localePath('/booking')" class="mt-5 inline-block">
             <BaseButton size="sm">{{ t('nav.bookNow') }}</BaseButton>

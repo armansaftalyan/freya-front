@@ -13,7 +13,7 @@ const isMobileMenuOpen = ref(false)
 const isMoreMenuOpen = ref(false)
 const moreMenuRef = ref<HTMLElement | null>(null)
 const { localePath } = useLocalizedPath()
-const { siteUrl, telephone } = useSiteMeta()
+const { siteUrl, telephone, telephoneHref, whatsappUrl, telegramUrl, sameAs } = useSiteMeta()
 const { rootPath, mastersPath, contactsPath, legalPath, privacyPolicyPath, giftCardsPath, authLoginPath, authProfilePath, blogPath } = useBrandContext()
 const { canonicalUrl, alternates } = useLocalizedSeo(() => route.path)
 const torLogoUrl = computed(() => `${siteUrl.value}/tor-logo.jpg`)
@@ -174,7 +174,7 @@ useHead(() => ({
             url: `${siteUrl.value}/tor`,
             image: torLogoUrl.value,
             logo: torLogoUrl.value,
-            sameAs: ['https://t.me/freyabeauty'],
+            sameAs,
           },
           {
             '@type': 'WebSite',
@@ -356,8 +356,12 @@ useHead(() => ({
           <h3 class="text-base font-semibold">Tor Barbershop</h3>
           <p class="mt-1">21 Azatutyan, Yerevan, Armenia</p>
           <p class="mt-1">
-            <a href="tel:+37444733773" class="transition hover:text-[#d79a49]">{{ telephone }}</a>
+            <a :href="telephoneHref" class="transition hover:text-[#d79a49]">{{ telephone }}</a>
           </p>
+          <div class="mt-2 flex flex-wrap gap-3">
+            <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" class="transition hover:text-[#d79a49]">WhatsApp</a>
+            <a :href="telegramUrl" target="_blank" rel="noopener noreferrer" class="transition hover:text-[#d79a49]">Telegram</a>
+          </div>
           <p class="mt-1">Daily: 10:00-19:00</p>
         </div>
 

@@ -10,7 +10,7 @@ const auth = useAuthStore()
 const { t, locale, locales } = useLocale()
 const route = useRoute()
 const { brand, authLoginPath, authProfilePath, contactsPath, legalPath, privacyPolicyPath, blogPath, rootPath } = useBrandContext()
-const { salonName, torSalonName, telephone, email, address, sameAs, siteUrl, logoUrl, defaultImageUrl } = useSiteMeta()
+const { salonName, torSalonName, telephone, telephoneHref, whatsappUrl, telegramUrl, email, address, sameAs, siteUrl, logoUrl, defaultImageUrl } = useSiteMeta()
 const isMobileMenuOpen = ref(false)
 const isMoreMenuOpen = ref(false)
 const moreMenuRef = ref<HTMLElement | null>(null)
@@ -351,8 +351,12 @@ useHead(() => ({
           <h3 class="text-base font-semibold">{{ brandName }}</h3>
           <p class="mt-1">21 Azatutyan, Yerevan, Armenia</p>
           <p class="mt-1">
-            <a href="tel:+37444733773" class="hover:text-sand-700">+374 44 733773</a>
+            <a :href="telephoneHref" class="hover:text-sand-700">{{ telephone }}</a>
           </p>
+          <div class="mt-2 flex flex-wrap gap-3">
+            <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" class="hover:text-sand-700">WhatsApp</a>
+            <a :href="telegramUrl" target="_blank" rel="noopener noreferrer" class="hover:text-sand-700">Telegram</a>
+          </div>
           <p class="mt-1">Daily: 10:00-19:00</p>
         </div>
 

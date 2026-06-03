@@ -9,6 +9,9 @@ export const useSiteMeta = () => {
   const salonName = 'Freya Beauty Salon'
   const torSalonName = 'Tor Barbershop'
   const telephone = '+374 44 733773'
+  const telephoneHref = 'tel:+37444733773'
+  const whatsappUrl = 'https://wa.me/37444733773'
+  const telegramUrl = 'https://t.me/freyabeautyam'
   const email = 'support@freyabeauty.am'
   const address = {
     '@type': 'PostalAddress',
@@ -34,7 +37,8 @@ export const useSiteMeta = () => {
   ]
 
   const sameAs = [
-    'https://t.me/freyabeauty',
+    telegramUrl,
+    whatsappUrl,
     'https://www.instagram.com/bellahairstayl/',
   ]
 
@@ -42,6 +46,9 @@ export const useSiteMeta = () => {
     salonName,
     torSalonName,
     telephone,
+    telephoneHref,
+    whatsappUrl,
+    telegramUrl,
     email,
     address,
     openingHoursSpecification,
