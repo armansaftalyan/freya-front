@@ -17,6 +17,14 @@ const moreMenuRef = ref<HTMLElement | null>(null)
 const { localePath } = useLocalizedPath()
 const localizedPath = computed(() => withLocalePath(stripLocalePrefix(route.path), normalizeLocale(locale.value)))
 const canonicalUrl = computed(() => `${siteUrl.value}${localizedPath.value}`)
+const markdownAlternatePath = computed(() => {
+  const normalizedPath = stripLocalePrefix(route.path)
+  if (!/^\/(?:services|products|masters|blog)(?:\/.*)?$/.test(normalizedPath) && normalizedPath !== '/') {
+    return null
+  }
+
+  return `/md${localizedPath.value}`
+})
 const brandName = computed(() => brand.value === 'tor' ? torSalonName : salonName)
 const showMobileBottomNav = computed(() => {
   const normalizedPath = stripLocalePrefix(route.path)
@@ -120,6 +128,9 @@ useHead(() => ({
     { rel: 'canonical', href: canonicalUrl.value },
     ...alternateLinks.value,
     { rel: 'alternate', hreflang: 'x-default', href: `${siteUrl.value}${withLocalePath(stripLocalePrefix(route.path), defaultLocale)}` },
+    ...(markdownAlternatePath.value
+      ? [{ key: 'markdown-alternate', rel: 'alternate', type: 'text/markdown', href: markdownAlternatePath.value }]
+      : []),
   ],
   meta: [
     { property: 'og:url', content: canonicalUrl.value },

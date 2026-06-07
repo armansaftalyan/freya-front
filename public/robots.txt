@@ -6,6 +6,8 @@ Disallow: /api/
 Disallow: /*?*utm_
 
 Sitemap: https://freyabeauty.am/sitemap.xml
+# AI-readable site index
+# https://freyabeauty.am/llms.txt
 # Product feeds
 # https://freyabeauty.am/yandex-market.yml
 # https://freyabeauty.am/google-merchant.xml

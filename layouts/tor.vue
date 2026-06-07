@@ -16,6 +16,14 @@ const { localePath } = useLocalizedPath()
 const { siteUrl, telephone, telephoneHref, whatsappUrl, telegramUrl, sameAs } = useSiteMeta()
 const { rootPath, mastersPath, contactsPath, legalPath, privacyPolicyPath, giftCardsPath, authLoginPath, authProfilePath, blogPath } = useBrandContext()
 const { canonicalUrl, alternates } = useLocalizedSeo(() => route.path)
+const markdownAlternatePath = computed(() => {
+  const normalizedPath = stripLocalePrefix(route.path)
+  if (!/^\/tor(?:\/(?:services|products|masters|blog)(?:\/.*)?)?$/.test(normalizedPath)) {
+    return null
+  }
+
+  return `/md${route.path.replace(/\/$/, '')}`
+})
 const torLogoUrl = computed(() => `${siteUrl.value}/tor-logo.jpg`)
 const showMobileBottomNav = computed(() => {
   const normalizedPath = stripLocalePrefix(route.path)
@@ -145,6 +153,9 @@ useHead(() => ({
     { rel: 'canonical', href: canonicalUrl.value },
     ...alternates.value.map((item) => ({ rel: 'alternate', hreflang: item.locale, href: item.href })),
     { rel: 'alternate', hreflang: 'x-default', href: alternates.value.find((item) => item.locale === 'hy')?.href || canonicalUrl.value },
+    ...(markdownAlternatePath.value
+      ? [{ key: 'markdown-alternate', rel: 'alternate', type: 'text/markdown', href: markdownAlternatePath.value }]
+      : []),
     { key: 'app-manifest', rel: 'manifest', href: '/tor.webmanifest?v=1' },
     { key: 'app-icon-png', rel: 'icon', type: 'image/png', href: '/tor-favicon-96x96.png?v=1', sizes: '96x96' },
     { key: 'app-icon-svg', rel: 'icon', type: 'image/png', href: '/tor-favicon-96x96.png?v=1', sizes: '96x96' },
