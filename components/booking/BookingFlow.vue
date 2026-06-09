@@ -1213,15 +1213,28 @@ onBeforeUnmount(() => {
                 :key="`${activeLine.id}-${category.id}`"
                 :data-category-id="category.id"
                 class="overflow-hidden rounded-[1.25rem] border"
-                :class="isTor ? 'border-white/10 bg-white/[0.03]' : 'border-sand-200 bg-white'"
+                :class="activeLine.categoryId === category.id
+                  ? (isTor ? 'border-[#d79a49]/70 bg-white/[0.03]' : 'border-sand-500 bg-white')
+                  : (isTor ? 'border-white/10 bg-white/[0.03]' : 'border-sand-200 bg-white')"
               >
                 <button
                   type="button"
-                  class="flex w-full items-center justify-between gap-3 px-4 py-4 text-left font-semibold"
+                  class="flex w-full items-center justify-between gap-3 px-4 py-4 text-left font-semibold transition"
+                  :class="activeLine.categoryId === category.id
+                    ? (isTor ? 'bg-[#d79a49]/12 text-[#e2ad67]' : 'bg-sand-100 text-sand-950')
+                    : (isTor ? 'text-stone-100 hover:bg-white/[0.04]' : 'text-sand-900 hover:bg-sand-50')"
                   @click="setLineCategory(activeLine, category.id)"
                 >
                   <span>{{ category.name }}</span>
-                  <span class="text-xl">{{ activeLine.categoryId === category.id ? '−' : '+' }}</span>
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    class="h-5 w-5 shrink-0 transition-transform duration-200"
+                    :class="activeLine.categoryId === category.id ? 'rotate-90' : ''"
+                    aria-hidden="true"
+                  >
+                    <path d="M7 4l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
                 </button>
                 <div v-if="activeLine.categoryId === category.id" class="space-y-2 border-t p-3" :class="isTor ? 'border-white/10' : 'border-sand-200'">
                   <button
@@ -1421,15 +1434,28 @@ onBeforeUnmount(() => {
                     :key="`${line.id}-${category.id}`"
                     :data-category-id="category.id"
                     class="overflow-hidden rounded-2xl border"
-                    :class="isTor ? 'border-white/10 bg-white/[0.03]' : 'border-sand-200 bg-white'"
+                    :class="line.categoryId === category.id
+                      ? (isTor ? 'border-[#d79a49]/70 bg-white/[0.03]' : 'border-sand-500 bg-white')
+                      : (isTor ? 'border-white/10 bg-white/[0.03]' : 'border-sand-200 bg-white')"
                   >
                     <button
                       type="button"
-                      class="flex w-full items-center justify-between gap-3 px-4 py-4 text-left font-semibold"
+                      class="flex w-full items-center justify-between gap-3 px-4 py-4 text-left font-semibold transition"
+                      :class="line.categoryId === category.id
+                        ? (isTor ? 'bg-[#d79a49]/12 text-[#e2ad67]' : 'bg-sand-100 text-sand-950')
+                        : (isTor ? 'text-stone-100 hover:bg-white/[0.04]' : 'text-sand-900 hover:bg-sand-50')"
                       @click="setLineCategory(line, category.id)"
                     >
                       <span>{{ category.name }}</span>
-                      <span class="text-xl">{{ line.categoryId === category.id ? '−' : '+' }}</span>
+                      <svg
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        class="h-5 w-5 shrink-0 transition-transform duration-200"
+                        :class="line.categoryId === category.id ? 'rotate-90' : ''"
+                        aria-hidden="true"
+                      >
+                        <path d="M7 4l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
                     </button>
                     <div v-if="line.categoryId === category.id" class="grid gap-2 border-t p-3" :class="isTor ? 'border-white/10' : 'border-sand-200'">
                       <button
