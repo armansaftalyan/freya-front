@@ -175,7 +175,7 @@ useStructuredData(() => ({
           <p class="mt-3 text-xs uppercase tracking-[0.14em]" :class="isTor ? 'text-[#c58a3a]' : 'text-sand-700'">{{ t('mastersPage.bookWithMaster') }}</p>
           <div class="mt-4 flex flex-wrap gap-2">
             <NuxtLink :to="localePath(`${mastersPath}/${master.slug || master.id}`)"><BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('mastersPage.viewProfile') }}</BaseButton></NuxtLink>
-            <NuxtLink :to="localePath(bookingPath)" class="inline-block"><BaseButton :theme="isTor ? 'tor' : 'default'">{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
+            <NuxtLink :to="localePath({ path: bookingPath, query: { master_id: String(master.id) } })" class="inline-block"><BaseButton :theme="isTor ? 'tor' : 'default'">{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
           </div>
         </Card>
       </div>

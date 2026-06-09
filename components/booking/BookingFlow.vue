@@ -9,7 +9,7 @@ import type { Slot } from '~/types/slot'
 import type { User } from '~/types/user'
 import Card from '~/components/base/Card.vue'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
-import BookingBreadcrumbs from '~/components/booking/BookingBreadcrumbs.vue'
+import BookingCalendar from '~/components/booking/BookingCalendar.vue'
 import SlotPicker from '~/components/booking/SlotPicker.vue'
 import FaqSection from '~/components/sections/FaqSection.vue'
 
@@ -25,6 +25,9 @@ interface BookingLine {
   mastersResolved: boolean
   slots: Slot[]
   slotsLoading: boolean
+  availableDates: string[]
+  availableDatesLoading: boolean
+  availableDatesRange: { from: string, to: string } | null
 }
 
 const { t, locale } = useLocale()
@@ -39,7 +42,6 @@ const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const { faqCopy } = await usePageFaqContent(isTor.value ? 'tor' : 'freya', 'booking')
 const hasQueryParams = computed(() => Object.keys(route.query).length > 0)
 
-const bookingBrandName = computed(() => (isTor.value ? 'Tor' : 'Freya'))
 const bookingSeoCopy = computed(() => {
   if (isTor.value) {
     if (locale.value === 'ru') {
@@ -128,17 +130,14 @@ const successCount = ref(0)
 const createdAppointments = ref<Appointment[]>([])
 const currentMasterProfile = ref<Master | null>(null)
 const mobileStepCardRef = ref<HTMLElement | null>(null)
-const mobileStepsStickyRef = ref<HTMLElement | null>(null)
-const mobileStepsStickyHeight = ref(0)
-const mobileStepsStickyTopOffset = ref(0)
+const mobileCategoriesRef = ref<HTMLElement | null>(null)
+const desktopCategoriesRefs = new Map<number, HTMLElement>()
 const clientLookupLoading = ref(false)
 const matchedClient = ref<User | null>(null)
 let clientLookupTimer: ReturnType<typeof setTimeout> | null = null
-let mobileStepsStickyObserver: ResizeObserver | null = null
 
 const comment = ref('')
 const guestFirstName = ref('')
-const guestLastName = ref('')
 const guestPhone = ref('')
 const source = ref<'site' | 'phone' | 'instagram' | 'yandex_maps'>('site')
 const bookingForClient = ref(false)
@@ -146,6 +145,8 @@ const mastersDebounceTimers = new Map<number, ReturnType<typeof setTimeout>>()
 const slotsDebounceTimers = new Map<number, ReturnType<typeof setTimeout>>()
 const mastersAbortControllers = new Map<number, AbortController>()
 const slotsAbortControllers = new Map<number, AbortController>()
+const availableDatesAbortControllers = new Map<number, AbortController>()
+let fetchAvailableDatesForLine: (line: BookingLine, range: { from: string, to: string }) => Promise<void>
 
 const minBookingDate = computed(() => todayYerevanDate())
 const defaultBookingDate = () => {
@@ -210,6 +211,12 @@ const parsePositiveInt = (value: unknown): number | null => {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null
 }
 
+const addDaysToDate = (value: string, days: number): string => {
+  const [year, month, day] = value.split('-').map(Number)
+  const date = new Date(Date.UTC(year, month - 1, day + days))
+  return date.toISOString().slice(0, 10)
+}
+
 const isAbortError = (error: any): boolean => {
   return error?.name === 'AbortError' || error?.message?.toLowerCase?.().includes('aborted')
 }
@@ -245,14 +252,9 @@ const lineActiveBookingGroup = (line: BookingLine): string | null => {
   return lineBookingGroup(line)
 }
 
-const defaultCategoryId = computed<number | null>(() => {
-  if (!visibleCategories.value.length) return null
-  return visibleCategories.value[0]?.id ?? null
-})
-
 const createEmptyLine = (preset: Partial<Pick<BookingLine, 'categoryId' | 'masterId'>> & { serviceId?: number } = {}): BookingLine => ({
   id: nextLineId.value++,
-  categoryId: preset.categoryId ?? defaultCategoryId.value,
+  categoryId: preset.categoryId ?? null,
   serviceIds: preset.serviceId ? [preset.serviceId] : [],
   masterId: preset.masterId ?? currentMasterProfile.value?.id ?? null,
   date: defaultBookingDate(),
@@ -262,6 +264,9 @@ const createEmptyLine = (preset: Partial<Pick<BookingLine, 'categoryId' | 'maste
   mastersResolved: false,
   slots: [],
   slotsLoading: false,
+  availableDates: [],
+  availableDatesLoading: false,
+  availableDatesRange: null,
 })
 
 const ensureAtLeastOneLine = () => {
@@ -296,30 +301,36 @@ const selectedMasterServiceIds = (line: BookingLine): Set<number> | null => {
   return new Set(master.services.map(item => item.id))
 }
 
+const categoriesForLine = (line: BookingLine) => {
+  const masterServiceIds = selectedMasterServiceIds(line)
+  if (!masterServiceIds) return visibleCategories.value
+
+  const categoryIds = new Set(
+    services.value
+      .filter(service => masterServiceIds.has(service.id))
+      .map(service => service.category_id),
+  )
+
+  return visibleCategories.value.filter(category => categoryIds.has(category.id))
+}
+
 const scrollMobileStepCardIntoView = async () => {
   if (!import.meta.client) return
 
   await nextTick()
 
   const targetTop = mobileStepCardRef.value
-    ? mobileStepCardRef.value.getBoundingClientRect().top + window.scrollY - mobileStepsStickyHeight.value - mobileStepsStickyTopOffset.value - 12
+    ? mobileStepCardRef.value.getBoundingClientRect().top + window.scrollY - 76
     : 0
 
   window.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' })
-}
-
-const updateMobileStepsStickyHeight = () => {
-  if (!import.meta.client) return
-  mobileStepsStickyHeight.value = mobileStepsStickyRef.value?.offsetHeight || 0
-  if (mobileStepsStickyRef.value) {
-    mobileStepsStickyTopOffset.value = Number.parseFloat(window.getComputedStyle(mobileStepsStickyRef.value).top || '0') || 0
-  }
 }
 
 const mobileStep = ref(1)
 const activeLineIndex = ref(0)
 
 const activeLine = computed(() => lines.value[activeLineIndex.value] || null)
+const mobileStepChanging = ref(false)
 
 const lineHasCategoryAndServices = (line: BookingLine | null) => Boolean(line?.categoryId && line.serviceIds.length)
 const lineHasDateAndSlot = (line: BookingLine | null) => Boolean(line?.date && line?.slot)
@@ -341,7 +352,7 @@ const setMobileStep = (step: number) => {
   mobileStep.value = step
 }
 
-const goToNextMobileStep = () => {
+const goToNextMobileStep = async () => {
   if (!activeLine.value) return
 
   if (mobileStep.value === 1 && !lineHasCategoryAndServices(activeLine.value)) {
@@ -354,9 +365,27 @@ const goToNextMobileStep = () => {
     return
   }
 
-  mobileStep.value = mobileStep.value === 1 && activeLine.value.masterId
-    ? 3
-    : Math.min(4, mobileStep.value + 1)
+  if (mobileStep.value === 2) {
+    mobileStepChanging.value = true
+    try {
+      const from = minBookingDate.value
+      await fetchAvailableDatesForLine(activeLine.value, {
+        from,
+        to: addDaysToDate(from, 41),
+      })
+
+      const firstAvailableDate = activeLine.value.availableDates[0]
+      if (firstAvailableDate) {
+        activeLine.value.date = firstAvailableDate
+        await fetchSlotsForLine(activeLine.value, true)
+      }
+    }
+    finally {
+      mobileStepChanging.value = false
+    }
+  }
+
+  mobileStep.value = Math.min(4, mobileStep.value + 1)
   void scrollMobileStepCardIntoView()
 }
 
@@ -437,16 +466,16 @@ const selectMasterForLine = async (line: BookingLine, masterId: number | null) =
   }
 
   fetchSlotsForLine(line)
+  if (line.availableDatesRange) {
+    void fetchAvailableDatesForLine(line, line.availableDatesRange)
+  }
 }
 
 const servicesForLine = (line: BookingLine) => {
-  const masterServiceIds = selectedMasterServiceIds(line)
-
   if (!line.categoryId) return []
   return services.value.filter((item) => {
     if (item.category_id !== line.categoryId) return false
     if (isRestrictedToMasterServices.value && !allowedMasterServiceIds.value.has(item.id)) return false
-    if (masterServiceIds && !masterServiceIds.has(item.id)) return false
     return true
   })
 }
@@ -537,16 +566,48 @@ useStructuredData(() => ({
 
 const setLineCategory = async (line: BookingLine, categoryId: number) => {
   if (!visibleCategories.value.some(category => category.id === categoryId)) return
-  line.categoryId = categoryId
-
-  // If no services are selected yet, category switch invalidates downstream selections.
-  if (!line.serviceIds.length) {
+  if (line.categoryId === categoryId) {
+    line.categoryId = null
     line.serviceIds = []
-    line.masterId = line.masterId ?? currentMasterProfile.value?.id ?? null
     line.slot = null
-    line.masters = []
-    line.mastersResolved = false
     line.slots = []
+    line.availableDates = []
+    return
+  }
+
+  line.categoryId = categoryId
+  line.serviceIds = []
+  line.slot = null
+  line.slots = []
+  line.availableDates = []
+
+  if (line.id === activeLine.value?.id && mobileCategoriesRef.value) {
+    await nextTick()
+    const categoryElement = mobileCategoriesRef.value.querySelector<HTMLElement>(`[data-category-id="${categoryId}"]`)
+    if (categoryElement) {
+      const containerTop = mobileCategoriesRef.value.getBoundingClientRect().top
+      const categoryTop = categoryElement.getBoundingClientRect().top
+      mobileCategoriesRef.value.scrollTo({
+        top: Math.max(0, mobileCategoriesRef.value.scrollTop + categoryTop - containerTop - 150),
+        behavior: 'smooth',
+      })
+    }
+  }
+
+  const desktopCategories = desktopCategoriesRefs.get(line.id)
+  if (desktopCategories) {
+    await nextTick()
+    desktopCategories.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
+
+const setDesktopCategoriesRef = (lineId: number, element: unknown) => {
+  const htmlElement = element instanceof HTMLElement ? element : null
+  if (htmlElement) {
+    desktopCategoriesRefs.set(lineId, htmlElement)
+  }
+  else {
+    desktopCategoriesRefs.delete(lineId)
   }
 }
 
@@ -565,34 +626,31 @@ const clearLineNetworkState = (lineId: number) => {
 
   mastersAbortControllers.get(lineId)?.abort()
   slotsAbortControllers.get(lineId)?.abort()
+  availableDatesAbortControllers.get(lineId)?.abort()
   mastersAbortControllers.delete(lineId)
   slotsAbortControllers.delete(lineId)
+  availableDatesAbortControllers.delete(lineId)
 }
 
 const refreshLineAfterServicesChanged = async (line: BookingLine) => {
   line.slot = null
   line.slots = []
+  line.availableDates = []
 
-  if (!line.masterId) {
-    fetchMastersForLine(line)
-    return
-  }
-
-  await hydrateMasterForLine(line, line.masterId)
+  await fetchMastersForLineNow(line)
   fetchSlotsForLine(line)
+  if (line.availableDatesRange) {
+    void fetchAvailableDatesForLine(line, line.availableDatesRange)
+  }
 }
 
 const toggleServiceForLine = (line: BookingLine, service: Service) => {
   if (isServiceDisabledForLine(line, service)) return
-  const hadServices = line.serviceIds.length > 0
-  line.serviceIds = line.serviceIds.includes(service.id)
+  const removingService = line.serviceIds.includes(service.id)
+
+  line.serviceIds = removingService
     ? line.serviceIds.filter(id => id !== service.id)
     : [...line.serviceIds, service.id]
-
-  if (line.id === activeLine.value?.id && mobileStep.value === 1 && line.masterId && !hadServices && line.serviceIds.length) {
-    mobileStep.value = 3
-    void scrollMobileStepCardIntoView()
-  }
 
   void refreshLineAfterServicesChanged(line)
 }
@@ -647,8 +705,8 @@ const fetchMastersForLineNow = async (line: BookingLine) => {
   finally {
     if (mastersAbortControllers.get(line.id) === abortController) {
       mastersAbortControllers.delete(line.id)
+      line.mastersLoading = false
     }
-    line.mastersLoading = false
   }
 }
 
@@ -709,7 +767,7 @@ const fetchSlotsForLineNow = async (line: BookingLine) => {
         start_at: String(item?.start_at ?? item?.startAt ?? ''),
         end_at: String(item?.end_at ?? item?.endAt ?? ''),
       }))
-      .filter((item: Slot) => Boolean(item.start_at))
+      .filter((item: Slot) => Boolean(item.start_at) && new Date(item.start_at).getTime() > Date.now())
   }
   catch (error: any) {
     if (isAbortError(error)) return
@@ -739,6 +797,45 @@ const fetchSlotsForLine = (line: BookingLine, immediate = false) => {
     fetchSlotsForLineNow(line)
   }, 220)
   slotsDebounceTimers.set(line.id, timer)
+}
+
+fetchAvailableDatesForLine = async (line: BookingLine, range: { from: string, to: string }) => {
+  line.availableDatesRange = range
+  line.availableDates = []
+  if (!line.serviceIds.length) return
+
+  availableDatesAbortControllers.get(line.id)?.abort()
+  const abortController = new AbortController()
+  availableDatesAbortControllers.set(line.id, abortController)
+  line.availableDatesLoading = true
+
+  try {
+    const response = await api.post<ApiItemResponse<string[]>>('/slots/available-dates', {
+      service_ids: line.serviceIds,
+      master_id: line.masterId ?? undefined,
+      from: range.from < minBookingDate.value ? minBookingDate.value : range.from,
+      to: range.to,
+    }, { signal: abortController.signal, skipErrorToast: true })
+
+    line.availableDates = Array.isArray(response?.data) ? response.data : []
+  }
+  catch (error: any) {
+    if (!isAbortError(error)) {
+      toast.push({ type: 'error', title: t('common.requestFailed'), description: t('common.unexpectedError') })
+    }
+  }
+  finally {
+    if (availableDatesAbortControllers.get(line.id) === abortController) {
+      availableDatesAbortControllers.delete(line.id)
+      line.availableDatesLoading = false
+    }
+  }
+}
+
+const selectCalendarDate = (line: BookingLine, date: string) => {
+  line.date = date
+  line.slot = null
+  fetchSlotsForLine(line, true)
 }
 
 const removeLine = (lineId: number) => {
@@ -776,7 +873,6 @@ const validate = () => {
 
   if (comment.value && comment.value.length > 2000) return t('booking.errors.comment')
   if (shouldUseGuestContact.value && !guestFirstName.value.trim()) return t('booking.errors.guestFirstName')
-  if (shouldUseGuestContact.value && !guestLastName.value.trim()) return t('booking.errors.guestLastName')
   if (shouldUseGuestContact.value && !guestPhone.value.trim()) return t('booking.errors.guestPhone')
   if (shouldUseGuestContact.value && !isPhoneValid(normalizePhone(guestPhone.value))) return t('common.phoneInvalid')
 
@@ -823,7 +919,7 @@ const submit = async () => {
         source: bookingForClient.value ? 'phone' : source.value,
         comment: comment.value || undefined,
         guest_first_name: guestFirstName.value.trim() || fallbackFirstName,
-        guest_last_name: guestLastName.value.trim() || fallbackLastName,
+        guest_last_name: fallbackLastName,
         guest_phone: normalizePhone(guestPhone.value) || fallbackPhone,
       },
       { skipErrorToast: true },
@@ -841,7 +937,6 @@ const submit = async () => {
     mobileStep.value = 1
     comment.value = ''
     guestFirstName.value = ''
-    guestLastName.value = ''
     guestPhone.value = ''
     bookingForClient.value = isMasterUser.value ? true : false
     void scrollMobileStepCardIntoView()
@@ -890,25 +985,49 @@ const bootstrapBookingFlow = async () => {
     ? currentMasterProfile.value?.id ?? null
     : parsePositiveInt(route.query.master_id)
 
-  const line = createEmptyLine({ categoryId: categoryId ?? defaultCategoryId.value ?? undefined, serviceId: serviceId ?? undefined, masterId: masterId ?? undefined })
+  const requestedService = serviceId ? services.value.find(item => item.id === serviceId) : null
+  const line = createEmptyLine({
+    categoryId: categoryId ?? requestedService?.category_id,
+    serviceId: serviceId ?? undefined,
+    masterId: masterId ?? undefined,
+  })
   lines.value = [line]
 
   if (line.masterId) {
     await hydrateMasterForLine(line, line.masterId, true)
     line.mastersResolved = true
+
+    const masterCategories = categoriesForLine(line)
+    if (!line.serviceIds.length) {
+      line.categoryId = masterCategories[0]?.id ?? null
+    }
   }
 
-  if (line.serviceIds.length && line.masterId) {
-    await fetchSlotsForLine(line, true)
-    mobileStep.value = 3
-  }
-  else if (line.serviceIds.length) {
+  if (line.serviceIds.length) {
     await fetchMastersForLine(line, true)
     if (line.masterId && !line.masters.some(master => master.id === line.masterId)) {
       line.masterId = null
     }
-    await fetchSlotsForLine(line, true)
-    mobileStep.value = line.masterId ? 3 : 2
+
+    if (serviceId && masterId && line.masterId) {
+      const from = minBookingDate.value
+      await fetchAvailableDatesForLine(line, {
+        from,
+        to: addDaysToDate(from, 41),
+      })
+
+      const firstAvailableDate = line.availableDates[0]
+      if (firstAvailableDate) {
+        line.date = firstAvailableDate
+        await fetchSlotsForLine(line, true)
+      }
+
+      mobileStep.value = 3
+    }
+    else {
+      await fetchSlotsForLine(line, true)
+      mobileStep.value = 2
+    }
   }
 }
 
@@ -947,7 +1066,6 @@ const lookupClientByPhone = async (phone: string) => {
     if (user) {
       matchedClient.value = user
       guestFirstName.value = user.first_name || guestFirstName.value
-      guestLastName.value = user.last_name || guestLastName.value
     }
   }
   catch (error: any) {
@@ -1006,25 +1124,9 @@ onBeforeUnmount(() => {
     clearTimeout(clientLookupTimer)
     clientLookupTimer = null
   }
-  mobileStepsStickyObserver?.disconnect()
-  mobileStepsStickyObserver = null
   for (const line of lines.value) {
     clearLineNetworkState(line.id)
   }
-})
-
-onMounted(() => {
-  updateMobileStepsStickyHeight()
-
-  if (!import.meta.client || typeof ResizeObserver === 'undefined' || !mobileStepsStickyRef.value) {
-    return
-  }
-
-  mobileStepsStickyObserver = new ResizeObserver(() => {
-    updateMobileStepsStickyHeight()
-  })
-
-  mobileStepsStickyObserver.observe(mobileStepsStickyRef.value)
 })
 </script>
 
@@ -1035,12 +1137,12 @@ onMounted(() => {
         <div>
           <p class="text-xs uppercase tracking-[0.2em]" :class="isTor ? 'text-[#d79a49]' : 'text-sand-600'">{{ bookingSeoCopy.eyebrow }}</p>
           <h1 class="text-3xl leading-tight sm:text-4xl lg:text-5xl">{{ t('booking.title') }}</h1>
-          <p class="mt-3 max-w-3xl text-sm leading-7 sm:text-base" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ bookingSeoCopy.lead }}</p>
+          <p class="mt-3 hidden max-w-3xl text-sm leading-7 sm:text-base lg:block" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ bookingSeoCopy.lead }}</p>
         </div>
         <NuxtLink :to="authAppointmentsPath"><BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ t('nav.myAppointments') }}</BaseButton></NuxtLink>
       </div>
 
-      <div class="grid gap-3 md:grid-cols-3">
+      <div class="hidden gap-3 md:grid-cols-3 lg:grid">
         <div
           v-for="item in bookingSeoCopy.bullets"
           :key="item"
@@ -1073,36 +1175,7 @@ onMounted(() => {
       </div>
 
       <div class="lg:hidden">
-        <p
-          class="rounded-xl px-3 py-2 text-xs"
-          :class="isTor
-            ? 'border border-white/10 bg-white/[0.03] text-stone-300'
-            : 'border border-sand-200 bg-sand-50 text-sand-700'"
-        >
-          {{ t('booking.oneCategoryPerLine') }}
-        </p>
-
-        <div
-          ref="mobileStepsStickyRef"
-          class="sticky top-16 z-20 mt-4 rounded-[1.5rem] p-2"
-          :class="isTor
-            ? 'border border-white/10 bg-[#0f0f10]/96 shadow-[0_18px_40px_rgba(0,0,0,0.38)] backdrop-blur'
-            : 'bg-[rgba(248,244,237,0.96)] shadow-soft backdrop-blur'"
-        >
-          <BookingBreadcrumbs :current="mobileStep" :theme="isTor ? 'dark' : 'light'" />
-        </div>
-
-        <div
-          class="mt-3 rounded-[1.75rem] px-4 py-3"
-          :class="isTor ? 'border border-white/10 bg-[#161616]' : 'border border-sand-200/80 bg-white shadow-soft'"
-        >
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <p class="text-[11px] uppercase tracking-[0.18em]" :class="isTor ? 'text-[#d79a49]' : 'text-sand-600'">{{ bookingBrandName }}</p>
-              <p class="text-lg font-semibold">{{ t('booking.wizard') }}</p>
-            </div>
-          </div>
-          <div v-if="lines.length > 1" class="mt-3 flex gap-2 overflow-x-auto pb-1">
+        <div v-if="lines.length > 1" class="flex gap-2 overflow-x-auto pb-1">
             <button
               v-for="(line, index) in lines"
               :key="`mobile-line-${line.id}`"
@@ -1115,10 +1188,9 @@ onMounted(() => {
             >
               {{ t('booking.lineTitle') }} #{{ index + 1 }}
             </button>
-          </div>
         </div>
 
-        <div v-if="activeLine" ref="mobileStepCardRef" class="mt-4">
+        <div v-if="activeLine" ref="mobileStepCardRef" :class="lines.length > 1 ? 'mt-4' : ''">
         <Card class="overflow-hidden" :class="isTor ? '!border-white/10 !bg-white/[0.03] !text-stone-100 shadow-[0_24px_60px_rgba(0,0,0,0.22)]' : ''">
           <div class="flex items-start justify-between gap-3">
             <div>
@@ -1131,72 +1203,48 @@ onMounted(() => {
           </div>
 
           <div v-if="mobileStep === 1" class="mt-5 space-y-5">
-            <div class="space-y-2">
-              <p class="text-sm" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ t('booking.chooseCategory') }}</p>
-              <div class="flex flex-wrap gap-2">
+            <div
+              ref="mobileCategoriesRef"
+              class="booking-categories-scroll max-h-[55vh] space-y-2 overflow-y-auto overscroll-contain pr-2"
+              :class="isTor ? 'booking-categories-scroll--tor' : 'booking-categories-scroll--freya'"
+            >
+              <div
+                v-for="category in visibleCategories"
+                :key="`${activeLine.id}-${category.id}`"
+                :data-category-id="category.id"
+                class="overflow-hidden rounded-[1.25rem] border"
+                :class="isTor ? 'border-white/10 bg-white/[0.03]' : 'border-sand-200 bg-white'"
+              >
                 <button
-                  v-for="category in visibleCategories"
-                  :key="`${activeLine.id}-${category.id}`"
                   type="button"
-                  class="rounded-full border px-3 py-2 text-sm transition"
-                  :class="activeLine.categoryId === category.id
-                    ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
-                    : (isTor ? 'border-white/10 bg-white/[0.04] text-stone-200' : 'border-sand-200 bg-white text-sand-900')"
+                  class="flex w-full items-center justify-between gap-3 px-4 py-4 text-left font-semibold"
                   @click="setLineCategory(activeLine, category.id)"
                 >
-                  {{ category.name }}
+                  <span>{{ category.name }}</span>
+                  <span class="text-xl">{{ activeLine.categoryId === category.id ? '−' : '+' }}</span>
                 </button>
-              </div>
-            </div>
-
-            <div class="space-y-3">
-              <p class="text-sm" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ t('booking.service') }}</p>
-              <div class="grid gap-3">
-                <button
-                  v-for="item in servicesForLine(activeLine)"
-                  :key="`${activeLine.id}-service-${item.id}`"
-                  type="button"
-                  class="w-full rounded-[1.5rem] border px-4 py-4 text-left transition"
-                  :disabled="isServiceDisabledForLine(activeLine, item)"
-                  :class="isServiceDisabledForLine(activeLine, item)
-                    ? (isTor ? 'cursor-not-allowed border-white/10 bg-white/[0.02] text-stone-500' : 'cursor-not-allowed border-sand-200 bg-sand-100 text-sand-400')
-                    : activeLine.serviceIds.includes(item.id)
-                    ? (isTor ? 'border-[#d79a49] bg-white/[0.06]' : 'border-sand-900 bg-sand-50')
-                    : (isTor ? 'border-white/10 bg-white/[0.03]' : 'border-sand-200 bg-white')"
-                  @click="toggleServiceForLine(activeLine, item)"
-                >
-                  <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0 flex-1">
-                      <p class="font-semibold">{{ item.name }}</p>
-                      <p class="mt-1 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ item.duration_minutes }} {{ t('booking.minutesUnit') }}</p>
-                      <div v-if="isPromoVisible" class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <span
-                          class="inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]"
-                          :class="isTor ? 'border-[#c58a3a]/45 text-[#d8a15a]' : 'border-rose-200 bg-rose-50 text-rose-700'"
-                        >
-                          {{ promoCopy.shortBadge }}
-                        </span>
-                        <span class="text-sm font-semibold" :class="isTor ? 'text-stone-100' : 'text-sand-800'">{{ promoPriceLabelForLine(activeLine, item) }}</span>
-                        <span class="text-xs line-through" :class="isTor ? 'text-stone-500' : 'text-sand-500'">{{ servicePriceLabelForLine(activeLine, item) }}</span>
-                      </div>
-                      <p v-else class="mt-1 text-sm font-semibold" :class="isTor ? 'text-stone-300' : 'text-sand-800'">{{ servicePriceLabelForLine(activeLine, item) }}</p>
-                    </div>
-                    <span
-                      class="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-base font-bold"
-                      :class="activeLine.serviceIds.includes(item.id)
-                        ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
-                        : (isTor ? 'border-white/15 text-stone-400' : 'border-sand-300 text-sand-500')"
-                    >
-                      {{ activeLine.serviceIds.includes(item.id) ? '✓' : '+' }}
+                <div v-if="activeLine.categoryId === category.id" class="space-y-2 border-t p-3" :class="isTor ? 'border-white/10' : 'border-sand-200'">
+                  <button
+                    v-for="item in servicesForLine(activeLine)"
+                    :key="`${activeLine.id}-service-${item.id}`"
+                    type="button"
+                    class="flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-3 text-left"
+                    :disabled="isServiceDisabledForLine(activeLine, item)"
+                    :class="activeLine.serviceIds.includes(item.id)
+                      ? (isTor ? 'border-[#d79a49] bg-[#d79a49]/10' : 'border-sand-900 bg-sand-50')
+                      : (isTor ? 'border-white/10' : 'border-sand-200')"
+                    @click="toggleServiceForLine(activeLine, item)"
+                  >
+                    <span class="min-w-0">
+                      <span class="block font-medium">{{ item.name }}</span>
+                      <span class="mt-1 block text-xs" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">
+                        {{ item.duration_minutes }} {{ t('booking.minutesUnit') }} · {{ isPromoVisible ? promoPriceLabelForLine(activeLine, item) : servicePriceLabelForLine(activeLine, item) }}
+                      </span>
                     </span>
-                  </div>
-                </button>
+                    <span class="shrink-0 text-lg font-bold">{{ activeLine.serviceIds.includes(item.id) ? '✓' : '+' }}</span>
+                  </button>
+                </div>
               </div>
-            </div>
-
-            <div v-if="activeLine.serviceIds.length" class="rounded-[1.5rem] p-4" :class="isTor ? 'border border-white/10 bg-white/[0.04]' : 'border border-sand-200 bg-sand-50/70'">
-              <p class="text-sm font-semibold">{{ t('booking.service') }}</p>
-              <p class="mt-1 text-sm" :class="isTor ? 'text-stone-300' : 'text-sand-800'">{{ selectedServicesLabel(activeLine) }}</p>
             </div>
           </div>
 
@@ -1232,7 +1280,7 @@ onMounted(() => {
                 @click="selectMasterForLine(activeLine, master.id)"
               >
                 <p class="font-semibold">{{ master.name }}</p>
-                <p class="mt-1 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ master.bio || t('booking.masterFallbackBio') }}</p>
+                <p class="mt-1 line-clamp-3 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ master.bio || t('booking.masterFallbackBio') }}</p>
               </button>
               <p v-if="activeLine.serviceIds.length && activeLine.mastersResolved && !activeLine.mastersLoading && !activeLine.masters.length" class="text-xs text-amber-700">{{ t('booking.noMastersForSelection') }}</p>
             </div>
@@ -1243,7 +1291,15 @@ onMounted(() => {
               <p class="font-semibold">{{ selectedServicesLabel(activeLine) }}</p>
               <p class="mt-1 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ selectedMaster(activeLine)?.name || t('booking.anyMaster') }}</p>
             </div>
-            <BaseInput v-model="activeLine.date" type="date" :theme="isTor ? 'dark' : 'light'" :label="t('booking.date')" :min="minBookingDate" @update:model-value="fetchSlotsForLine(activeLine)" />
+            <BookingCalendar
+              :model-value="activeLine.date"
+              :min="minBookingDate"
+              :available-dates="activeLine.availableDates"
+              :loading="activeLine.availableDatesLoading"
+              :theme="isTor ? 'dark' : 'light'"
+              @update:model-value="selectCalendarDate(activeLine, $event)"
+              @month-change="fetchAvailableDatesForLine(activeLine, $event)"
+            />
             <div v-if="activeLine.slotsLoading" class="grid grid-cols-2 gap-2">
               <SkeletonBlock v-for="idx in 8" :key="`mobile-slots-${activeLine.id}-${idx}`" :theme="isTor ? 'dark' : 'light'" class="h-11" />
             </div>
@@ -1299,11 +1355,9 @@ onMounted(() => {
               >
                 <p class="font-semibold">{{ t('nav.myProfile') }}</p>
                 <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestFirstName') }}:</span> <span class="font-semibold">{{ bookingContact.firstName || '—' }}</span></p>
-                <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestLastName') }}:</span> <span class="font-semibold">{{ bookingContact.lastName || '—' }}</span></p>
                 <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestPhone') }}:</span> <span class="font-semibold">{{ bookingContact.phone || '—' }}</span></p>
               </div>
               <BaseInput v-if="shouldUseGuestContact" v-model="guestFirstName" :theme="isTor ? 'dark' : 'light'" :label="t('booking.guestFirstName')" :placeholder="t('booking.guestFirstNamePlaceholder')" />
-              <BaseInput v-if="shouldUseGuestContact" v-model="guestLastName" :theme="isTor ? 'dark' : 'light'" :label="t('booking.guestLastName')" :placeholder="t('booking.guestLastNamePlaceholder')" />
               <BaseInput v-if="shouldUseGuestContact" v-model="guestPhone" :theme="isTor ? 'dark' : 'light'" type="tel" :label="t('booking.guestPhone')" :placeholder="t('booking.guestPhonePlaceholder')" />
               <p v-if="bookingForClient && clientLookupLoading" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.clientLookupLoading') }}</p>
               <p v-else-if="bookingForClient && matchedClient" class="text-sm" :class="isTor ? 'text-emerald-300' : 'text-emerald-700'">{{ t('booking.clientFound') }}: {{ matchedClient.first_name }} {{ matchedClient.last_name }}</p>
@@ -1315,19 +1369,24 @@ onMounted(() => {
         </Card>
         </div>
 
-        <div class="sticky bottom-3 z-20 mt-4 rounded-[1.75rem] p-3 backdrop-blur" :class="isTor ? 'border border-white/10 bg-[#161616]/92' : 'border border-sand-200/80 bg-white/95 shadow-soft'">
+        <div
+          v-if="mobileStep > 1 || activeLine.serviceIds.length"
+          class="sticky bottom-3 z-20 mt-4 rounded-[1.75rem] p-3 backdrop-blur"
+          :class="isTor ? 'border border-white/10 bg-[#161616]/92' : 'border border-sand-200/80 bg-white/95 shadow-soft'"
+        >
           <div class="flex gap-3">
             <BaseButton v-if="mobileStep > 1" variant="secondary" :theme="isTor ? 'tor' : 'default'" class="flex-1" @click="goToPreviousMobileStep">{{ t('common.previous') }}</BaseButton>
             <BaseButton
-              v-if="mobileStep < 4"
+              v-if="mobileStep < 4 && (mobileStep !== 1 || activeLine.serviceIds.length)"
               :theme="isTor ? 'tor' : 'default'"
               class="flex-1"
+              :disabled="activeLine.mastersLoading || mobileStepChanging"
               @click="goToNextMobileStep"
             >
-              {{ t('common.next') }}
+              {{ t('common.continue') }}
             </BaseButton>
             <BaseButton
-              v-else
+              v-else-if="mobileStep === 4"
               :theme="isTor ? 'tor' : 'default'"
               class="flex-1"
               :disabled="creating"
@@ -1340,16 +1399,7 @@ onMounted(() => {
       </div>
 
       <div class="hidden lg:block">
-        <p
-          class="rounded-xl px-3 py-2 text-xs"
-          :class="isTor
-            ? 'border border-white/10 bg-white/[0.03] text-stone-300'
-            : 'border border-sand-200 bg-sand-50 text-sand-700'"
-        >
-          {{ t('booking.oneCategoryPerLine') }}
-        </p>
-
-        <div class="mt-4 space-y-4">
+        <div class="space-y-4">
           <Card
             v-for="(line, index) in lines"
             :key="line.id"
@@ -1362,66 +1412,66 @@ onMounted(() => {
 
             <div class="mt-4 grid gap-5 xl:grid-cols-2">
               <div class="space-y-4">
-                <div class="space-y-2">
-                  <p class="text-sm" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ t('booking.chooseCategory') }}</p>
-                  <div class="flex flex-wrap gap-2">
+                <div
+                  :ref="element => setDesktopCategoriesRef(line.id, element)"
+                  class="space-y-2 scroll-mt-24"
+                >
+                  <div
+                    v-for="category in visibleCategories"
+                    :key="`${line.id}-${category.id}`"
+                    :data-category-id="category.id"
+                    class="overflow-hidden rounded-2xl border"
+                    :class="isTor ? 'border-white/10 bg-white/[0.03]' : 'border-sand-200 bg-white'"
+                  >
                     <button
-                      v-for="category in visibleCategories"
-                      :key="`${line.id}-${category.id}`"
                       type="button"
-                      class="rounded-full border px-3 py-1.5 text-sm transition"
-                      :class="line.categoryId === category.id
-                        ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
-                        : (isTor ? 'border-white/10 bg-white/[0.04] text-stone-200 hover:border-[#d79a49]/50' : 'border-sand-200 bg-white text-sand-900 hover:border-sand-600')"
+                      class="flex w-full items-center justify-between gap-3 px-4 py-4 text-left font-semibold"
                       @click="setLineCategory(line, category.id)"
                     >
-                      {{ category.name }}
+                      <span>{{ category.name }}</span>
+                      <span class="text-xl">{{ line.categoryId === category.id ? '−' : '+' }}</span>
                     </button>
-                  </div>
-                </div>
-
-                <div class="space-y-2">
-                  <p class="text-sm" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ t('booking.service') }}</p>
-                  <div class="grid gap-2">
-                    <button
-                      v-for="item in servicesForLine(line)"
-                      :key="`${line.id}-service-${item.id}`"
-                      type="button"
-                      class="w-full rounded-2xl border px-4 py-3 text-left transition"
-                      :disabled="isServiceDisabledForLine(line, item)"
+                    <div v-if="line.categoryId === category.id" class="grid gap-2 border-t p-3" :class="isTor ? 'border-white/10' : 'border-sand-200'">
+                      <button
+                        v-for="item in servicesForLine(line)"
+                        :key="`${line.id}-service-${item.id}`"
+                        type="button"
+                        class="w-full rounded-2xl border px-4 py-3 text-left transition"
+                        :disabled="isServiceDisabledForLine(line, item)"
                         :class="isServiceDisabledForLine(line, item)
                           ? (isTor ? 'cursor-not-allowed border-white/10 bg-white/[0.02] text-stone-500' : 'cursor-not-allowed border-sand-200 bg-sand-100 text-sand-400')
                           : line.serviceIds.includes(item.id)
                           ? (isTor ? 'border-[#d79a49] bg-white/[0.05]' : 'border-sand-900 bg-sand-50')
                           : (isTor ? 'border-white/10 bg-white/[0.03] hover:border-[#d79a49]/50' : 'border-sand-200 bg-white hover:border-sand-600')"
-                      @click="toggleServiceForLine(line, item)"
-                    >
-                      <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0 flex-1">
-                          <p class="font-semibold">{{ item.name }}</p>
-                          <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ item.duration_minutes }} {{ t('booking.minutesUnit') }}</p>
-                          <div v-if="isPromoVisible" class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-                            <span
-                              class="inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]"
-                              :class="isTor ? 'border-[#c58a3a]/45 text-[#d8a15a]' : 'border-rose-200 bg-rose-50 text-rose-700'"
-                            >
-                              {{ promoCopy.shortBadge }}
-                            </span>
-                            <span class="text-sm font-semibold" :class="isTor ? 'text-stone-100' : 'text-sand-800'">{{ promoPriceLabelForLine(line, item) }}</span>
-                            <span class="text-xs line-through" :class="isTor ? 'text-stone-500' : 'text-sand-500'">{{ servicePriceLabelForLine(line, item) }}</span>
+                        @click="toggleServiceForLine(line, item)"
+                      >
+                        <div class="flex items-start justify-between gap-3">
+                          <div class="min-w-0 flex-1">
+                            <p class="font-semibold">{{ item.name }}</p>
+                            <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ item.duration_minutes }} {{ t('booking.minutesUnit') }}</p>
+                            <div v-if="isPromoVisible" class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                              <span
+                                class="inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em]"
+                                :class="isTor ? 'border-[#c58a3a]/45 text-[#d8a15a]' : 'border-rose-200 bg-rose-50 text-rose-700'"
+                              >
+                                {{ promoCopy.shortBadge }}
+                              </span>
+                              <span class="text-sm font-semibold" :class="isTor ? 'text-stone-100' : 'text-sand-800'">{{ promoPriceLabelForLine(line, item) }}</span>
+                              <span class="text-xs line-through" :class="isTor ? 'text-stone-500' : 'text-sand-500'">{{ servicePriceLabelForLine(line, item) }}</span>
+                            </div>
+                            <p v-else class="text-sm font-semibold" :class="isTor ? 'text-stone-300' : 'text-sand-800'">{{ servicePriceLabelForLine(line, item) }}</p>
                           </div>
-                          <p v-else class="text-sm font-semibold" :class="isTor ? 'text-stone-300' : 'text-sand-800'">{{ servicePriceLabelForLine(line, item) }}</p>
+                          <span
+                            class="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-base font-bold leading-none"
+                            :class="line.serviceIds.includes(item.id)
+                              ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
+                              : (isTor ? 'border-white/15 text-stone-400' : 'border-sand-300 text-sand-500')"
+                          >
+                            {{ line.serviceIds.includes(item.id) ? '✓' : '+' }}
+                          </span>
                         </div>
-                        <span
-                          class="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-base font-bold leading-none"
-                          :class="line.serviceIds.includes(item.id)
-                            ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-sand-900 bg-sand-900 text-white')
-                            : (isTor ? 'border-white/15 text-stone-400' : 'border-sand-300 text-sand-500')"
-                        >
-                          {{ line.serviceIds.includes(item.id) ? '✓' : '+' }}
-                        </span>
-                      </div>
-                    </button>
+                      </button>
+                    </div>
                   </div>
                   <div v-if="line.serviceIds.length" class="space-y-2">
                     <p class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'"><span class="font-semibold">{{ t('booking.service') }}:</span> {{ selectedServicesLabel(line) }}</p>
@@ -1472,7 +1522,7 @@ onMounted(() => {
                     @click="selectMasterForLine(line, master.id)"
                   >
                     <p class="font-semibold">{{ master.name }}</p>
-                    <p class="line-clamp-1 text-xs" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ master.bio || t('booking.masterFallbackBio') }}</p>
+                    <p class="line-clamp-3 text-xs" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ master.bio || t('booking.masterFallbackBio') }}</p>
                   </button>
                   <p v-if="line.serviceIds.length && line.mastersResolved && !line.mastersLoading && !line.masters.length" class="text-xs text-amber-700">{{ t('booking.noMastersForSelection') }}</p>
                 </div>
@@ -1480,7 +1530,15 @@ onMounted(() => {
             </div>
 
             <div class="mt-5 space-y-4">
-              <BaseInput v-model="line.date" type="date" :theme="isTor ? 'dark' : 'light'" :label="t('booking.date')" :min="minBookingDate" @update:model-value="fetchSlotsForLine(line)" />
+              <BookingCalendar
+                :model-value="line.date"
+                :min="minBookingDate"
+                :available-dates="line.availableDates"
+                :loading="line.availableDatesLoading"
+                :theme="isTor ? 'dark' : 'light'"
+                @update:model-value="selectCalendarDate(line, $event)"
+                @month-change="fetchAvailableDatesForLine(line, $event)"
+              />
               <div v-if="line.slotsLoading" class="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <SkeletonBlock v-for="idx in 8" :key="`slots-${line.id}-${idx}`" :theme="isTor ? 'dark' : 'light'" class="h-10" />
               </div>
@@ -1552,11 +1610,9 @@ onMounted(() => {
               >
                 <p class="font-semibold">{{ t('nav.myProfile') }}</p>
                 <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestFirstName') }}:</span> <span class="font-semibold">{{ bookingContact.firstName || '—' }}</span></p>
-                <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestLastName') }}:</span> <span class="font-semibold">{{ bookingContact.lastName || '—' }}</span></p>
                 <p><span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.guestPhone') }}:</span> <span class="font-semibold">{{ bookingContact.phone || '—' }}</span></p>
               </div>
               <BaseInput v-if="shouldUseGuestContact" v-model="guestFirstName" :theme="isTor ? 'dark' : 'light'" :label="t('booking.guestFirstName')" :placeholder="t('booking.guestFirstNamePlaceholder')" />
-              <BaseInput v-if="shouldUseGuestContact" v-model="guestLastName" :theme="isTor ? 'dark' : 'light'" :label="t('booking.guestLastName')" :placeholder="t('booking.guestLastNamePlaceholder')" />
               <BaseInput v-if="shouldUseGuestContact" v-model="guestPhone" :theme="isTor ? 'dark' : 'light'" type="tel" :label="t('booking.guestPhone')" :placeholder="t('booking.guestPhonePlaceholder')" />
               <p v-if="bookingForClient && clientLookupLoading" class="text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.clientLookupLoading') }}</p>
               <p v-else-if="bookingForClient && matchedClient" class="text-sm" :class="isTor ? 'text-emerald-300' : 'text-emerald-700'">{{ t('booking.clientFound') }}: {{ matchedClient.first_name }} {{ matchedClient.last_name }}</p>
@@ -1582,3 +1638,37 @@ onMounted(() => {
     </div>
   </section>
 </template>
+
+<style scoped>
+.booking-categories-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--booking-scroll-thumb) transparent;
+}
+
+.booking-categories-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.booking-categories-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.booking-categories-scroll::-webkit-scrollbar-thumb {
+  background: var(--booking-scroll-thumb);
+  border-radius: 999px;
+}
+
+.booking-categories-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--booking-scroll-thumb-hover);
+}
+
+.booking-categories-scroll--freya {
+  --booking-scroll-thumb: #c8a77d;
+  --booking-scroll-thumb-hover: #8b6b43;
+}
+
+.booking-categories-scroll--tor {
+  --booking-scroll-thumb: #c58a3a;
+  --booking-scroll-thumb-hover: #e0ad68;
+}
+</style>

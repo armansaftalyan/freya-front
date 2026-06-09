@@ -488,6 +488,7 @@ const messages: Record<Locale, Dict> = {
       close: 'Закрыть',
       previous: 'Назад',
       next: 'Вперед',
+      continue: 'Продолжить',
     },
   },
   en: {
@@ -973,6 +974,7 @@ const messages: Record<Locale, Dict> = {
       close: 'Close',
       previous: 'Previous',
       next: 'Next',
+      continue: 'Continue',
     },
   },
   hy: {
@@ -1473,6 +1475,7 @@ const messages: Record<Locale, Dict> = {
       close: 'Փակել',
       previous: 'Նախորդ',
       next: 'Հաջորդ',
+      continue: 'Շարունակել',
     },
   },
 }

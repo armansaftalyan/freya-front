@@ -103,7 +103,7 @@ const filteredMasters = computed(() =>
           </div>
           <div class="mt-4 flex flex-wrap gap-2">
             <NuxtLink :to="localePath(`${mastersPath}/${master.slug || master.id}`)"><BaseButton size="sm" variant="secondary">{{ t('mastersPage.viewProfile') }}</BaseButton></NuxtLink>
-            <NuxtLink :to="localePath(bookingPath)"><BaseButton size="sm">{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
+            <NuxtLink :to="localePath({ path: bookingPath, query: { master_id: String(master.id) } })"><BaseButton size="sm">{{ t('nav.bookNow') }}</BaseButton></NuxtLink>
           </div>
         </Card>
       </div>
