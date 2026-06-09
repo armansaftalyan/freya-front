@@ -1,7 +1,7 @@
 {
   "name": "Tor Barbershop",
   "short_name": "Tor",
-  "id": "/tor",
+  "id": "/tor-pwa",
   "start_url": "/hy/tor?source=pwa",
   "scope": "/",
   "description": "Tor Barbershop online booking, services, masters, and products.",

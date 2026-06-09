@@ -228,16 +228,20 @@ const onPortfolioChange = async (event: Event) => {
 
   if (!files.length) return
 
-  const body = new FormData()
-  files.forEach(file => body.append('images[]', file))
-
   uploadingPortfolio.value = true
   try {
     await persistPortfolio()
-    const response = await api.post<{ images: string[], data: Master }>('/master/profile/portfolio', body)
-    const master = extractMaster(response.data)
-    profile.value = master
-    syncForm(master)
+
+    for (const file of files) {
+      const body = new FormData()
+      body.append('images[]', file)
+
+      const response = await api.post<{ images: string[], data: Master }>('/master/profile/portfolio', body)
+      const master = extractMaster(response.data)
+      profile.value = master
+      syncForm(master)
+    }
+
     toast.push({ type: 'success', title: t('account.portfolioUpdated') })
   }
   finally {

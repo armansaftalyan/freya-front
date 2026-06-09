@@ -1,10 +1,11 @@
-const CACHE_NAME = 'freya-pwa-v1'
+const CACHE_NAME = 'freya-pwa-v2'
 const APP_SHELL = [
   '/',
   '/hy',
   '/logo.png?v=4',
   '/logo.svg?v=4',
-  '/site.webmanifest?v=4',
+  '/site.webmanifest?v=5',
+  '/tor.webmanifest?v=2',
   '/web-app-manifest-192x192.png',
   '/web-app-manifest-512x512.png',
 ]

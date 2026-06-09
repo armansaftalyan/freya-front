@@ -185,7 +185,6 @@ export default defineNuxtConfig({
         { key: 'app-icon-svg', rel: 'icon', type: 'image/svg+xml', href: '/logo.svg?v=4' },
         { key: 'app-shortcut-icon', rel: 'shortcut icon', href: '/logo.png?v=4' },
         { key: 'app-apple-touch-icon', rel: 'apple-touch-icon', sizes: '180x180', href: '/logo.png?v=4' },
-        { key: 'app-manifest', rel: 'manifest', href: '/site.webmanifest?v=4' },
       ],
     },
   },

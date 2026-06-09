@@ -125,6 +125,7 @@ useHead(() => ({
   },
   titleTemplate,
   link: [
+    { key: 'app-manifest', rel: 'manifest', href: '/site.webmanifest?v=5' },
     { rel: 'canonical', href: canonicalUrl.value },
     ...alternateLinks.value,
     { rel: 'alternate', hreflang: 'x-default', href: `${siteUrl.value}${withLocalePath(stripLocalePrefix(route.path), defaultLocale)}` },

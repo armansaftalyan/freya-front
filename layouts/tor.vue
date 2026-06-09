@@ -156,7 +156,7 @@ useHead(() => ({
     ...(markdownAlternatePath.value
       ? [{ key: 'markdown-alternate', rel: 'alternate', type: 'text/markdown', href: markdownAlternatePath.value }]
       : []),
-    { key: 'app-manifest', rel: 'manifest', href: '/tor.webmanifest?v=1' },
+    { key: 'app-manifest', rel: 'manifest', href: '/tor.webmanifest?v=2' },
     { key: 'app-icon-png', rel: 'icon', type: 'image/png', href: '/tor-favicon-96x96.png?v=1', sizes: '96x96' },
     { key: 'app-icon-svg', rel: 'icon', type: 'image/png', href: '/tor-favicon-96x96.png?v=1', sizes: '96x96' },
     { key: 'app-shortcut-icon', rel: 'shortcut icon', href: '/tor-favicon-96x96.png?v=1' },

@@ -1,7 +1,7 @@
 {
   "name": "Freya Beauty Salon",
   "short_name": "Freya",
-  "id": "/",
+  "id": "/freya-pwa",
   "start_url": "/hy?source=pwa",
   "scope": "/",
   "description": "Freya Beauty Salon online booking, services, masters, and products.",
