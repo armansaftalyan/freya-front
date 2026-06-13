@@ -378,9 +378,9 @@ const messages: Record<Locale, Dict> = {
       hero: {
         badge: 'Премиальный бьюти-опыт',
         title: 'Красота без лишних усилий.',
-        seoHeading: 'Премиальный салон красоты в Ереване — волосы, ногти и косметология',
+        serviceHeading: 'Всё для красоты и ухода в одном салоне',
         subtitle: 'Персональные beauty-ритуалы, сильная команда мастеров и онлайн-запись в два клика.',
-        searchLead: 'Freya Beauty Salon это салон красоты в Ереване на Азатутян 21 с онлайн-записью, мастерами и уходовыми услугами.',
+        customerLead: 'Выберите услугу и мастера, запишитесь на удобное время онлайн и приходите к нам по адресу Азатутян 21.',
       },
       services: {
         title: 'Услуги',
@@ -864,9 +864,9 @@ const messages: Record<Locale, Dict> = {
       hero: {
         badge: 'Premium Beauty Experience',
         title: 'Beauty that feels effortless.',
-        seoHeading: 'Premium Beauty Salon in Yerevan — Hair, Nails & Cosmetology Services',
+        serviceHeading: 'Beauty and care services in one salon',
         subtitle: 'Personalized beauty rituals, expert masters, and online booking in two clicks.',
-        searchLead: 'Freya Beauty Salon is located at 21 Azatutyan in Yerevan with online booking, expert masters, and premium care services.',
+        customerLead: 'Choose a service and specialist, book a convenient time online, and visit us at 21 Azatutyan.',
       },
       services: {
         title: 'Services',
@@ -1359,9 +1359,9 @@ const messages: Record<Locale, Dict> = {
       hero: {
         badge: 'Պրեմիում գեղեցկության փորձ',
         title: 'Գեղեցկություն՝ առանց ավելորդ ջանքի։',
-        seoHeading: 'Պրեմիում գեղեցկության սրահ Երևանում՝ մազեր, եղունգներ և կոսմետոլոգիա',
+        serviceHeading: 'Գեղեցկության և խնամքի ծառայություններ մեկ սրահում',
         subtitle: 'Անհատական beauty-ծրագրեր, ուժեղ վարպետների թիմ և օնլայն գրանցում երկու քլիքով։',
-        searchLead: 'Freya Beauty Salon-ը գտնվում է Երևանում՝ Ազատության 21 հասցեում, օնլայն գրանցմամբ, փորձառու վարպետներով և խնամքի ծառայություններով։',
+        customerLead: 'Ընտրեք ծառայությունն ու մասնագետին, ամրագրեք հարմար ժամը օնլայն և այցելեք մեզ Ազատության 21 հասցեում։',
       },
       services: {
         title: 'Ծառայություններ',

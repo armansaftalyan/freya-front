@@ -49,8 +49,8 @@ const bookingSeoCopy = computed(() => {
         title: 'Онлайн-запись в Tor Barbershop в Ереване',
         description: 'Запись в Tor Barbershop онлайн: мужская стрижка, beard trim, fade, мужской маникюр, педикюр и массаж в Ереване с выбором барбера и свободного времени.',
         ogDescription: 'Выберите барбера, мужскую услугу и свободный слот в Tor Barbershop.',
-        eyebrow: 'Barbershop Booking',
-        lead: 'Онлайн-запись в Tor помогает быстро выбрать мужскую стрижку, beard trim, fade, мужской маникюр, педикюр и другие grooming-услуги в Ереване.',
+        eyebrow: 'Онлайн-запись',
+        lead: 'Выберите нужную услугу, барбера и удобное время. Свободные слоты отображаются сразу.',
         bullets: ['Выбор барбера или любого свободного мастера', 'Свободные слоты по дате и времени', 'Запись на мужские услуги без лишних шагов'],
       }
     }
@@ -60,8 +60,8 @@ const bookingSeoCopy = computed(() => {
         title: 'Online Booking at Tor Barbershop in Yerevan',
         description: 'Book Tor Barbershop online for men’s haircuts, beard trims, fades, men manicure, pedicure, and massage in Yerevan with barber selection and available time slots.',
         ogDescription: 'Choose a barber, men’s service, and available slot at Tor Barbershop.',
-        eyebrow: 'Barbershop Booking',
-        lead: 'Tor online booking helps users quickly reserve men’s haircuts, beard work, fades, men manicure, pedicure, and other grooming services in Yerevan.',
+        eyebrow: 'Online booking',
+        lead: 'Choose a service, barber, and convenient time. Available slots are shown immediately.',
         bullets: ['Choose a barber or any available specialist', 'See open slots by date and time', 'Book men’s grooming services in a few steps'],
       }
     }
@@ -70,8 +70,8 @@ const bookingSeoCopy = computed(() => {
       title: 'Tor Barbershop օնլայն ամրագրում Երևանում',
       description: 'Tor Barbershop օնլայն ամրագրում Երևանում՝ տղամարդկանց սանրվածք, beard trim, fade, տղամարդկանց manicure, pedicure և massage՝ բարբերի և ազատ ժամի ընտրությամբ։',
       ogDescription: 'Ընտրեք բարբերին, տղամարդկանց ծառայությունը և ազատ ժամը Tor Barbershop-ում։',
-      eyebrow: 'Barbershop Booking',
-      lead: 'Tor-ի օնլայն ամրագրումը թույլ է տալիս արագ ընտրել տղամարդկանց սանրվածք, beard trim, fade, տղամարդկանց manicure, pedicure և այլ grooming ծառայություններ Երևանում։',
+      eyebrow: 'Օնլայն ամրագրում',
+      lead: 'Ընտրեք ծառայությունը, բարբերին և հարմար ժամը։ Ազատ ժամերը ցուցադրվում են անմիջապես։',
       bullets: ['Կոնկրետ բարբերի կամ ցանկացած ազատ մասնագետի ընտրություն', 'Ազատ ժամեր ըստ ամսաթվի և ժամի', 'Տղամարդկանց ծառայությունների արագ օնլայն ամրագրում'],
     }
   }
@@ -81,8 +81,8 @@ const bookingSeoCopy = computed(() => {
       title: 'Онлайн-запись в Freya Beauty Salon в Ереване',
       description: 'Онлайн-запись в Freya Beauty Salon: маникюр, педикюр, волосы, косметология, массаж и beauty-услуги в Ереване с выбором мастера и свободного времени.',
       ogDescription: 'Выберите beauty-услугу, мастера и свободный слот в Freya Beauty Salon.',
-      eyebrow: 'Beauty Booking',
-      lead: 'Страница онлайн-записи Freya закрывает коммерческий интент на manicure, pedicure, hair, cosmetology, massage и другие beauty-услуги в Ереване.',
+      eyebrow: 'Онлайн-запись',
+      lead: 'Выберите нужную услугу, мастера и удобное время. Свободные слоты отображаются сразу, а запись подтверждается по телефону.',
       bullets: ['Выбор категории, услуги и мастера', 'Свободные слоты по дате и времени', 'Запись без регистрации с подтверждением по телефону'],
     }
   }
@@ -92,8 +92,8 @@ const bookingSeoCopy = computed(() => {
       title: 'Online Booking at Freya Beauty Salon in Yerevan',
       description: 'Book Freya Beauty Salon online for manicure, pedicure, hair, cosmetology, massage, and beauty services in Yerevan with specialist selection and available time slots.',
       ogDescription: 'Choose a beauty service, specialist, and available slot at Freya Beauty Salon.',
-      eyebrow: 'Beauty Booking',
-      lead: 'Freya online booking is designed for high-intent beauty searches covering manicure, pedicure, hair, cosmetology, massage, and related services in Yerevan.',
+      eyebrow: 'Online booking',
+      lead: 'Choose a service, specialist, and convenient time. Available slots are shown immediately, and your appointment is confirmed by phone.',
       bullets: ['Choose category, service, and specialist', 'See available slots by date and time', 'Book without registration with phone confirmation'],
     }
   }
@@ -102,8 +102,8 @@ const bookingSeoCopy = computed(() => {
     title: 'Freya Beauty Salon օնլայն ամրագրում Երևանում',
     description: 'Freya Beauty Salon օնլայն ամրագրում Երևանում՝ manicure, pedicure, hair, cosmetology, massage և beauty ծառայություններ՝ մասնագետի և ազատ ժամի ընտրությամբ։',
     ogDescription: 'Ընտրեք beauty ծառայությունը, մասնագետին և ազատ ժամը Freya Beauty Salon-ում։',
-    eyebrow: 'Beauty Booking',
-    lead: 'Freya-ի օնլայն ամրագրումը նախատեսված է բարձր intent ունեցող beauty որոնումների համար՝ manicure, pedicure, hair, cosmetology, massage և այլ ծառայություններով Երևանում։',
+    eyebrow: 'Օնլայն ամրագրում',
+    lead: 'Ընտրեք ծառայությունը, մասնագետին և հարմար ժամը։ Ազատ ժամերը ցուցադրվում են անմիջապես, իսկ ամրագրումը հաստատվում է հեռախոսով։',
     bullets: ['Կատեգորիայի, ծառայության և մասնագետի ընտրություն', 'Ազատ ժամեր ըստ ամսաթվի և ժամի', 'Ամրագրում նաև առանց գրանցման՝ հեռախոսով հաստատմամբ'],
   }
 })

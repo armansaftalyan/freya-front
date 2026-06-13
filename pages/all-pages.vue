@@ -63,7 +63,7 @@ const copy = computed(() => {
     return {
       title: 'All Pages',
       description: 'HTML sitemap with all major sections, categories, services, products, and master profile pages for Freya and Tor.',
-      intro: 'This page centralizes internal links so users and search engines can discover important URLs faster.',
+      intro: 'Use this page to quickly find the main sections, services, products, and information available on the website.',
       corePages: 'Core pages',
       serviceCategories: 'Service categories',
       services: 'All services',

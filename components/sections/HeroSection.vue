@@ -24,13 +24,13 @@ const fallbackHeroImage = 'https://images.unsplash.com/photo-1562322140-8baeecec
           {{ t('homePage.hero.title') }}
         </h1>
         <h2 class="mt-4 max-w-2xl text-xl text-sand-700 sm:text-2xl">
-          {{ t('homePage.hero.seoHeading') }}
+          {{ t('homePage.hero.serviceHeading') }}
         </h2>
         <p class="max-w-2xl text-lg leading-8 text-[var(--muted)] xl:text-[1.35rem]">
           {{ t('homePage.hero.subtitle') }}
         </p>
         <p class="max-w-2xl text-sm leading-7 text-sand-700 sm:text-base">
-          {{ t('homePage.hero.searchLead') }}
+          {{ t('homePage.hero.customerLead') }}
         </p>
         <div class="grid gap-3 sm:flex sm:flex-wrap">
           <NuxtLink :to="localePath(bookingPath)">

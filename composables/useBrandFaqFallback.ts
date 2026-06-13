@@ -278,8 +278,8 @@ export const useBrandFaqFallback = (brand: 'freya' | 'tor', pageKey: 'home' | 'c
             lead: 'Короткие ответы о стрижках, бороде, длительности и записи в Tor.',
           items: [
             { question: 'Какие услуги доступны в Tor?', answer: 'В Tor доступны мужские стрижки, fade, beard trim, бритье и другие барбер-услуги.' },
-            { question: 'Есть ли в Tor мужской маникюр, педикюр и дополнительные мужские процедуры?', answer: 'Да, Tor можно усиливать под мужской manicure, pedicure, grooming, мужской уход, косметологию и другие мужские beauty-запросы. Актуальный список всегда смотрите в каталоге услуг.' },
-            { question: 'Доступны ли мужская эпиляция, воск и elos-запросы?', answer: 'Да, Tor должен покрывать и такие мужские интенты, как эпиляция, wax-уход и related men care searches. Конкретные доступные позиции определяются текущим каталогом услуг.' },
+            { question: 'Есть ли в Tor мужской маникюр, педикюр и дополнительные мужские процедуры?', answer: 'Актуальный список мужских услуг, включая маникюр, педикюр и уходовые процедуры, представлен в каталоге.' },
+            { question: 'Доступны ли мужская эпиляция, воск и ELOS-процедуры?', answer: 'Доступность эпиляции, восковых и ELOS-процедур можно проверить в текущем каталоге услуг.' },
             { question: 'Как узнать длительность услуги?', answer: 'Время выполнения указано рядом с каждой услугой на странице.' },
             { question: 'Можно ли записаться сразу с выбранной услугой?', answer: 'Да, кнопка записи рядом с услугой ведет прямо в бронирование.' },
             { question: 'От чего зависит цена услуги?', answer: 'Цена зависит от конкретной услуги и может отличаться по диапазону, если это указано в карточке.' },
@@ -294,8 +294,8 @@ export const useBrandFaqFallback = (brand: 'freya' | 'tor', pageKey: 'home' | 'c
             lead: 'Short answers about cuts, beard work, duration, and booking in Tor.',
           items: [
             { question: 'What services are available in Tor?', answer: 'Tor offers men’s cuts, fades, beard trims, shaving, and other barbershop services.' },
-            { question: 'Does Tor support men manicure, pedicure, and broader men’s care intent?', answer: 'Yes, Tor can be positioned for men manicure, pedicure, grooming, men’s care, cosmetology, and broader male beauty demand. The currently active list is shown in the service catalog.' },
-            { question: 'Are men’s epilation, waxing, and elos-related intents covered?', answer: 'Yes, Tor is also optimized for men’s epilation, waxing, and related men care search intent. Exact availability depends on the active service catalog.' },
+            { question: 'Does Tor offer men’s manicure, pedicure, and additional care services?', answer: 'The current list of men’s services, including manicure, pedicure, and care treatments, is available in the service catalog.' },
+            { question: 'Are men’s epilation, waxing, and ELOS treatments available?', answer: 'Check the current service catalog for the availability of epilation, waxing, and ELOS treatments.' },
             { question: 'How can I check the service duration?', answer: 'The duration is shown next to each listed service on the page.' },
             { question: 'Can I book directly from a service card?', answer: 'Yes, each service card includes a booking button that opens the booking flow.' },
             { question: 'What affects the service price?', answer: 'The price depends on the selected service and may be shown as a range when applicable.' },
@@ -309,8 +309,8 @@ export const useBrandFaqFallback = (brand: 'freya' | 'tor', pageKey: 'home' | 'c
           lead: 'Կարճ պատասխաններ Tor-ի սանրվածքների, մորուքի խնամքի, տևողության և ամրագրման մասին։',
         items: [
           { question: 'Ի՞նչ ծառայություններ կան Tor-ում։', answer: 'Tor-ում հասանելի են տղամարդկանց սանրվածքներ, fade, beard trim, սափրում և այլ բարբեր ծառայություններ։' },
-          { question: 'Tor-ում կա՞ տղամարդկանց manicure, pedicure և այլ տղամարդկանց խնամք։', answer: 'Այո, Tor-ը կարելի է ուժեղացնել նաև տղամարդկանց manicure, pedicure, grooming, cosmetology և ավելի լայն men care intent-ների համար։ Ակտիվ ցանկը տեսեք ծառայությունների կատալոգում։' },
-          { question: 'Փակո՞ւմ եք տղամարդկանց epilation, waxing և elos intent-ները։', answer: 'Այո, Tor-ը նաև ուղղված է տղամարդկանց epilation, waxing և related men care որոնումների վրա։ Կոնկրետ հասանելի ծառայությունները կախված են ակտիվ կատալոգից։' },
+          { question: 'Tor-ում կա՞ տղամարդկանց manicure, pedicure և այլ խնամք։', answer: 'Տղամարդկանց ընթացիկ ծառայությունների ցանկը, ներառյալ manicure-ը, pedicure-ը և խնամքի պրոցեդուրաները, ներկայացված է կատալոգում։' },
+          { question: 'Հասանելի՞ են տղամարդկանց epilation, waxing և ELOS պրոցեդուրաները։', answer: 'Epilation, waxing և ELOS պրոցեդուրաների հասանելիությունը կարող եք ստուգել ծառայությունների ընթացիկ կատալոգում։' },
           { question: 'Ինչպե՞ս տեսնել ծառայության տևողությունը։', answer: 'Տևողությունը նշված է յուրաքանչյուր ծառայության կողքին էջում։' },
           { question: 'Հնարավո՞ր է ամրագրել հենց ծառայության քարտից։', answer: 'Այո, յուրաքանչյուր ծառայության քարտում կա ամրագրման կոճակ։' },
           { question: 'Ինչի՞ց է կախված գինը։', answer: 'Գինը կախված է ընտրված ծառայությունից և կարող է նշված լինել որպես միջակայք։' },
@@ -325,7 +325,7 @@ export const useBrandFaqFallback = (brand: 'freya' | 'tor', pageKey: 'home' | 'c
           lead: 'Короткие ответы о категориях, длительности, цене и записи на услуги Freya.',
           items: [
             { question: 'Какие услуги доступны в Freya?', answer: 'В Freya доступны услуги для волос, ногтей, бровей и ресниц, макияжа, косметологии, массажа и ухода.' },
-            { question: 'Есть ли в каталоге маникюр, педикюр, эпиляция и мужские услуги?', answer: 'Да, каталог Freya рассчитан на широкие beauty-запросы, включая маникюр, педикюр, эпиляцию, wax-уход, косметологию, массаж и отдельные услуги для мужчин.' },
+            { question: 'Есть ли в каталоге маникюр, педикюр, эпиляция и мужские услуги?', answer: 'Да, в каталоге представлены маникюр, педикюр, эпиляция, косметология, массаж и отдельные услуги для мужчин.' },
             { question: 'Как узнать длительность услуги?', answer: 'В карточке каждой услуги указана длительность в минутах.' },
             { question: 'Можно ли записаться на услугу онлайн?', answer: 'Да, через сайт можно выбрать услугу и перейти к онлайн-записи.' },
             { question: 'Почему у некоторых услуг указан диапазон цены?', answer: 'Диапазон цены зависит от объема работы, техники и конкретного запроса по услуге.' },
@@ -340,7 +340,7 @@ export const useBrandFaqFallback = (brand: 'freya' | 'tor', pageKey: 'home' | 'c
           lead: 'Short answers about categories, duration, pricing, and online booking for Freya services.',
           items: [
             { question: 'What services are available at Freya?', answer: 'Freya offers hair, nails, brows and lashes, makeup, cosmetology, massage, and beauty care services.' },
-            { question: 'Does the catalog include manicure, pedicure, epilation, and men’s services?', answer: 'Yes, the Freya catalog is built for broad beauty demand including manicure, pedicure, epilation, waxing, cosmetology, massage, and selected men’s beauty services.' },
+            { question: 'Does the catalog include manicure, pedicure, epilation, and men’s services?', answer: 'Yes, the Freya catalog includes manicure, pedicure, epilation, waxing, cosmetology, massage, and selected men’s beauty services.' },
             { question: 'How can I check the service duration?', answer: 'Each service card shows the estimated duration in minutes.' },
             { question: 'Can I book a service online?', answer: 'Yes, you can select a service on the site and continue to online booking.' },
             { question: 'Why do some services show a price range?', answer: 'A price range may depend on the amount of work, technique, or the selected service format.' },
@@ -354,7 +354,7 @@ export const useBrandFaqFallback = (brand: 'freya' | 'tor', pageKey: 'home' | 'c
         lead: 'Կարճ պատասխաններ Freya-ի ծառայությունների, տևողության, գների և օնլայն ամրագրման մասին։',
         items: [
           { question: 'Ի՞նչ ծառայություններ կան Freya-ում։', answer: 'Freya-ում հասանելի են մազերի, եղունգների, հոնքերի և թարթիչների, դիմահարդարման, կոսմետոլոգիայի, մերսման և խնամքի ծառայություններ։' },
-          { question: 'Կատալոգում կա՞ն manicure, pedicure, epilation և տղամարդկանց ծառայություններ։', answer: 'Այո, Freya-ի կատալոգը նախատեսված է լայն beauty պահանջարկի համար՝ manicure, pedicure, epilation, waxing, cosmetology, massage և որոշ տղամարդկանց ծառայություններով։' },
+          { question: 'Կատալոգում կա՞ն manicure, pedicure, epilation և տղամարդկանց ծառայություններ։', answer: 'Այո, Freya-ի կատալոգում ներկայացված են manicure, pedicure, epilation, waxing, cosmetology, massage և որոշ տղամարդկանց ծառայություններ։' },
           { question: 'Ինչպե՞ս տեսնել ծառայության տևողությունը։', answer: 'Յուրաքանչյուր ծառայության քարտում նշված է դրա տևողությունը րոպեներով։' },
           { question: 'Հնարավո՞ր է ծառայությունը օնլայն ամրագրել։', answer: 'Այո, կայքում կարող եք ընտրել ծառայությունը և անցնել օնլայն ամրագրման։' },
           { question: 'Ինչո՞ւ է որոշ ծառայությունների մոտ գների միջակայք նշված։', answer: 'Գների միջակայքը կարող է կախված լինել աշխատանքի ծավալից, տեխնիկայից կամ ընտրված ծառայության ձևաչափից։' },
@@ -455,8 +455,8 @@ export const useBrandFaqFallback = (brand: 'freya' | 'tor', pageKey: 'home' | 'c
           items: [
             { question: 'Какие услуги есть в Tor Barbershop?', answer: 'Tor специализируется на мужских стрижках, fade, оформлении бороды, бритье и мужском уходе.' },
             { question: 'Делаете ли вы fade и beard trim?', answer: 'Да, в Tor доступны fade, окантовка, коррекция формы бороды и другие барбер-услуги.' },
-            { question: 'Подходит ли Tor для запросов по мужскому маникюру, педикюру и мужскому уходу?', answer: 'Да, Tor можно продвигать и по мужскому маникюру, педикюру, мужскому уходу, cosmetology и другим men grooming-направлениям, если они представлены в каталоге.' },
-            { question: 'Есть ли мужская эпиляция, wax и elos-направления?', answer: 'Tor также должен быть релевантен мужским запросам по эпиляции, wax-уходу и elos-процедурам, если эти услуги есть в активном каталоге.' },
+            { question: 'Есть ли в Tor мужской маникюр, педикюр и уходовые процедуры?', answer: 'Доступные мужские процедуры представлены в каталоге услуг Tor.' },
+            { question: 'Есть ли мужская эпиляция, воск и ELOS-процедуры?', answer: 'Проверьте каталог услуг: в нём всегда указан актуальный список доступных процедур.' },
             { question: 'Нужно ли записываться заранее?', answer: 'Да, лучше бронировать время заранее, особенно если вы хотите попасть к конкретному барберу.' },
             { question: 'Сколько длится мужская стрижка?', answer: 'Точная длительность зависит от услуги, но она всегда указана на сайте рядом с каждой позицией.' },
             { question: 'Есть ли у вас товары для домашнего ухода?', answer: 'Да, на сайте доступны товары для бороды, бритья, волос и ежедневного мужского ухода.' },
@@ -473,8 +473,8 @@ export const useBrandFaqFallback = (brand: 'freya' | 'tor', pageKey: 'home' | 'c
           items: [
             { question: 'What services are available at Tor Barbershop?', answer: 'Tor focuses on men’s haircuts, fades, beard shaping, shaving, and male grooming services.' },
             { question: 'Do you offer fade cuts and beard trims?', answer: 'Yes, Tor offers fades, line-ups, beard contour work, and other core barbershop services.' },
-            { question: 'Can Tor rank for men manicure, pedicure, and men’s grooming searches?', answer: 'Yes, Tor can also target men manicure, pedicure, men’s care, cosmetology, and broader men’s grooming demand when those services are present in the catalog.' },
-            { question: 'Do you cover men’s epilation, waxing, and elos-related intent?', answer: 'Yes, Tor can also support men’s epilation, waxing, and elos-related search intent when such procedures are included in the active service set.' },
+            { question: 'Does Tor offer men’s manicure, pedicure, and care treatments?', answer: 'All currently available men’s treatments are listed in the Tor service catalog.' },
+            { question: 'Are men’s epilation, waxing, and ELOS treatments available?', answer: 'Check the service catalog for the current list of available treatments.' },
             { question: 'Do I need to book in advance?', answer: 'Yes, booking ahead is recommended, especially if you want a specific barber or peak time slot.' },
             { question: 'How long does a men’s haircut take?', answer: 'The exact duration depends on the service, and it is shown on the website for each listed option.' },
             { question: 'Do you sell grooming products?', answer: 'Yes, the site includes grooming products for beard care, shaving, styling, and daily maintenance.' },
@@ -490,8 +490,8 @@ export const useBrandFaqFallback = (brand: 'freya' | 'tor', pageKey: 'home' | 'c
         items: [
           { question: 'Ի՞նչ ծառայություններ կան Tor Barbershop-ում։', answer: 'Tor-ը մասնագիտացած է տղամարդկանց սանրվածքի, fade-ի, մորուքի ձևավորման, սափրման և տղամարդկանց խնամքի ծառայությունների վրա։' },
           { question: 'Անո՞ւմ եք fade և beard trim։', answer: 'Այո, Tor-ում հասանելի են fade, եզրագծում, մորուքի ձևավորում և դասական բարբեր ծառայություններ։' },
-          { question: 'Tor-ը հարմա՞ր է տղամարդկանց manicure, pedicure և men grooming որոնումների համար։', answer: 'Այո, Tor-ը կարելի է ներկայացնել նաև տղամարդկանց manicure, pedicure, men care, cosmetology և ավելի լայն men grooming intent-ների համար, եթե դրանք կան կատալոգում։' },
-          { question: 'Փակո՞ւմ եք տղամարդկանց epilation, waxing և elos intent-ները։', answer: 'Այո, Tor-ը կարող է լինել նաև տղամարդկանց epilation, waxing և elos intent-ների համար համապատասխան, եթե այդ ծառայությունները հասանելի են ակտիվ ծառայությունների ցանկում։' },
+          { question: 'Tor-ում կա՞ տղամարդկանց manicure, pedicure և խնամքի պրոցեդուրաներ։', answer: 'Tor-ի ծառայությունների կատալոգում ներկայացված են տվյալ պահին հասանելի բոլոր տղամարդկանց պրոցեդուրաները։' },
+          { question: 'Հասանելի՞ են տղամարդկանց epilation, waxing և ELOS պրոցեդուրաները։', answer: 'Ծառայությունների կատալոգում միշտ նշված է տվյալ պահին հասանելի պրոցեդուրաների ցանկը։' },
           { question: 'Պե՞տք է նախապես ամրագրել։', answer: 'Այո, խորհուրդ է տրվում նախապես ամրագրել, հատկապես եթե ցանկանում եք կոնկրետ բարբեր կամ պահանջված ժամ։' },
           { question: 'Որքա՞ն է տևում տղամարդկանց սանրվածքը։', answer: 'Ճշգրիտ տևողությունը կախված է ծառայությունից, և այն նշված է կայքում յուրաքանչյուր ծառայության կողքին։' },
           { question: 'Ունե՞ք տնային խնամքի ապրանքներ։', answer: 'Այո, կայքում ներկայացված են մորուքի, սափրման, հարդարման և ամենօրյա խնամքի ապրանքներ։' },
