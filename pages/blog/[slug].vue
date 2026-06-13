@@ -2,6 +2,7 @@
 import type { ApiItemResponse, ApiListResponse } from '~/types/api'
 import type { BlogArticle, BlogArticleCard } from '~/types/blog'
 import BlogArticleCardComponent from '~/components/blog/BlogArticleCard.vue'
+import { supportedLocales, type SupportedLocale } from '~/composables/useLocalizedPath'
 
 const api = useApi()
 const route = useRoute()
@@ -39,6 +40,13 @@ const { data } = await useAsyncData(
 
 const article = computed(() => data.value?.article || null)
 const relatedArticles = computed(() => data.value?.related || [])
+const currentLocale = computed(() => locale.value as SupportedLocale)
+const localizedArticlePaths = computed(() => Object.fromEntries(
+  supportedLocales.map((targetLocale) => [
+    targetLocale,
+    `${blogPath.value}/${localizedSlugFor(article.value, targetLocale)}`,
+  ]),
+) as Partial<Record<SupportedLocale, string>>)
 
 const dateLabel = computed(() => {
   if (!article.value?.published_at) return ''
@@ -51,6 +59,7 @@ const dateLabel = computed(() => {
 })
 
 usePageSeo({
+  localizedPaths: () => localizedArticlePaths.value,
   title: () => article.value?.seo_title || article.value?.title || t('blog.guides'),
   description: () => article.value?.seo_description || article.value?.excerpt || t('blog.guides'),
   image: () => article.value?.cover_image_url || undefined,
@@ -164,7 +173,10 @@ useStructuredData(() => {
               <NuxtLink
                 v-for="service in article.related_services"
                 :key="service.id"
-                :to="localePath(`${servicesPath}/${service.category_slug}/${service.slug}`)"
+                :to="localePath(`${servicesPath}/${localizedSlugFor({
+                  slug: service.category_slug,
+                  slug_i18n: service.category_slug_i18n,
+                }, currentLocale)}/${localizedSlugFor(service, currentLocale)}`)"
                 class="rounded-[24px] border p-4 transition"
                 :class="isTor
                   ? 'border-white/10 bg-white/[0.03] hover:border-[#d79a49]/40'

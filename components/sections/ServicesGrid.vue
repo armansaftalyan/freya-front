@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import ServiceCatalogCard from '~/components/catalog/ServiceCatalogCard.vue'
+import type { Category } from '~/types/category'
+import type { Service } from '~/types/service'
+import type { SupportedLocale } from '~/composables/useLocalizedPath'
 
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
@@ -47,8 +50,8 @@ const grouped = computed(() =>
     .filter((entry) => entry.items.length),
 )
 
-const detailPathFor = (categorySlug: string, service: { slug: string }) =>
-  localePath(`${servicesPath.value}/${categorySlug}/${service.slug}`) as string
+const detailPathFor = (category: Category, service: Service) =>
+  localePath(`${servicesPath.value}/${localizedSlugFor(category, locale.value as SupportedLocale)}/${localizedSlugFor(service, locale.value as SupportedLocale)}`) as string
 </script>
 
 <template>
@@ -83,7 +86,7 @@ const detailPathFor = (categorySlug: string, service: { slug: string }) =>
               :promo-disclaimer="isPromoVisible ? promoCopy.disclaimer : ''"
               :action-label="t('nav.bookNow')"
               :action-to="localePath({ path: bookingPath, query: { category_id: String(service.category_id), service_id: String(service.id) } }) as string"
-              :card-to="detailPathFor(entry.category.slug, service)"
+              :card-to="detailPathFor(entry.category, service)"
             />
           </div>
         </div>

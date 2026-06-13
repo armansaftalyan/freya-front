@@ -9,7 +9,7 @@ type SeoInput = {
   twitterDescription?: string | (() => string)
   image?: string | (() => string | undefined)
   noindex?: boolean | (() => boolean)
-  ogType?: 'website' | 'article' | 'profile' | 'product'
+  ogType?: 'website' | 'article' | 'profile'
   localizedPaths?: () => Partial<Record<SupportedLocale, string>>
 }
 
@@ -36,7 +36,15 @@ export const usePageSeo = (input: SeoInput) => {
   const { defaultImageUrl } = useSiteMeta()
   const route = useRoute()
   const { locale } = useLocale()
+  const localizedRoutePaths = useState<Partial<Record<SupportedLocale, string>> | null>(
+    'localized-route-paths',
+    () => null,
+  )
   const { canonicalUrl } = useLocalizedSeo(() => input.localizedPaths ? input.localizedPaths() : route.path)
+
+  watchEffect(() => {
+    localizedRoutePaths.value = input.localizedPaths ? input.localizedPaths() : null
+  })
 
   const imageUrl = computed(() => {
     const value = typeof input.image === 'function' ? input.image() : input.image

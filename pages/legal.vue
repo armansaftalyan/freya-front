@@ -7,8 +7,18 @@ const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const brandOgImage = computed(() => brand.value === 'tor' ? `${siteUrl.value}/tor-logo.jpg` : defaultImageUrl.value)
 
 usePageSeo({
-  title: () => `${brand.value === 'tor' ? 'Terms and Policies Tor Barbershop' : 'Terms and Policies Freya Beauty Salon'}`,
-  description: () => `Privacy, personal data processing, cancellation/refund, delivery terms and payment details for ${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon'}.`,
+  title: () => {
+    const name = brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon'
+    if (locale.value === 'ru') return `Условия и политики | ${name}`
+    if (locale.value === 'hy') return `Պայմաններ և քաղաքականություններ | ${name}`
+    return `Terms and Policies | ${name}`
+  },
+  description: () => {
+    const name = brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon'
+    if (locale.value === 'ru') return `Конфиденциальность, обработка данных, отмена, возврат, оплата и условия оказания услуг ${name}.`
+    if (locale.value === 'hy') return `${name}-ի գաղտնիության, տվյալների մշակման, չեղարկման, վերադարձի, վճարման և ծառայությունների պայմանները։`
+    return `Privacy, data processing, cancellation, refunds, payment, and service terms for ${name}.`
+  },
   image: () => brandOgImage.value,
 })
 
@@ -235,8 +245,18 @@ useStructuredData(() => ({
           : 'border border-sand-200 bg-white shadow-soft'"
       >
         <p class="text-sm" :class="isTor ? 'text-stone-300' : 'text-sand-700'">
-          Visa, Mastercard, ArCa և Idram վճարային համակարգերի սպասարկում։
-          <span :class="isTor ? 'text-stone-500' : 'text-[var(--muted)]'">(Լոգոները ներկայացված են ֆութերում)</span>
+          {{ locale === 'ru'
+            ? 'Поддерживаются платёжные системы Visa, Mastercard, ArCa и Idram.'
+            : locale === 'en'
+              ? 'Visa, Mastercard, ArCa, and Idram payment systems are supported.'
+              : 'Սպասարկվում են Visa, Mastercard, ArCa և Idram վճարային համակարգերը։' }}
+          <span :class="isTor ? 'text-stone-500' : 'text-[var(--muted)]'">
+            {{ locale === 'ru'
+              ? '(Логотипы представлены в футере)'
+              : locale === 'en'
+                ? '(Logos are shown in the footer)'
+                : '(Լոգոները ներկայացված են ֆութերում)' }}
+          </span>
         </p>
       </div>
 

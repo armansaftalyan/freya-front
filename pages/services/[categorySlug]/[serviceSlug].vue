@@ -300,7 +300,7 @@ useStructuredData(() => {
             :promo-disclaimer="isPromoVisible ? promoCopy.disclaimer : ''"
             :action-label="pageCopy.primaryAction"
             :action-to="localePath({ path: bookingPath, query: { category_id: String(item.category_id), service_id: String(item.id), ...(selectedMaster ? { master_id: String(selectedMaster.id) } : {}) } }) as string"
-            :card-to="{ path: `${servicesPath}/${category?.slug}/${item.slug}`, query: selectedMaster ? { master_id: String(selectedMaster.id) } : undefined }"
+            :card-to="{ path: `${servicesPath}/${localizedSlugFor(category, currentLocale)}/${localizedSlugFor(item, currentLocale)}`, query: selectedMaster ? { master_id: String(selectedMaster.id) } : undefined }"
           />
         </div>
       </div>

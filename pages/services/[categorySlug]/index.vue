@@ -271,7 +271,7 @@ useStructuredData(() => {
             :promo-disclaimer="isPromoVisible ? promoCopy.disclaimer : ''"
             :action-label="isTor ? pageCopy.primaryAction : t('nav.bookNow')"
             :action-to="localePath({ path: bookingPath, query: { category_id: String(item.category_id), service_id: String(item.id), ...(selectedMaster ? { master_id: String(selectedMaster.id) } : {}) } }) as string"
-            :card-to="{ path: `${servicesPath}/${categories.find((categoryItem) => categoryItem.id === item.category_id)?.slug || category?.slug}/${item.slug}`, query: selectedMaster ? { master_id: String(selectedMaster.id) } : undefined }"
+            :card-to="{ path: `${servicesPath}/${localizedSlugFor(categories.find((categoryItem) => categoryItem.id === item.category_id) || category, currentLocale)}/${localizedSlugFor(item, currentLocale)}`, query: selectedMaster ? { master_id: String(selectedMaster.id) } : undefined }"
           />
         </div>
       </div>

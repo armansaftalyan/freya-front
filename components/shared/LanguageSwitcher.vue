@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { SupportedLocale } from '~/composables/useLocalizedPath'
+
 const props = withDefaults(defineProps<{
   theme?: 'light' | 'dark'
   compact?: boolean
@@ -10,6 +12,16 @@ const props = withDefaults(defineProps<{
 const route = useRoute()
 const { locale, locales } = useLocale()
 const { localePath } = useLocalizedPath()
+const localizedRoutePaths = useState<Partial<Record<SupportedLocale, string>> | null>(
+  'localized-route-paths',
+  () => null,
+)
+const switchPath = (targetLocale: SupportedLocale) =>
+  localePath({
+    path: localizedRoutePaths.value?.[targetLocale] || route.path,
+    query: route.query,
+    hash: route.hash,
+  }, targetLocale)
 </script>
 
 <template>
@@ -22,7 +34,7 @@ const { localePath } = useLocalizedPath()
     <NuxtLink
       v-for="item in locales"
       :key="item.code"
-      :to="localePath(route.fullPath, item.code)"
+      :to="switchPath(item.code)"
       class="inline-flex items-center justify-center rounded-full font-semibold uppercase leading-none whitespace-nowrap transition"
       :class="[
         props.compact ? 'min-w-[2.15rem] px-0 py-2 text-[0.68rem] tracking-[0.18em]' : 'px-2.5 py-1.5 text-xs tracking-[0.14em]',

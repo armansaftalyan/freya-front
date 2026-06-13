@@ -2,7 +2,9 @@ export interface BlogArticleServiceLink {
   id: number
   name: string
   slug: string
+  slug_i18n?: Partial<Record<'ru' | 'en' | 'hy', string | null>>
   category_slug: string
+  category_slug_i18n?: Partial<Record<'ru' | 'en' | 'hy', string | null>>
   category_name: string
   price_from: number
   price_to: number | null
@@ -13,6 +15,7 @@ export interface BlogArticleCategory {
   id: number
   name: string
   slug: string
+  slug_i18n?: Partial<Record<'ru' | 'en' | 'hy', string | null>>
 }
 
 export interface BlogArticleCard {
@@ -20,6 +23,7 @@ export interface BlogArticleCard {
   brand: 'freya' | 'tor'
   title: string
   slug: string
+  slug_i18n?: Partial<Record<'ru' | 'en' | 'hy', string | null>>
   excerpt: string | null
   seo_title: string | null
   seo_description: string | null

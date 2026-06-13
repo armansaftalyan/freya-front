@@ -10,8 +10,18 @@ const { faqCopy } = await usePageFaqContent(brand.value, 'privacy-policy')
 const brandOgImage = computed(() => brand.value === 'tor' ? `${siteUrl.value}/tor-logo.jpg` : defaultImageUrl.value)
 
 usePageSeo({
-  title: () => `${brand.value === 'tor' ? 'Privacy Policy Tor Barbershop' : 'Privacy Policy Freya Beauty Salon'}`,
-  description: () => `Privacy policy, personal data processing, cancellation and payment terms for ${brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon'}.`,
+  title: () => {
+    const name = brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon'
+    if (locale.value === 'ru') return `Политика конфиденциальности | ${name}`
+    if (locale.value === 'hy') return `Գաղտնիության քաղաքականություն | ${name}`
+    return `Privacy Policy | ${name}`
+  },
+  description: () => {
+    const name = brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon'
+    if (locale.value === 'ru') return `Политика конфиденциальности и обработки персональных данных, условия отмены и оплаты ${name}.`
+    if (locale.value === 'hy') return `${name}-ի գաղտնիության և անձնական տվյալների մշակման քաղաքականությունը, չեղարկման և վճարման պայմանները։`
+    return `Privacy and personal data processing policy, cancellation, and payment terms for ${name}.`
+  },
   image: () => brandOgImage.value,
 })
 
@@ -92,7 +102,7 @@ useStructuredData(() => ({
       >
         <p class="text-sm leading-7" :class="isTor ? 'text-stone-300' : 'text-sand-700'">{{ content.intro }}</p>
         <div class="mt-5 space-y-2 text-sm leading-7" :class="isTor ? 'text-stone-400' : 'text-sand-700'">
-          <p>Phone: +374 44 733773</p>
+          <p>{{ locale === 'ru' ? 'Телефон' : locale === 'hy' ? 'Հեռախոս' : 'Phone' }}: +374 44 733773</p>
           <p>WhatsApp: https://wa.me/37444733773</p>
           <p>Email: support@freyabeauty.am</p>
           <p>Telegram: https://t.me/freyabeautyam</p>
