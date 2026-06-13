@@ -113,7 +113,11 @@ const titleTemplate = (title?: string | null) => {
     return baseTitle
   }
 
-  return /\bTor\b/i.test(title) ? title : `${title} | ${baseTitle}`
+  if (/\bTor\b/i.test(title) || title.length >= 41) {
+    return title
+  }
+
+  return `${title} | ${baseTitle}`
 }
 
 watch(
