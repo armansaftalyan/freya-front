@@ -421,10 +421,10 @@ export const buildMarkdownPage = async (
   ].join('\n')
 }
 
-export const markdownResponse = (body: string) => new Response(`${body.trim()}\n`, {
+export const markdownResponse = (body: string, robots = 'index, follow') => new Response(`${body.trim()}\n`, {
   headers: {
     'content-type': 'text/markdown; charset=utf-8',
     'cache-control': 'public, max-age=900, s-maxage=3600, stale-while-revalidate=86400',
-    'x-robots-tag': 'index, follow',
+    'x-robots-tag': robots,
   },
 })

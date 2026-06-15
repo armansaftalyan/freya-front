@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 404, statusMessage: 'Markdown page not found' })
     }
 
-    return markdownResponse(body)
+    return markdownResponse(body, 'noindex, follow')
   }
   catch (error: any) {
     if (error?.statusCode) throw error

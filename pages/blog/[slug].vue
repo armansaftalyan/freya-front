@@ -15,7 +15,7 @@ const slug = computed(() => String(route.params.slug || '').trim())
 const isArmenianLocale = computed(() => locale.value === 'hy')
 const brandHomeLabel = computed(() => brand.value === 'tor' ? 'Tor Barbershop' : 'Freya Beauty Salon')
 
-const { data } = await useAsyncData(
+const { data, error } = await useAsyncData(
   () => `blog-article-${brand.value}-${slug.value}-${locale.value}`,
   async () => {
     const articleResponse = await api.get<ApiItemResponse<BlogArticle>>(`/blog/${slug.value}`, { brand: brand.value }, { skipErrorToast: true })
@@ -37,6 +37,14 @@ const { data } = await useAsyncData(
     }
   },
 )
+
+if (error.value) {
+  throw createError({
+    statusCode: 404,
+    statusMessage: 'Blog article not found',
+    fatal: true,
+  })
+}
 
 const article = computed(() => data.value?.article || null)
 const relatedArticles = computed(() => data.value?.related || [])
