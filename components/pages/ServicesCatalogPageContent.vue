@@ -45,6 +45,8 @@ const { formatPriceLabel } = useServicePricing()
 const { isVisible: isPromoVisible, promoCopy, promoPricingFor } = useFirstBookingPromo()
 const isTor = computed(() => props.theme === 'tor')
 
+const categoryAnchorId = (categoryId: number) => `services-category-${categoryId}`
+
 const detailPathFor = (category: Pick<Category, 'slug' | 'slug_i18n'>, service: Service) =>
   localePath(`${props.servicesPath}/${localizedSlugFor(category, locale.value as SupportedLocale)}/${localizedSlugFor(service, locale.value as SupportedLocale)}`) as string
 </script>
@@ -100,8 +102,46 @@ const detailPathFor = (category: Pick<Category, 'slug' | 'slug_i18n'>, service: 
         <SkeletonBlock v-for="idx in 6" :key="idx" class="h-48" />
       </div>
 
+      <nav
+        v-if="grouped.length"
+        class="md:hidden"
+        :aria-label="eyebrow || title"
+      >
+        <div
+          class="grid gap-2 rounded-lg border p-2"
+          :class="isTor
+            ? 'border-white/10 bg-white/[0.03]'
+            : 'border-sand-200 bg-white/80 shadow-sm'"
+        >
+          <a
+            v-for="entry in grouped"
+            :key="`mobile-category-${entry.category.id}`"
+            :href="`#${categoryAnchorId(entry.category.id)}`"
+            class="flex min-h-14 items-center justify-between gap-3 rounded-lg border px-3 py-3 text-left transition active:scale-[0.99]"
+            :class="isTor
+              ? 'border-white/10 bg-black/20 text-stone-100 active:border-[#c58a3a]/50'
+              : 'border-sand-200 bg-white text-sand-950 active:border-sand-400'"
+          >
+            <span class="min-w-0 text-sm font-semibold leading-snug">
+              {{ entry.category.name }}
+            </span>
+            <span
+              class="inline-flex h-7 min-w-7 shrink-0 items-center justify-center rounded-full px-2 text-xs font-semibold"
+              :class="isTor ? 'bg-[#d79a49]/15 text-[#efbf7f]' : 'bg-sand-100 text-sand-700'"
+            >
+              {{ entry.items.length }}
+            </span>
+          </a>
+        </div>
+      </nav>
+
       <div :class="isTor ? 'mt-10 space-y-10' : 'space-y-8'">
-        <div v-for="entry in grouped" :key="entry.category.id" class="space-y-4">
+        <div
+          v-for="entry in grouped"
+          :id="categoryAnchorId(entry.category.id)"
+          :key="entry.category.id"
+          class="scroll-mt-24 space-y-4"
+        >
           <div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 :class="isTor ? 'text-[1.9rem] leading-tight text-stone-100 sm:text-[2.1rem]' : 'text-[1.9rem] leading-tight text-sand-950 sm:text-[2.1rem]'">
               {{ entry.category.name }}
