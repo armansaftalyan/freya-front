@@ -5,8 +5,14 @@ export default defineNuxtPlugin(() => {
 
   window.addEventListener('load', () => {
     let refreshing = false
+    let hadController = Boolean(navigator.serviceWorker.controller)
 
     navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController) {
+        hadController = true
+        return
+      }
+
       if (refreshing) return
       refreshing = true
       window.location.reload()

@@ -47,6 +47,11 @@ export default defineNuxtConfig({
     },
   },
   routeRules: {
+    '/sw.js': {
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+      },
+    },
     '/': publicSwrRule,
     '/en': publicSwrRule,
     '/ru': publicSwrRule,
