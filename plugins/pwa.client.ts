@@ -4,20 +4,6 @@ export default defineNuxtPlugin(() => {
   }
 
   window.addEventListener('load', () => {
-    let refreshing = false
-    let hadController = Boolean(navigator.serviceWorker.controller)
-
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!hadController) {
-        hadController = true
-        return
-      }
-
-      if (refreshing) return
-      refreshing = true
-      window.location.reload()
-    })
-
     navigator.serviceWorker.register('/sw.js', {
       scope: '/',
       updateViaCache: 'none',
@@ -26,5 +12,13 @@ export default defineNuxtPlugin(() => {
       .catch(() => {
         // PWA installability should not block normal browsing.
       })
+
+    if ('caches' in window) {
+      caches.keys()
+        .then(keys => Promise.all(keys.filter(key => key.startsWith('freya-pwa')).map(key => caches.delete(key))))
+        .catch(() => {
+          // Cache cleanup should not block normal browsing.
+        })
+    }
   }, { once: true })
 })
