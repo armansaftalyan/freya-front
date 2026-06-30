@@ -372,7 +372,7 @@ export const useBrandFaqFallback = (brand: 'freya' | 'tor', pageKey: 'home' | 'c
             items: [
               { question: 'Где находится Tor Barbershop?', answer: 'Tor Barbershop находится в Ереване по адресу Азатутян 21.' },
               { question: 'Как записаться в Tor?', answer: 'Вы можете записаться онлайн через сайт и выбрать удобное время визита.' },
-              { question: 'Какой у вас график работы?', answer: 'Барбершоп работает ежедневно с 10:00 до 19:00.' },
+              { question: 'Какой у вас график работы?', answer: 'Барбершоп работает ежедневно с 10:00 до 20:00.' },
               { question: 'Можно ли открыть маршрут в навигаторе?', answer: 'Да, на странице контактов есть быстрые кнопки для открытия маршрута в Yandex и Google Maps.' },
             ],
           }
@@ -386,7 +386,7 @@ export const useBrandFaqFallback = (brand: 'freya' | 'tor', pageKey: 'home' | 'c
             items: [
               { question: 'Where is Tor Barbershop located?', answer: 'Tor Barbershop is located at 21 Azatutyan, Yerevan.' },
               { question: 'How can I book an appointment?', answer: 'You can book online through the website and choose a suitable time slot.' },
-              { question: 'What are your working hours?', answer: 'The barbershop is open daily from 10:00 to 19:00.' },
+              { question: 'What are your working hours?', answer: 'The barbershop is open daily from 10:00 to 20:00.' },
               { question: 'Can I open a route in navigation apps?', answer: 'Yes, the contacts page includes quick links for Yandex and Google Maps routes.' },
             ],
           }
@@ -399,7 +399,7 @@ export const useBrandFaqFallback = (brand: 'freya' | 'tor', pageKey: 'home' | 'c
           items: [
             { question: 'Որտե՞ղ է գտնվում Tor Barbershop-ը։', answer: 'Tor Barbershop-ը գտնվում է Երևանում, Ազատության 21 հասցեում։' },
             { question: 'Ինչպե՞ս ամրագրել այցը։', answer: 'Կարող եք օնլայն ամրագրել կայքի միջոցով և ընտրել ձեզ հարմար ժամը։' },
-            { question: 'Ո՞ր ժամերին եք աշխատում։', answer: 'Բարբեր շոփը աշխատում է ամեն օր՝ 10:00-ից 19:00։' },
+            { question: 'Ո՞ր ժամերին եք աշխատում։', answer: 'Բարբեր շոփը աշխատում է ամեն օր՝ 10:00-ից 20:00։' },
             { question: 'Հնարավո՞ր է բացել երթուղին նավիգացիայում։', answer: 'Այո, կոնտակտների էջում կան արագ հղումներ Yandex և Google Maps երթուղիների համար։' },
           ],
         }
@@ -413,7 +413,7 @@ export const useBrandFaqFallback = (brand: 'freya' | 'tor', pageKey: 'home' | 'c
           items: [
             { question: 'Где находится Freya Beauty Salon?', answer: 'Салон находится в Ереване по адресу Азатутян 21.' },
             { question: 'Как записаться в салон?', answer: 'Вы можете записаться онлайн через сайт и выбрать удобное время визита.' },
-            { question: 'Какой у вас график работы?', answer: 'Салон работает ежедневно с 10:00 до 19:00.' },
+            { question: 'Какой у вас график работы?', answer: 'Салон работает ежедневно с 10:00 до 20:00.' },
             { question: 'Можно ли открыть маршрут в навигаторе?', answer: 'Да, на странице контактов есть быстрые кнопки для открытия маршрута в Yandex и Google Maps.' },
           ],
         }
@@ -427,7 +427,7 @@ export const useBrandFaqFallback = (brand: 'freya' | 'tor', pageKey: 'home' | 'c
           items: [
             { question: 'Where is Freya Beauty Salon located?', answer: 'Freya Beauty Salon is located at 21 Azatutyan, Yerevan.' },
             { question: 'How can I book an appointment?', answer: 'You can book online through the website and choose a suitable time slot.' },
-            { question: 'What are your working hours?', answer: 'The salon is open daily from 10:00 to 19:00.' },
+            { question: 'What are your working hours?', answer: 'The salon is open daily from 10:00 to 20:00.' },
             { question: 'Can I open a route in navigation apps?', answer: 'Yes, the contacts page includes quick links for Yandex and Google Maps routes.' },
           ],
         }
@@ -440,7 +440,7 @@ export const useBrandFaqFallback = (brand: 'freya' | 'tor', pageKey: 'home' | 'c
         items: [
           { question: 'Որտե՞ղ է գտնվում Freya Beauty Salon-ը։', answer: 'Սրահը գտնվում է Երևանում, Ազատության 21 հասցեում։' },
           { question: 'Ինչպե՞ս ամրագրել այցը։', answer: 'Կարող եք օնլայն ամրագրել կայքի միջոցով և ընտրել ձեզ հարմար ժամը։' },
-          { question: 'Ո՞ր ժամերին եք աշխատում։', answer: 'Սրահը աշխատում է ամեն օր՝ 10:00-ից 19:00։' },
+          { question: 'Ո՞ր ժամերին եք աշխատում։', answer: 'Սրահը աշխատում է ամեն օր՝ 10:00-ից 20:00։' },
           { question: 'Հնարավո՞ր է բացել երթուղին նավիգացիայում։', answer: 'Այո, կոնտակտների էջում կան արագ հղումներ Yandex և Google Maps երթուղիների համար։' },
         ],
       }

@@ -32,7 +32,7 @@ export const useSiteMeta = () => {
         'https://schema.org/Sunday',
       ],
       opens: '10:00',
-      closes: '19:00',
+      closes: '20:00',
     },
   ]
 

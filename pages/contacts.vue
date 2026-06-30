@@ -69,9 +69,9 @@ const fixedAddress = computed(() => {
 })
 
 const fixedSchedule = computed(() => {
-  if (locale.value === 'ru') return 'Ежедневно, 10:00-19:00'
-  if (locale.value === 'en') return 'Daily, 10:00-19:00'
-  return 'Ամեն օր, 10:00-19:00'
+  if (locale.value === 'ru') return 'Ежедневно, 10:00-20:00'
+  if (locale.value === 'en') return 'Daily, 10:00-20:00'
+  return 'Ամեն օր, 10:00-20:00'
 })
 
 const fixedPhone = '+374 44 733773'
