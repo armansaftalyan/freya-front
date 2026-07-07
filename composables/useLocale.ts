@@ -377,10 +377,10 @@ const messages: Record<Locale, Dict> = {
       ogDescription: 'Запишитесь онлайн: услуги, мастера и быстрый выбор времени.',
       hero: {
         badge: 'Премиальный бьюти-опыт',
-        title: 'Красота без лишних усилий.',
+        title: 'Салон красоты в Ереване',
         serviceHeading: 'Всё для красоты и ухода в одном салоне',
         subtitle: 'Персональные beauty-ритуалы, сильная команда мастеров и онлайн-запись в два клика.',
-        customerLead: 'Выберите услугу и мастера, запишитесь на удобное время онлайн и приходите к нам по адресу Азатутян 21.',
+        customerLead: 'Freya Beauty Salon — салон красоты в Ереване на Азатутян 21. Выберите услугу и мастера, запишитесь на удобное время онлайн и приходите к нам.',
       },
       services: {
         title: 'Услуги',
@@ -863,10 +863,10 @@ const messages: Record<Locale, Dict> = {
       ogDescription: 'Book online: services, masters, and instant appointment slots.',
       hero: {
         badge: 'Premium Beauty Experience',
-        title: 'Beauty that feels effortless.',
+        title: 'Beauty Salon in Yerevan',
         serviceHeading: 'Beauty and care services in one salon',
         subtitle: 'Personalized beauty rituals, expert masters, and online booking in two clicks.',
-        customerLead: 'Choose a service and specialist, book a convenient time online, and visit us at 21 Azatutyan.',
+        customerLead: 'Freya Beauty Salon is a beauty salon in Yerevan at 21 Azatutyan. Choose a service and specialist, book a convenient time online, and visit us.',
       },
       services: {
         title: 'Services',
@@ -1358,10 +1358,10 @@ const messages: Record<Locale, Dict> = {
       ogDescription: 'Գրանցվեք օնլայն՝ ծառայություններ, վարպետներ և արագ ժամի ընտրություն։',
       hero: {
         badge: 'Պրեմիում գեղեցկության փորձ',
-        title: 'Գեղեցկություն՝ առանց ավելորդ ջանքի։',
+        title: 'Գեղեցկության սրահ Երևանում',
         serviceHeading: 'Գեղեցկության և խնամքի ծառայություններ մեկ սրահում',
         subtitle: 'Անհատական beauty-ծրագրեր, ուժեղ վարպետների թիմ և օնլայն գրանցում երկու քլիքով։',
-        customerLead: 'Ընտրեք ծառայությունն ու մասնագետին, ամրագրեք հարմար ժամը օնլայն և այցելեք մեզ Ազատության 21 հասցեում։',
+        customerLead: 'Freya Beauty Salon-ը գեղեցկության սրահ է Երևանում՝ Ազատության 21 հասցեում։ Ընտրեք ծառայությունն ու մասնագետին, ամրագրեք հարմար ժամը օնլայն և այցելեք մեզ։',
       },
       services: {
         title: 'Ծառայություններ',

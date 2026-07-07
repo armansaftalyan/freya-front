@@ -5,7 +5,7 @@ import FaqSection from '~/components/sections/FaqSection.vue'
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
 const route = useRoute()
-const { siteUrl, defaultImageUrl, telephone, telephoneHref, whatsappUrl, telegramUrl, address, openingHoursSpecification, sameAs } = useSiteMeta()
+const { siteUrl, defaultImageUrl, telephone, telephoneHref, whatsappUrl, telegramUrl, instagramUrl, twoGisUrl, address, geoCoordinates, googleMapsUrl, openingHoursSpecification, sameAs } = useSiteMeta()
 const { brand, isTor, bookingPath } = useBrandContext()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const brandOgImage = computed(() => brand.value === 'tor' ? `${siteUrl.value}/tor-logo.jpg` : defaultImageUrl.value)
@@ -75,9 +75,9 @@ const fixedSchedule = computed(() => {
 })
 
 const fixedPhone = '+374 44 733773'
-const yandexMapUrl = 'https://yandex.ru/map-widget/v1/?oid=161971752484&ol=biz&z=17'
-const yandexRouteUrl = 'https://yandex.ru/maps/?oid=161971752484&ol=biz'
-const googleRouteUrl = 'https://www.google.com/maps/search/?api=1&query=%D0%90%D0%B7%D0%B0%D1%82%D1%83%D1%82%D1%8F%D0%BD%2021%2C%20%D0%95%D1%80%D0%B5%D0%B2%D0%B0%D0%BD'
+const yandexBusinessOid = computed(() => brand.value === 'tor' ? '157536408300' : '161971752484')
+const yandexMapUrl = computed(() => `https://yandex.ru/map-widget/v1/?oid=${yandexBusinessOid.value}&ol=biz&z=17`)
+const yandexRouteUrl = computed(() => `https://yandex.ru/maps/?oid=${yandexBusinessOid.value}&ol=biz`)
 
 const mapButtonCopy = computed(() => {
   if (locale.value === 'ru') {
@@ -130,8 +130,10 @@ useStructuredData(() => ({
       image: brandOgImage.value,
       telephone,
       address,
+      geo: geoCoordinates.value,
+      hasMap: googleMapsUrl.value,
       openingHoursSpecification,
-      sameAs,
+      sameAs: sameAs.value,
     },
     {
       '@type': 'BreadcrumbList',
@@ -190,6 +192,8 @@ useStructuredData(() => ({
               <div class="mt-3 flex flex-wrap gap-3 text-sm">
                 <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer" :class="isTor ? 'text-stone-200 transition hover:text-[#d79a49]' : 'text-sand-800 hover:text-sand-600'">WhatsApp</a>
                 <a :href="telegramUrl" target="_blank" rel="noopener noreferrer" :class="isTor ? 'text-stone-200 transition hover:text-[#d79a49]' : 'text-sand-800 hover:text-sand-600'">Telegram</a>
+                <a :href="instagramUrl" target="_blank" rel="noopener noreferrer" :class="isTor ? 'text-stone-200 transition hover:text-[#d79a49]' : 'text-sand-800 hover:text-sand-600'">Instagram</a>
+                <a :href="twoGisUrl" target="_blank" rel="noopener noreferrer" :class="isTor ? 'text-stone-200 transition hover:text-[#d79a49]' : 'text-sand-800 hover:text-sand-600'">2GIS</a>
               </div>
               <p class="mt-4 text-xs uppercase tracking-[0.15em]" :class="isTor ? 'text-[#c58a3a]' : 'text-sand-600'">{{ copy.scheduleLabel }}</p>
               <p class="mt-2 rounded-xl p-3 text-sm" :class="isTor ? 'bg-white/[0.06] text-stone-200' : 'bg-sand-50 text-sand-700'">{{ fixedSchedule }}</p>
@@ -214,7 +218,7 @@ useStructuredData(() => ({
 
       <div class="flex flex-wrap gap-3">
         <a :href="yandexRouteUrl" target="_blank" rel="noopener noreferrer"><BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ mapButtonCopy.yandex }}</BaseButton></a>
-        <a :href="googleRouteUrl" target="_blank" rel="noopener noreferrer"><BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ mapButtonCopy.google }}</BaseButton></a>
+        <a :href="googleMapsUrl" target="_blank" rel="noopener noreferrer"><BaseButton variant="secondary" :theme="isTor ? 'tor' : 'default'">{{ mapButtonCopy.google }}</BaseButton></a>
       </div>
 
       <FaqSection

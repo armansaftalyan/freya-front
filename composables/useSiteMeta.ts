@@ -12,7 +12,27 @@ export const useSiteMeta = () => {
   const telephoneHref = 'tel:+37444733773'
   const whatsappUrl = 'https://wa.me/37444733773'
   const telegramUrl = 'https://t.me/freyabeautyam'
+  const instagramUrl = computed(() => brand.value === 'tor'
+    ? 'https://www.instagram.com/torbarbershop.am/'
+    : 'https://www.instagram.com/freya_beauty.am/')
+  const twoGisUrl = computed(() => brand.value === 'tor'
+    ? 'https://2gis.am/ru/yerevan/inside/70030076748432267/firm/70000001114757930/44.526922%2C40.207028?m=44.526983%2C40.207175%2F19.48'
+    : 'https://2gis.am/ru/yerevan/inside/70030076748432267/firm/70000001088976948/44.526922%2C40.207028?m=44.526983%2C40.207175%2F19.48')
   const email = 'support@freyabeauty.am'
+  const geoCoordinates = computed(() => brand.value === 'tor'
+    ? undefined
+    : {
+        '@type': 'GeoCoordinates',
+        latitude: 40.2069962,
+        longitude: 44.5268533,
+      })
+  const googleMapsUrl = computed(() => {
+    if (brand.value === 'tor') {
+      return 'https://www.google.com/maps/place/Tor+Barbershop/data=!4m2!3m1!1s0x0:0x23fa938c95d744af'
+    }
+
+    return 'https://www.google.com/maps/place/Freya/@40.2069962,44.5268533,845m/data=!3m2!1e3!4b1!4m6!3m5!1s0x406aa2cccc01b45d:0x3d92077da3371274!8m2!3d40.2069962!4d44.5268533!16s%2Fg%2F11d_d46mzb'
+  })
   const address = {
     '@type': 'PostalAddress',
     streetAddress: '21 Azatutyan',
@@ -36,11 +56,12 @@ export const useSiteMeta = () => {
     },
   ]
 
-  const sameAs = [
+  const sameAs = computed(() => [
     telegramUrl,
     whatsappUrl,
-    'https://www.instagram.com/bellahairstayl/',
-  ]
+    instagramUrl.value,
+    twoGisUrl.value,
+  ])
 
   return {
     salonName,
@@ -49,7 +70,11 @@ export const useSiteMeta = () => {
     telephoneHref,
     whatsappUrl,
     telegramUrl,
+    instagramUrl,
+    twoGisUrl,
     email,
+    geoCoordinates,
+    googleMapsUrl,
     address,
     openingHoursSpecification,
     sameAs,

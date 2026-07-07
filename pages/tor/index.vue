@@ -212,7 +212,7 @@ useStructuredData(() => ({
       email,
       address,
       openingHoursSpecification,
-      sameAs,
+      sameAs: sameAs.value,
       parentOrganization: {
         '@id': `${siteUrl.value}#salon`,
       },
