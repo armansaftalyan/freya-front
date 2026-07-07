@@ -10,7 +10,7 @@ const auth = useAuthStore()
 const { t, locale, locales } = useLocale()
 const route = useRoute()
 const { brand, authLoginPath, authProfilePath, contactsPath, legalPath, privacyPolicyPath, blogPath, rootPath } = useBrandContext()
-const { salonName, torSalonName, telephone, telephoneHref, whatsappUrl, telegramUrl, email, address, sameAs, siteUrl, logoUrl, defaultImageUrl } = useSiteMeta()
+const { salonName, torSalonName, telephone, telephoneHref, whatsappUrl, telegramUrl, email, address, geoCoordinates, googleMapsUrl, sameAs, siteUrl, logoUrl, defaultImageUrl } = useSiteMeta()
 const isMobileMenuOpen = ref(false)
 const isMoreMenuOpen = ref(false)
 const moreMenuRef = ref<HTMLElement | null>(null)
@@ -156,11 +156,8 @@ useHead(() => ({
             email,
             priceRange: '$$',
             address,
-            geo: {
-              '@type': 'GeoCoordinates',
-              latitude: 40.1776,
-              longitude: 44.5126,
-            },
+            geo: geoCoordinates.value,
+            hasMap: googleMapsUrl.value,
             openingHoursSpecification: [
               {
                 '@type': 'OpeningHoursSpecification',
@@ -177,7 +174,7 @@ useHead(() => ({
                 closes: '20:00',
               },
             ],
-            sameAs,
+            sameAs: sameAs.value,
           },
           {
             '@type': 'WebSite',

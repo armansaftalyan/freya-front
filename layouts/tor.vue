@@ -189,7 +189,7 @@ useHead(() => ({
             url: `${siteUrl.value}/tor`,
             image: torLogoUrl.value,
             logo: torLogoUrl.value,
-            sameAs,
+            sameAs: sameAs.value,
           },
           {
             '@type': 'WebSite',
