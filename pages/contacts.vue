@@ -5,7 +5,7 @@ import FaqSection from '~/components/sections/FaqSection.vue'
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
 const route = useRoute()
-const { siteUrl, defaultImageUrl, telephone, telephoneHref, whatsappUrl, telegramUrl, instagramUrl, twoGisUrl, address, geoCoordinates, googleMapsUrl, openingHoursSpecification, sameAs } = useSiteMeta()
+const { siteUrl, defaultImageUrl, telephone, telephoneHref, whatsappUrl, telegramUrl, instagramUrl, twoGisUrl, email, address, geoCoordinates, googleMapsUrl, openingHoursSpecification, sameAs, contactPoint } = useSiteMeta()
 const { brand, isTor, bookingPath } = useBrandContext()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const brandOgImage = computed(() => brand.value === 'tor' ? `${siteUrl.value}/tor-logo.jpg` : defaultImageUrl.value)
@@ -128,12 +128,16 @@ useStructuredData(() => ({
       name: copy.value.salonName,
       url: canonicalUrl.value,
       image: brandOgImage.value,
+      logo: brandOgImage.value,
       telephone,
+      email,
+      priceRange: '$$',
       address,
       geo: geoCoordinates.value,
       hasMap: googleMapsUrl.value,
       openingHoursSpecification,
       sameAs: sameAs.value,
+      contactPoint: contactPoint.value,
     },
     {
       '@type': 'BreadcrumbList',

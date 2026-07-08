@@ -11,7 +11,7 @@ import BaseModal from "~/components/base/BaseModal.vue";
 const { t, locale } = useLocale()
 const { localePath } = useLocalizedPath()
 const route = useRoute()
-const { siteUrl, salonName, telephone, address, geoCoordinates, googleMapsUrl, openingHoursSpecification, sameAs, defaultImageUrl } = useSiteMeta()
+const { siteUrl, salonName, telephone, email, address, geoCoordinates, googleMapsUrl, openingHoursSpecification, sameAs, contactPoint, defaultImageUrl } = useSiteMeta()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const { pageContent, faqCopy } = await usePageFaqContent('freya', 'home')
 const heroSlides = computed(() => pageContent.value?.hero_slides || [])
@@ -60,13 +60,16 @@ useStructuredData(() => ({
       name: salonName,
       url: canonicalUrl.value,
       image: defaultImageUrl.value,
+      logo: defaultImageUrl.value,
       telephone,
+      email,
       priceRange: '$$',
       address,
       geo: geoCoordinates.value,
       hasMap: googleMapsUrl.value,
       openingHoursSpecification,
       sameAs: sameAs.value,
+      contactPoint: contactPoint.value,
     },
     {
       '@type': 'WebPage',

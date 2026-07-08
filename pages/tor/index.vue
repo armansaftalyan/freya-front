@@ -17,7 +17,7 @@ const route = useRoute()
 const { locale, t } = useLocale()
 const { localePath } = useLocalizedPath()
 const { masterAvatarSrc, onMasterAvatarError } = useMasterAvatar()
-const { siteUrl, telephone, email, address, openingHoursSpecification, sameAs } = useSiteMeta()
+const { siteUrl, telephone, email, address, geoCoordinates, googleMapsUrl, openingHoursSpecification, sameAs, contactPoint } = useSiteMeta()
 const { bookingPath, productsPath, mastersPath, servicesPath } = useBrandContext()
 const { formatPriceLabel } = useServicePricing()
 const cart = useCartStore()
@@ -208,11 +208,16 @@ useStructuredData(() => ({
       description: copy.value.seoDescription,
       url: `${siteUrl.value}${route.path}`,
       image: torOgImage.value,
+      logo: torOgImage.value,
       telephone,
       email,
+      priceRange: '$$',
       address,
+      geo: geoCoordinates.value,
+      hasMap: googleMapsUrl.value,
       openingHoursSpecification,
       sameAs: sameAs.value,
+      contactPoint: contactPoint.value,
       parentOrganization: {
         '@id': `${siteUrl.value}#salon`,
       },

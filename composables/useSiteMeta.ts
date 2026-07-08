@@ -18,9 +18,16 @@ export const useSiteMeta = () => {
   const twoGisUrl = computed(() => brand.value === 'tor'
     ? 'https://2gis.am/ru/yerevan/inside/70030076748432267/firm/70000001114757930/44.526922%2C40.207028?m=44.526983%2C40.207175%2F19.48'
     : 'https://2gis.am/ru/yerevan/inside/70030076748432267/firm/70000001088976948/44.526922%2C40.207028?m=44.526983%2C40.207175%2F19.48')
+  const yandexMapsUrl = computed(() => brand.value === 'tor'
+    ? 'https://yandex.ru/maps/?oid=157536408300&ol=biz'
+    : 'https://yandex.ru/maps/?oid=161971752484&ol=biz')
   const email = 'support@freyabeauty.am'
   const geoCoordinates = computed(() => brand.value === 'tor'
-    ? undefined
+    ? {
+        '@type': 'GeoCoordinates',
+        latitude: 40.207028,
+        longitude: 44.526922,
+      }
     : {
         '@type': 'GeoCoordinates',
         latitude: 40.2069962,
@@ -57,10 +64,25 @@ export const useSiteMeta = () => {
   ]
 
   const sameAs = computed(() => [
-    telegramUrl,
-    whatsappUrl,
     instagramUrl.value,
     twoGisUrl.value,
+    googleMapsUrl.value,
+    yandexMapsUrl.value,
+  ])
+  const contactPoint = computed(() => [
+    {
+      '@type': 'ContactPoint',
+      telephone,
+      contactType: 'customer service',
+      availableLanguage: ['hy', 'ru', 'en'],
+      url: whatsappUrl,
+    },
+    {
+      '@type': 'ContactPoint',
+      contactType: 'customer service',
+      availableLanguage: ['hy', 'ru', 'en'],
+      url: telegramUrl,
+    },
   ])
 
   return {
@@ -72,12 +94,14 @@ export const useSiteMeta = () => {
     telegramUrl,
     instagramUrl,
     twoGisUrl,
+    yandexMapsUrl,
     email,
     geoCoordinates,
     googleMapsUrl,
     address,
     openingHoursSpecification,
     sameAs,
+    contactPoint,
     siteUrl,
     logoUrl,
     defaultImageUrl,

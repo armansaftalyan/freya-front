@@ -13,7 +13,20 @@ const isMobileMenuOpen = ref(false)
 const isMoreMenuOpen = ref(false)
 const moreMenuRef = ref<HTMLElement | null>(null)
 const { localePath } = useLocalizedPath()
-const { siteUrl, telephone, telephoneHref, whatsappUrl, telegramUrl, sameAs } = useSiteMeta()
+const {
+  siteUrl,
+  telephone,
+  telephoneHref,
+  whatsappUrl,
+  telegramUrl,
+  email,
+  address,
+  geoCoordinates,
+  googleMapsUrl,
+  openingHoursSpecification,
+  sameAs,
+  contactPoint,
+} = useSiteMeta()
 const { rootPath, mastersPath, contactsPath, legalPath, privacyPolicyPath, giftCardsPath, authLoginPath, authProfilePath, blogPath } = useBrandContext()
 const { canonicalUrl, alternates } = useLocalizedSeo(() => route.path)
 const markdownAlternatePath = computed(() => {
@@ -189,7 +202,15 @@ useHead(() => ({
             url: `${siteUrl.value}/tor`,
             image: torLogoUrl.value,
             logo: torLogoUrl.value,
+            telephone,
+            email,
+            priceRange: '$$',
+            address,
+            geo: geoCoordinates.value,
+            hasMap: googleMapsUrl.value,
+            openingHoursSpecification,
             sameAs: sameAs.value,
+            contactPoint: contactPoint.value,
           },
           {
             '@type': 'WebSite',

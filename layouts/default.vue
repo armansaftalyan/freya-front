@@ -10,7 +10,7 @@ const auth = useAuthStore()
 const { t, locale, locales } = useLocale()
 const route = useRoute()
 const { brand, authLoginPath, authProfilePath, contactsPath, legalPath, privacyPolicyPath, blogPath, rootPath } = useBrandContext()
-const { salonName, torSalonName, telephone, telephoneHref, whatsappUrl, telegramUrl, email, address, geoCoordinates, googleMapsUrl, sameAs, siteUrl, logoUrl, defaultImageUrl } = useSiteMeta()
+const { salonName, torSalonName, telephone, telephoneHref, whatsappUrl, telegramUrl, email, address, geoCoordinates, googleMapsUrl, sameAs, contactPoint, siteUrl, logoUrl, defaultImageUrl } = useSiteMeta()
 const isMobileMenuOpen = ref(false)
 const isMoreMenuOpen = ref(false)
 const moreMenuRef = ref<HTMLElement | null>(null)
@@ -175,6 +175,7 @@ useHead(() => ({
               },
             ],
             sameAs: sameAs.value,
+            contactPoint: contactPoint.value,
           },
           {
             '@type': 'WebSite',
