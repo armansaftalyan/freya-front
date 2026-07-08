@@ -1,4 +1,4 @@
-import { useApiError } from '~/composables/useApiError'
+import { parseApiError } from '~/composables/useApiError'
 
 type HttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE'
 
@@ -66,7 +66,7 @@ export const useApi = () => {
       return response as T
     }
     catch (error: any) {
-      const parsed = useApiError(error)
+      const parsed = parseApiError(error, t)
 
       if (!skipErrorToast) {
         toast.push({

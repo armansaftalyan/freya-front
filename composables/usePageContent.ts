@@ -4,13 +4,13 @@ export const usePageContent = async (brand: 'freya' | 'tor', pageKey: 'home' | '
   const api = useApi()
   const { locale } = useLocale()
 
-  const { data: pageContent } = await useAsyncData(() => `${brand}-${pageKey}-content-${locale.value}`, async () => {
+  const { data: pageContent } = await useAsyncData<PageContentResponse | false>(() => `${brand}-${pageKey}-content-${locale.value}`, async () => {
     try {
       const response = await api.get<PageContentResponse>(`/page-content/${pageKey}`, { brand }, { skipErrorToast: true })
       return response.data
     }
     catch {
-      return null
+      return false
     }
   })
 

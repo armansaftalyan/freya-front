@@ -169,7 +169,7 @@ const saveProfile = async () => {
     toast.push({ type: 'success', title: t('account.profileSaved') })
   }
   catch (error: any) {
-    const parsed = useApiError(error)
+    const parsed = parseApiError(error, t)
     toast.push({ type: 'error', title: t('common.requestFailed'), description: parsed.message })
   }
   finally {
@@ -197,7 +197,7 @@ const onAvatarChange = async (event: Event) => {
     toast.push({ type: 'success', title: t('account.avatarUpdated') })
   }
   catch (error: any) {
-    const parsed = useApiError(error)
+    const parsed = parseApiError(error, t)
     toast.push({ type: 'error', title: t('common.requestFailed'), description: parsed.message })
   }
   finally {
@@ -215,7 +215,7 @@ const removeAvatar = async () => {
     toast.push({ type: 'success', title: t('account.avatarUpdated') })
   }
   catch (error: any) {
-    const parsed = useApiError(error)
+    const parsed = parseApiError(error, t)
     toast.push({ type: 'error', title: t('common.requestFailed'), description: parsed.message })
   }
   finally {

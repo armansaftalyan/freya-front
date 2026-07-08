@@ -40,7 +40,7 @@ const submit = async () => {
     toast.push({ type: 'success', title: t('common.resetLinkSent') })
   }
   catch (error: any) {
-    const parsed = useApiError(error)
+    const parsed = parseApiError(error, t)
     toast.push({ type: 'error', title: t('common.requestFailed'), description: parsed.message })
   }
   finally {

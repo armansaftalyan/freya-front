@@ -54,6 +54,8 @@ const copy = computed(() => {
       privacyPolicy: 'Политика конфиденциальности',
       legal: 'Условия и политики',
       allPages: 'HTML-карта сайта',
+      localYerevanBeautySalon: 'Салон красоты в Ереване',
+      localYerevanBarbershop: 'Barbershop в Ереване',
       giftCards: 'Подарочные карты',
       booking: 'Онлайн-запись',
     }
@@ -78,6 +80,8 @@ const copy = computed(() => {
       privacyPolicy: 'Privacy Policy',
       legal: 'Terms and Policies',
       allPages: 'HTML Sitemap',
+      localYerevanBeautySalon: 'Beauty Salon in Yerevan',
+      localYerevanBarbershop: 'Barbershop in Yerevan',
       giftCards: 'Gift Cards',
       booking: 'Online Booking',
     }
@@ -101,6 +105,8 @@ const copy = computed(() => {
     privacyPolicy: 'Գաղտնիության քաղաքականություն',
     legal: 'Պայմաններ և քաղաքականություններ',
     allPages: 'HTML կայքի քարտեզ',
+    localYerevanBeautySalon: 'Գեղեցկության սրահ Երևանում',
+    localYerevanBarbershop: 'Barbershop Երևանում',
     giftCards: 'Նվեր քարտեր',
     booking: 'Օնլայն գրանցում',
   }
@@ -169,6 +175,7 @@ const staticSections = computed<Record<'freya' | 'tor', SitemapSection>>(() => (
     links: [
       { title: 'Freya Beauty Salon', to: '/' },
       { title: copy.value.allPages, to: '/all-pages' },
+      { title: copy.value.localYerevanBeautySalon, to: '/yerevan-beauty-salon' },
       { title: copy.value.blog, to: '/blog' },
       { title: copy.value.serviceCategories, to: '/services' },
       { title: copy.value.productCategories, to: '/products' },
@@ -185,6 +192,7 @@ const staticSections = computed<Record<'freya' | 'tor', SitemapSection>>(() => (
     links: [
       { title: 'Tor Barbershop', to: '/tor' },
       { title: copy.value.allPages, to: '/tor/all-pages' },
+      { title: copy.value.localYerevanBarbershop, to: '/tor/yerevan-barbershop' },
       { title: copy.value.blog, to: '/tor/blog' },
       { title: copy.value.serviceCategories, to: '/tor/services' },
       { title: copy.value.productCategories, to: '/tor/products' },

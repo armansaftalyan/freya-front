@@ -44,8 +44,9 @@ const mapMessageToKey = (message: string): string | null => {
   return null
 }
 
-export const useApiError = (error: any): ParsedApiError => {
-  const { t } = useLocale()
+type TranslateFn = (key: string) => string
+
+export const parseApiError = (error: any, t: TranslateFn): ParsedApiError => {
   const fieldErrorsRaw = error?.data?.errors as Record<string, string[] | string> | undefined
   const fieldErrors: Record<string, string> = {}
 
@@ -75,4 +76,9 @@ export const useApiError = (error: any): ParsedApiError => {
     message,
     fieldErrors,
   }
+}
+
+export const useApiError = (error: any): ParsedApiError => {
+  const { t } = useLocale()
+  return parseApiError(error, t)
 }

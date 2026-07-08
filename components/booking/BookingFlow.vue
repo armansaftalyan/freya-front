@@ -942,7 +942,7 @@ const submit = async () => {
     void scrollMobileStepCardIntoView()
   }
   catch (error: any) {
-    const parsed = useApiError(error)
+    const parsed = parseApiError(error, t)
     const partial = createdAppointments.value.length
       ? ` (${t('booking.successCount')}: ${createdAppointments.value.length})`
       : ''

@@ -37,7 +37,7 @@ const submit = async () => {
     await navigateTo(localePath(authLoginPath.value))
   }
   catch (error: any) {
-    const parsed = useApiError(error)
+    const parsed = parseApiError(error, t)
     toast.push({ type: 'error', title: t('common.requestFailed'), description: parsed.message })
   }
   finally {
