@@ -1,5 +1,12 @@
 <script setup lang="ts">
-const { locale } = useLocale()
+import type { ApiListResponse } from '~/types/api'
+import type { Category } from '~/types/category'
+import type { Master } from '~/types/master'
+import type { Service } from '~/types/service'
+import type { SupportedLocale } from '~/composables/useLocalizedPath'
+
+const api = useApi()
+const { locale, t } = useLocale()
 const { localePath } = useLocalizedPath()
 const route = useRoute()
 const {
@@ -22,6 +29,9 @@ const {
   defaultImageUrl,
 } = useSiteMeta()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
+const { formatAmd } = useCurrency()
+const { masterAvatarSrc, onMasterAvatarError } = useMasterAvatar()
+const localizedPath = (target: string) => localePath(target) as string
 
 const copy = computed(() => {
   if (locale.value === 'ru') {
@@ -39,6 +49,13 @@ const copy = computed(() => {
       faqTitle: 'FAQ: салон красоты в Ереване',
       packagesTitle: 'Что можно выбрать',
       packagesLead: 'Начните с услуги или подарочной карты, а администратор поможет подобрать мастера и удобное время.',
+      realServicesTitle: 'Популярные услуги Freya',
+      realServicesLead: 'Конкретные услуги из каталога с ценой, длительностью и быстрым переходом к записи.',
+      mastersTitle: 'Мастера Freya',
+      mastersLead: 'Специалисты салона, к которым можно перейти в профиль или сразу выбрать время визита.',
+      bookService: 'Записаться',
+      viewProfile: 'Профиль',
+      bookMaster: 'Записаться',
       routeTitle: 'Как добраться',
       routeText: 'Freya находится на Азатутян 21 в Ереване. Откройте маршрут в удобной карте или напишите администратору перед визитом.',
       contactTitle: 'Связь и запись',
@@ -82,6 +99,13 @@ const copy = computed(() => {
       faqTitle: 'FAQ: beauty salon in Yerevan',
       packagesTitle: 'What you can book',
       packagesLead: 'Start with a service or a gift card, and the administrator will help choose a master and time.',
+      realServicesTitle: 'Popular Freya services',
+      realServicesLead: 'Real catalog services with price, duration, and a quick path to booking.',
+      mastersTitle: 'Freya masters',
+      mastersLead: 'Salon specialists with profile links and direct booking.',
+      bookService: 'Book',
+      viewProfile: 'Profile',
+      bookMaster: 'Book',
       routeTitle: 'How to get there',
       routeText: 'Freya is located at 21 Azatutyan in Yerevan. Open the route in your preferred map or message the administrator before visiting.',
       contactTitle: 'Contact and booking',
@@ -124,6 +148,13 @@ const copy = computed(() => {
     faqTitle: 'FAQ. գեղեցկության սրահ Երևանում',
     packagesTitle: 'Ինչ կարող եք ընտրել',
     packagesLead: 'Սկսեք ծառայությունից կամ նվեր քարտից, իսկ ադմինիստրատորը կօգնի ընտրել մասնագետին և հարմար ժամը։',
+    realServicesTitle: 'Freya-ի պահանջված ծառայություններ',
+    realServicesLead: 'Իրական ծառայություններ կատալոգից՝ գներով, տևողությամբ և արագ ամրագրման հղումով։',
+    mastersTitle: 'Freya-ի մասնագետներ',
+    mastersLead: 'Սրահի մասնագետներ՝ պրոֆիլի հղումով և արագ ամրագրմամբ։',
+    bookService: 'Ամրագրել',
+    viewProfile: 'Պրոֆիլ',
+    bookMaster: 'Ամրագրել',
     routeTitle: 'Ինչպես հասնել',
     routeText: 'Freya-ն գտնվում է Երևանում՝ Ազատության 21 հասցեում։ Բացեք երթուղին հարմար քարտեզում կամ գրեք ադմինիստրատորին այցից առաջ։',
     contactTitle: 'Կապ և ամրագրում',
@@ -151,6 +182,41 @@ const copy = computed(() => {
     ],
   }
 })
+
+const { data: catalogData } = await useAsyncData(() => `yerevan-beauty-salon-catalog-${locale.value}`, async () => {
+  const [categoriesResponse, servicesResponse, mastersResponse] = await Promise.all([
+    api.get<ApiListResponse<Category>>('/categories', { brand: 'freya' }, { skipErrorToast: true }),
+    api.get<ApiListResponse<Service>>('/services', { brand: 'freya' }, { skipErrorToast: true }),
+    api.get<ApiListResponse<Master>>('/masters', { brand: 'freya' }, { skipErrorToast: true }),
+  ])
+
+  return {
+    categories: categoriesResponse.data,
+    services: servicesResponse.data,
+    masters: mastersResponse.data,
+  }
+})
+
+const categories = computed(() => catalogData.value?.categories || [])
+const services = computed(() => catalogData.value?.services || [])
+const masters = computed(() => catalogData.value?.masters || [])
+const categoryById = computed(() => new Map(categories.value.map(category => [category.id, category])))
+const featuredServices = computed(() => services.value.filter(service => service.is_active !== false).slice(0, 6))
+const featuredMasters = computed(() => masters.value.filter(master => master.is_active !== false).slice(0, 3))
+const servicePath = (service: Service) => localizedPath(`/services/${localizedSlugFor(categoryById.value.get(service.category_id), locale.value as SupportedLocale) || 'category'}/${localizedSlugFor(service, locale.value as SupportedLocale)}`)
+const serviceBookingPath = (service: Service) => localePath({ path: '/booking', query: { category_id: String(service.category_id), service_id: String(service.id) } })
+const masterProfilePath = (master: Master) => localizedPath(`/masters/${master.slug || master.id}`)
+const masterBookingPath = (master: Master) => localePath({ path: '/booking', query: { master_id: String(master.id) } })
+const priceLabel = (service: Service) => {
+  const priceFrom = Number(service.price_from || 0)
+  const priceTo = Number(service.price_to || 0)
+
+  if (priceTo > priceFrom) {
+    return `${formatAmd(priceFrom)} - ${formatAmd(priceTo)}`
+  }
+
+  return `${t('servicesPage.priceFrom')} ${formatAmd(priceFrom)}`
+}
 
 const mapLinks = computed(() => [
   { label: copy.value.maps[0], href: googleMapsUrl.value },
@@ -205,13 +271,13 @@ useStructuredData(() => ({
       hasOfferCatalog: {
         '@type': 'OfferCatalog',
         name: copy.value.packagesTitle,
-        itemListElement: copy.value.packages.map((item, index) => ({
+        itemListElement: (featuredServices.value.length ? featuredServices.value : copy.value.packages).map((item: Service | string[], index) => ({
           '@type': 'Offer',
           position: index + 1,
           itemOffered: {
             '@type': 'Service',
-            name: item[0],
-            description: item[1],
+            name: Array.isArray(item) ? item[0] : item.name,
+            description: Array.isArray(item) ? item[1] : item.description,
           },
         })),
       },
@@ -311,6 +377,51 @@ useStructuredData(() => ({
           </article>
         </div>
       </div>
+
+      <section v-if="featuredServices.length" class="space-y-5">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-[0.18em] text-sand-700">{{ copy.servicesTitle }}</p>
+          <h2 class="mt-2 text-3xl font-semibold text-sand-950">{{ copy.realServicesTitle }}</h2>
+          <p class="mt-3 max-w-2xl leading-7 text-sand-700">{{ copy.realServicesLead }}</p>
+        </div>
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <article v-for="service in featuredServices" :key="service.id" class="flex h-full flex-col rounded-[1.25rem] border border-sand-200 bg-white p-5 shadow-sm">
+            <NuxtLink :to="servicePath(service)" class="text-lg font-semibold text-sand-950 transition hover:text-sand-700">{{ service.name }}</NuxtLink>
+            <p class="mt-3 line-clamp-2 min-h-[3.5rem] leading-7 text-sand-700">{{ service.description || t('servicesPage.defaultDescription') }}</p>
+            <div class="mt-auto flex items-end justify-between gap-3 pt-5">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-sand-600">{{ service.duration_minutes }} {{ t('servicesPage.minutes') }}</p>
+                <p class="mt-1 font-semibold text-sand-900">{{ priceLabel(service) }}</p>
+              </div>
+              <NuxtLink :to="serviceBookingPath(service)" class="inline-flex min-h-10 items-center justify-center rounded-full bg-sand-900 px-4 text-sm font-semibold text-white transition hover:bg-sand-700">
+                {{ copy.bookService }}
+              </NuxtLink>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section v-if="featuredMasters.length" class="space-y-5">
+        <div>
+          <h2 class="text-3xl font-semibold text-sand-950">{{ copy.mastersTitle }}</h2>
+          <p class="mt-3 max-w-2xl leading-7 text-sand-700">{{ copy.mastersLead }}</p>
+        </div>
+        <div class="grid gap-4 md:grid-cols-3">
+          <article v-for="master in featuredMasters" :key="master.id" class="rounded-[1.25rem] border border-sand-200 bg-white p-5 shadow-sm">
+            <div class="flex items-center gap-4">
+              <img :src="masterAvatarSrc(master.avatar, master.name)" :alt="master.name" class="h-16 w-16 rounded-2xl object-cover" width="64" height="64" loading="lazy" decoding="async" @error="onMasterAvatarError($event, master.name)">
+              <div>
+                <h3 class="text-lg font-semibold text-sand-950">{{ master.name }}</h3>
+                <p class="line-clamp-2 text-sm leading-6 text-sand-700">{{ master.bio || t('homePage.masters.fallbackBio') }}</p>
+              </div>
+            </div>
+            <div class="mt-5 flex flex-wrap gap-3">
+              <NuxtLink :to="masterProfilePath(master)" class="inline-flex min-h-10 items-center justify-center rounded-full border border-sand-300 px-4 text-sm font-semibold text-sand-900 transition hover:bg-sand-50">{{ copy.viewProfile }}</NuxtLink>
+              <NuxtLink :to="masterBookingPath(master)" class="inline-flex min-h-10 items-center justify-center rounded-full bg-sand-900 px-4 text-sm font-semibold text-white transition hover:bg-sand-700">{{ copy.bookMaster }}</NuxtLink>
+            </div>
+          </article>
+        </div>
+      </section>
 
       <div class="grid gap-4 lg:grid-cols-3">
         <section class="rounded-[1.25rem] border border-sand-200 bg-white p-5 shadow-sm lg:col-span-2">

@@ -1,9 +1,16 @@
 <script setup lang="ts">
+import type { ApiListResponse } from '~/types/api'
+import type { Category } from '~/types/category'
+import type { Master } from '~/types/master'
+import type { Service } from '~/types/service'
+import type { SupportedLocale } from '~/composables/useLocalizedPath'
+
 definePageMeta({
   layout: 'tor',
 })
 
-const { locale } = useLocale()
+const api = useApi()
+const { locale, t } = useLocale()
 const { localePath } = useLocalizedPath()
 const route = useRoute()
 const {
@@ -26,6 +33,9 @@ const {
 } = useSiteMeta()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const torImageUrl = computed(() => `${siteUrl.value}/tor-logo.jpg`)
+const { formatAmd } = useCurrency()
+const { masterAvatarSrc, onMasterAvatarError } = useMasterAvatar()
+const localizedPath = (target: string) => localePath(target) as string
 
 const copy = computed(() => {
   if (locale.value === 'ru') {
@@ -42,6 +52,13 @@ const copy = computed(() => {
       servicesTitle: 'Что доступно',
       packagesTitle: 'Мужские услуги в Ереване',
       packagesLead: 'Выберите услугу, мастера и слот онлайн. Страница собирает локальные запросы по barbershop Yerevan и мужскому уходу.',
+      realServicesTitle: 'Популярные услуги Tor',
+      realServicesLead: 'Реальные услуги из каталога Tor с ценой, длительностью и быстрым переходом к записи.',
+      mastersTitle: 'Барберы Tor',
+      mastersLead: 'Мастера Tor, к которым можно перейти в профиль или сразу выбрать время визита.',
+      bookService: 'Записаться',
+      viewProfile: 'Профиль',
+      bookMaster: 'Записаться',
       routeTitle: 'Как добраться',
       routeText: 'Tor находится на Азатутян 21 в Ереване. Откройте маршрут в карте или напишите администратору, если нужно уточнить вход и время визита.',
       contactTitle: 'Связь и запись',
@@ -85,6 +102,13 @@ const copy = computed(() => {
       servicesTitle: 'What is available',
       packagesTitle: 'Men services in Yerevan',
       packagesLead: 'Choose a service, master, and slot online. This page targets local barbershop Yerevan and men grooming searches.',
+      realServicesTitle: 'Popular Tor services',
+      realServicesLead: 'Real Tor catalog services with price, duration, and a quick path to booking.',
+      mastersTitle: 'Tor barbers',
+      mastersLead: 'Tor masters with profile links and direct booking.',
+      bookService: 'Book',
+      viewProfile: 'Profile',
+      bookMaster: 'Book',
       routeTitle: 'How to get there',
       routeText: 'Tor is located at 21 Azatutyan in Yerevan. Open the route in your preferred map or message the administrator before your visit.',
       contactTitle: 'Contact and booking',
@@ -127,6 +151,13 @@ const copy = computed(() => {
     servicesTitle: 'Ինչ է հասանելի',
     packagesTitle: 'Տղամարդկանց ծառայություններ Երևանում',
     packagesLead: 'Ընտրեք ծառայություն, մասնագետ և ժամ օնլայն։ Էջը նախատեսված է barbershop Yerevan և տղամարդկանց խնամքի տեղային որոնումների համար։',
+    realServicesTitle: 'Tor-ի պահանջված ծառայություններ',
+    realServicesLead: 'Իրական Tor ծառայություններ կատալոգից՝ գներով, տևողությամբ և արագ ամրագրման հղումով։',
+    mastersTitle: 'Tor-ի բարբերներ',
+    mastersLead: 'Tor-ի մասնագետներ՝ պրոֆիլի հղումով և արագ ամրագրմամբ։',
+    bookService: 'Ամրագրել',
+    viewProfile: 'Պրոֆիլ',
+    bookMaster: 'Ամրագրել',
     routeTitle: 'Ինչպես հասնել',
     routeText: 'Tor-ը գտնվում է Երևանում՝ Ազատության 21 հասցեում։ Բացեք երթուղին հարմար քարտեզում կամ գրեք ադմինիստրատորին այցից առաջ։',
     contactTitle: 'Կապ և ամրագրում',
@@ -155,6 +186,41 @@ const copy = computed(() => {
     ],
   }
 })
+
+const { data: catalogData } = await useAsyncData(() => `tor-yerevan-barbershop-catalog-${locale.value}`, async () => {
+  const [categoriesResponse, servicesResponse, mastersResponse] = await Promise.all([
+    api.get<ApiListResponse<Category>>('/categories', { brand: 'tor' }, { skipErrorToast: true }),
+    api.get<ApiListResponse<Service>>('/services', { brand: 'tor' }, { skipErrorToast: true }),
+    api.get<ApiListResponse<Master>>('/masters', { brand: 'tor' }, { skipErrorToast: true }),
+  ])
+
+  return {
+    categories: categoriesResponse.data,
+    services: servicesResponse.data,
+    masters: mastersResponse.data,
+  }
+})
+
+const categories = computed(() => catalogData.value?.categories || [])
+const services = computed(() => catalogData.value?.services || [])
+const masters = computed(() => catalogData.value?.masters || [])
+const categoryById = computed(() => new Map(categories.value.map(category => [category.id, category])))
+const featuredServices = computed(() => services.value.filter(service => service.is_active !== false).slice(0, 6))
+const featuredMasters = computed(() => masters.value.filter(master => master.is_active !== false).slice(0, 3))
+const servicePath = (service: Service) => localizedPath(`/tor/services/${localizedSlugFor(categoryById.value.get(service.category_id), locale.value as SupportedLocale) || 'men-hair'}/${localizedSlugFor(service, locale.value as SupportedLocale)}`)
+const serviceBookingPath = (service: Service) => localePath({ path: '/tor/booking', query: { category_id: String(service.category_id), service_id: String(service.id) } })
+const masterProfilePath = (master: Master) => localizedPath(`/tor/masters/${master.slug || master.id}`)
+const masterBookingPath = (master: Master) => localePath({ path: '/tor/booking', query: { master_id: String(master.id) } })
+const priceLabel = (service: Service) => {
+  const priceFrom = Number(service.price_from || 0)
+  const priceTo = Number(service.price_to || 0)
+
+  if (priceTo > priceFrom) {
+    return `${formatAmd(priceFrom)} - ${formatAmd(priceTo)}`
+  }
+
+  return `${t('servicesPage.priceFrom')} ${formatAmd(priceFrom)}`
+}
 
 const mapLinks = computed(() => [
   { label: copy.value.maps[0], href: googleMapsUrl.value },
@@ -209,13 +275,13 @@ useStructuredData(() => ({
       hasOfferCatalog: {
         '@type': 'OfferCatalog',
         name: copy.value.packagesTitle,
-        itemListElement: copy.value.packages.map((item, index) => ({
+        itemListElement: (featuredServices.value.length ? featuredServices.value : copy.value.packages).map((item: Service | string[], index) => ({
           '@type': 'Offer',
           position: index + 1,
           itemOffered: {
             '@type': 'Service',
-            name: item[0],
-            description: item[1],
+            name: Array.isArray(item) ? item[0] : item.name,
+            description: Array.isArray(item) ? item[1] : item.description,
           },
         })),
       },
@@ -315,6 +381,51 @@ useStructuredData(() => ({
           </article>
         </div>
       </div>
+
+      <section v-if="featuredServices.length" class="space-y-5">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-[0.22em] text-[#c58a3a]">{{ copy.servicesTitle }}</p>
+          <h2 class="mt-2 text-3xl font-black uppercase tracking-[0.04em] text-white">{{ copy.realServicesTitle }}</h2>
+          <p class="mt-3 max-w-2xl leading-7 text-stone-300">{{ copy.realServicesLead }}</p>
+        </div>
+        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <article v-for="service in featuredServices" :key="service.id" class="flex h-full flex-col rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-5 shadow-[0_18px_48px_rgba(0,0,0,0.2)]">
+            <NuxtLink :to="servicePath(service)" class="text-lg font-bold uppercase tracking-[0.04em] text-white transition hover:text-[#d79a49]">{{ service.name }}</NuxtLink>
+            <p class="mt-3 line-clamp-2 min-h-[3.5rem] leading-7 text-stone-300">{{ service.description || t('servicesPage.defaultDescription') }}</p>
+            <div class="mt-auto flex items-end justify-between gap-3 pt-5">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.14em] text-[#c58a3a]">{{ service.duration_minutes }} {{ t('servicesPage.minutes') }}</p>
+                <p class="mt-1 font-semibold text-stone-100">{{ priceLabel(service) }}</p>
+              </div>
+              <NuxtLink :to="serviceBookingPath(service)" class="inline-flex min-h-10 items-center justify-center rounded-full bg-[#d79a49] px-4 text-sm font-semibold uppercase tracking-[0.1em] text-black transition hover:bg-[#c58a3a]">
+                {{ copy.bookService }}
+              </NuxtLink>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section v-if="featuredMasters.length" class="space-y-5">
+        <div>
+          <h2 class="text-3xl font-black uppercase tracking-[0.04em] text-white">{{ copy.mastersTitle }}</h2>
+          <p class="mt-3 max-w-2xl leading-7 text-stone-300">{{ copy.mastersLead }}</p>
+        </div>
+        <div class="grid gap-4 md:grid-cols-3">
+          <article v-for="master in featuredMasters" :key="master.id" class="rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-5 shadow-[0_18px_48px_rgba(0,0,0,0.2)]">
+            <div class="flex items-center gap-4">
+              <img :src="masterAvatarSrc(master.avatar, master.name)" :alt="master.name" class="h-16 w-16 rounded-2xl object-cover" width="64" height="64" loading="lazy" decoding="async" @error="onMasterAvatarError($event, master.name)">
+              <div>
+                <h3 class="text-lg font-bold uppercase tracking-[0.04em] text-white">{{ master.name }}</h3>
+                <p class="line-clamp-2 text-sm leading-6 text-stone-300">{{ master.bio || t('homePage.masters.fallbackBio') }}</p>
+              </div>
+            </div>
+            <div class="mt-5 flex flex-wrap gap-3">
+              <NuxtLink :to="masterProfilePath(master)" class="inline-flex min-h-10 items-center justify-center rounded-full border border-white/15 px-4 text-sm font-semibold uppercase tracking-[0.1em] text-stone-100 transition hover:border-[#c58a3a] hover:text-[#d79a49]">{{ copy.viewProfile }}</NuxtLink>
+              <NuxtLink :to="masterBookingPath(master)" class="inline-flex min-h-10 items-center justify-center rounded-full bg-[#d79a49] px-4 text-sm font-semibold uppercase tracking-[0.1em] text-black transition hover:bg-[#c58a3a]">{{ copy.bookMaster }}</NuxtLink>
+            </div>
+          </article>
+        </div>
+      </section>
 
       <div class="grid gap-4 lg:grid-cols-3">
         <section class="rounded-[1.25rem] border border-white/10 bg-white/[0.04] p-5 shadow-[0_18px_48px_rgba(0,0,0,0.2)] lg:col-span-2">
