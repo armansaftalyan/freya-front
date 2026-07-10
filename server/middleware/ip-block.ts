@@ -14,7 +14,8 @@ export default defineEventHandler(async (event) => {
     return
   }
 
-  const ipAddress = getRequestIP(event, { xForwardedFor: true })
+  const cloudflareIp = String(getHeader(event, 'cf-connecting-ip') || '').trim()
+  const ipAddress = cloudflareIp || getRequestIP(event, { xForwardedFor: true })
 
   if (!ipAddress) {
     return
