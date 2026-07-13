@@ -12,6 +12,7 @@ import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 import BookingCalendar from '~/components/booking/BookingCalendar.vue'
 import SlotPicker from '~/components/booking/SlotPicker.vue'
 import FaqSection from '~/components/sections/FaqSection.vue'
+import BaseModal from '~/components/base/BaseModal.vue'
 
 interface BookingLine {
   id: number
@@ -36,7 +37,8 @@ const { formatPriceLabel } = useServicePricing()
 const { formatYerevanDateTime, formatYerevanDate, todayYerevanDate } = useDateTime()
 const { isVisible: isPromoVisible, promoCopy, promoPricingFor } = useFirstBookingPromo()
 const { siteUrl } = useSiteMeta()
-const { isTor, brand, authAppointmentsPath } = useBrandContext()
+const { isTor, brand, rootPath, authAppointmentsPath } = useBrandContext()
+const { localePath } = useLocalizedPath()
 const route = useRoute()
 const { canonicalUrl } = useLocalizedSeo(() => route.path)
 const { faqCopy } = await usePageFaqContent(isTor.value ? 'tor' : 'freya', 'booking')
@@ -127,8 +129,10 @@ const lines = ref<BookingLine[]>([])
 const nextLineId = ref(1)
 const creating = ref(false)
 const successCount = ref(0)
+const successModalOpen = ref(false)
 const createdAppointments = ref<Appointment[]>([])
 const currentMasterProfile = ref<Master | null>(null)
+const bookingFormRef = ref<HTMLElement | null>(null)
 const mobileStepCardRef = ref<HTMLElement | null>(null)
 const mobileCategoriesRef = ref<HTMLElement | null>(null)
 const desktopCategoriesRefs = new Map<number, HTMLElement>()
@@ -897,6 +901,7 @@ const submit = async () => {
 
   creating.value = true
   successCount.value = 0
+  successModalOpen.value = false
   createdAppointments.value = []
 
   try {
@@ -930,6 +935,7 @@ const submit = async () => {
       : []
     createdAppointments.value = apiAppointments
     successCount.value = createdAppointments.value.length
+    successModalOpen.value = true
     toast.push({ type: 'success', title: t('common.appointmentCreated') })
 
     lines.value = [createEmptyLine()]
@@ -951,6 +957,12 @@ const submit = async () => {
   finally {
     creating.value = false
   }
+}
+
+const bookAnotherAppointment = async () => {
+  successModalOpen.value = false
+  await nextTick()
+  bookingFormRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 ensureAtLeastOneLine()
@@ -1165,14 +1177,57 @@ onBeforeUnmount(() => {
         <p class="mt-2 max-w-3xl text-sm leading-6" :class="isTor ? 'text-stone-300' : 'text-sand-800'">{{ promoCopy.description }}</p>
       </div>
 
-      <div v-if="successCount" class="rounded-3xl p-6" :class="isTor ? 'border border-emerald-500/30 bg-white/[0.03] shadow-[0_20px_50px_rgba(0,0,0,0.22)]' : 'border border-emerald-200 bg-white shadow-soft'">
-        <p class="text-xs uppercase tracking-[0.16em] text-emerald-700">{{ t('booking.successLabel') }}</p>
-        <h2 class="mt-2 text-3xl">{{ t('booking.success') }}</h2>
-        <p class="mt-3 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">{{ t('booking.successCount') }}: {{ successCount }}</p>
-        <div class="mt-2 text-sm" :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">
-          <p v-for="item in createdAppointments" :key="item.id">#{{ item.id }} · {{ formatYerevanDateTime(item.start_at) }}</p>
+      <BaseModal
+        v-model="successModalOpen"
+        :title="t('booking.successTitle')"
+        :theme="isTor ? 'tor' : 'default'"
+        max-width-class="max-w-lg"
+      >
+        <div class="space-y-5">
+          <div
+            class="flex h-16 w-16 items-center justify-center rounded-full"
+            :class="isTor ? 'bg-[#d79a49]/15 text-[#e2ad67]' : 'bg-emerald-50 text-emerald-700'"
+          >
+            <svg viewBox="0 0 24 24" fill="none" class="h-8 w-8" aria-hidden="true">
+              <path d="m5 12.5 4.2 4.2L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+
+          <p class="text-sm leading-7 sm:text-base" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">
+            {{ t('booking.successMessage') }}
+          </p>
+
+          <div
+            v-if="createdAppointments.length"
+            class="rounded-2xl border p-4"
+            :class="isTor ? 'border-white/10 bg-white/[0.04]' : 'border-sand-200 bg-sand-50/70'"
+          >
+            <p class="text-xs font-semibold uppercase tracking-[0.16em]" :class="isTor ? 'text-[#d79a49]' : 'text-sand-600'">
+              {{ t('booking.appointmentDetails') }}
+            </p>
+            <div class="mt-2 space-y-1 text-sm">
+              <p v-for="item in createdAppointments" :key="item.id">
+                <span :class="isTor ? 'text-stone-400' : 'text-[var(--muted)]'">#{{ item.id }}</span>
+                <span class="mx-2">·</span>
+                <span class="font-semibold">{{ formatYerevanDateTime(item.start_at) }}</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="grid gap-3 sm:grid-cols-2">
+            <BaseButton block size="lg" :theme="isTor ? 'tor' : 'default'" @click="bookAnotherAppointment">
+              {{ t('booking.bookAnother') }}
+            </BaseButton>
+            <NuxtLink :to="localePath(rootPath)" class="flex" @click="successModalOpen = false">
+              <BaseButton block size="lg" variant="secondary" :theme="isTor ? 'tor' : 'default'">
+                {{ t('booking.backHome') }}
+              </BaseButton>
+            </NuxtLink>
+          </div>
         </div>
-      </div>
+      </BaseModal>
+
+      <div ref="bookingFormRef" class="scroll-mt-24" aria-hidden="true" />
 
       <div class="lg:hidden">
         <div v-if="lines.length > 1" class="flex gap-2 overflow-x-auto pb-1">
