@@ -11,6 +11,7 @@ const { siteUrl } = useSiteMeta()
 const { localePath } = useLocalizedPath()
 const route = useRoute()
 const auth = useAuthStore()
+const referral = useReferralAttribution()
 const cart = useCartStore()
 cart.hydrateItems()
 const uiReady = ref(false)
@@ -306,6 +307,8 @@ const submit = async () => {
   ordering.value = true
   try {
     const response = await api.post<ApiItemResponse<ProductOrder> & { payment?: ProductOrderPayment }>('/product-orders', {
+      referral_code: referral.code.value || undefined,
+      referral_clicked_at: referral.clickedAt.value || undefined,
       items: cart.items.map(item => ({
         product_id: item.product.id,
         quantity: Math.max(1, Number(item.quantity || 1)),

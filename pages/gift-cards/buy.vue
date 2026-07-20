@@ -11,6 +11,7 @@ const { locale, t } = useLocale()
 const { formatAmd } = useCurrency()
 const route = useRoute()
 const auth = useAuthStore()
+const referral = useReferralAttribution()
 const { siteUrl, salonName, defaultImageUrl } = useSiteMeta()
 const { isTor, brand, authGiftCardScanBasePath } = useBrandContext()
 
@@ -365,6 +366,8 @@ const submit = async () => {
   creating.value = true
   try {
     const response = await api.post<any>('/gift-cards/orders', {
+      referral_code: referral.code.value || undefined,
+      referral_clicked_at: referral.clickedAt.value || undefined,
       amount,
       currency: 'AMD',
       payment_provider: paymentProvider.value,
@@ -385,7 +388,6 @@ const submit = async () => {
     createdOrder.value = response?.data || null
     issuedCard.value = response?.data?.gift_card || null
     payment.value = response?.payment || null
-
     toast.push({ type: 'success', title: t('giftCards.orderCreated') })
 
     if (paymentProvider.value === 'idram' && idramPayload.value) {

@@ -26,6 +26,13 @@ const items = computed(() => {
     { to: authProductOrdersPath.value, label: t('account.productOrders') },
   )
 
+  if (auth.user?.roles?.includes('referrer')) {
+    links.push({
+      to: isTor.value ? '/tor/account/referrals' : '/account/referrals',
+      label: t('account.referrals'),
+    })
+  }
+
   return links
 })
 

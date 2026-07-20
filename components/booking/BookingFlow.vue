@@ -36,6 +36,7 @@ const { formatAmd } = useCurrency()
 const { formatPriceLabel } = useServicePricing()
 const { formatYerevanDateTime, formatYerevanDate, todayYerevanDate } = useDateTime()
 const { isVisible: isPromoVisible, promoCopy, promoPricingFor } = useFirstBookingPromo()
+const referral = useReferralAttribution()
 const { siteUrl } = useSiteMeta()
 const { isTor, brand, rootPath, authAppointmentsPath } = useBrandContext()
 const { localePath } = useLocalizedPath()
@@ -922,6 +923,8 @@ const submit = async () => {
           })),
         })),
         source: bookingForClient.value ? 'phone' : source.value,
+        referral_code: bookingForClient.value ? undefined : referral.code.value || undefined,
+        referral_clicked_at: bookingForClient.value ? undefined : referral.clickedAt.value || undefined,
         comment: comment.value || undefined,
         guest_first_name: guestFirstName.value.trim() || fallbackFirstName,
         guest_last_name: fallbackLastName,
@@ -937,7 +940,6 @@ const submit = async () => {
     successCount.value = createdAppointments.value.length
     successModalOpen.value = true
     toast.push({ type: 'success', title: t('common.appointmentCreated') })
-
     lines.value = [createEmptyLine()]
     activeLineIndex.value = 0
     mobileStep.value = 1

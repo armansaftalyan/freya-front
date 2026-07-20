@@ -59,6 +59,9 @@ export interface ProductOrder {
   subtotal_price: number
   delivery_fee: number
   total_price: number
+  referral_base?: number
+  referral_percent?: number
+  referral_payout?: number
   paid_at: string | null
   payment_token?: string | null
   items?: ProductOrderItem[]

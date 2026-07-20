@@ -9,6 +9,10 @@ export interface Appointment {
   status: AppointmentStatus
   source: string
   comment: string | null
+  total_price?: number
+  referral_percent?: number
+  referral_payout?: number
+  referral_base?: number
   start_at: string
   end_at: string
   service: Service

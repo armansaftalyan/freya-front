@@ -2,8 +2,8 @@
 const props = defineProps<{ status: string }>()
 
 const cls = computed(() => {
-  if (props.status === 'confirmed') return 'bg-emerald-100 text-emerald-700'
-  if (props.status === 'cancelled') return 'bg-rose-100 text-rose-700'
+  if (props.status === 'confirmed' || props.status === 'paid' || props.status === 'completed') return 'bg-emerald-100 text-emerald-700'
+  if (props.status === 'cancelled' || props.status === 'failed' || props.status === 'refunded') return 'bg-rose-100 text-rose-700'
   if (props.status === 'done') return 'bg-sky-100 text-sky-700'
   return 'bg-amber-100 text-amber-700'
 })
