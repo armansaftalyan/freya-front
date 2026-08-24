@@ -19,6 +19,14 @@ const privateNoStoreRule = {
     'Cache-Control': 'private, no-store',
   },
 }
+const privatePaymentRule = {
+  prerender: false,
+  headers: {
+    'Cache-Control': 'private, no-store, max-age=0',
+    'X-Robots-Tag': 'noindex, nofollow',
+    'Referrer-Policy': 'no-referrer',
+  },
+}
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
@@ -52,6 +60,14 @@ export default defineNuxtConfig({
         'Cache-Control': 'no-cache, no-store, must-revalidate',
       },
     },
+    '/pay/**': privatePaymentRule,
+    '/tor/pay/**': privatePaymentRule,
+    '/en/pay/**': privatePaymentRule,
+    '/ru/pay/**': privatePaymentRule,
+    '/hy/pay/**': privatePaymentRule,
+    '/en/tor/pay/**': privatePaymentRule,
+    '/ru/tor/pay/**': privatePaymentRule,
+    '/hy/tor/pay/**': privatePaymentRule,
     '/': publicSwrRule,
     '/en': publicSwrRule,
     '/ru': publicSwrRule,

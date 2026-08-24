@@ -1,6 +1,13 @@
 export default defineNuxtPlugin(() => {
   const router = useRouter()
   const runtimeConfig = useRuntimeConfig()
+  const isPaymentLinkPath = (path: string) => /^\/(?:(?:ru|en|hy)\/)?(?:tor\/)?pay\/[A-Za-z0-9]+(?:[/?#]|$)/.test(path)
+
+  // Payment URLs are bearer secrets and may contain a customer's name on the page.
+  // Do not load analytics/webvisor or transmit the token to third parties.
+  if (isPaymentLinkPath(window.location.pathname)) {
+    return
+  }
 
   const googleAnalyticsId = String(runtimeConfig.public.googleAnalyticsId || '').trim()
   const yandexMetricaId = Number(String(runtimeConfig.public.yandexMetricaId || '').trim())
@@ -132,6 +139,11 @@ export default defineNuxtPlugin(() => {
   }
 
   const trackPageView = (fullPath: string) => {
+    if (isPaymentLinkPath(fullPath)) {
+      pendingPageView = null
+      return
+    }
+
     pendingPageView = fullPath
 
     if (!analyticsLoaded) {
