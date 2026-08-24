@@ -18,6 +18,9 @@ const { isTor } = useBrandContext()
 const token = computed(() => String(route.params.token || ''))
 const paying = ref(false)
 const payError = ref('')
+const paymentProvider = ref<'bank_card' | 'idram'>('bank_card')
+const idramFormRef = ref<HTMLFormElement | null>(null)
+const idramPayment = ref<{ action: string, method: string, fields: Record<string, string> } | null>(null)
 
 const copy = computed(() => {
   if (locale.value === 'hy') {
@@ -27,6 +30,10 @@ const copy = computed(() => {
       purpose: 'Վճարման նպատակը',
       amount: 'Վճարման գումարը',
       pay: 'Վճարել բանկային քարտով',
+      payIdram: 'Վճարել Idram-ով',
+      method: 'Վճարման եղանակը',
+      card: 'Բանկային քարտ',
+      idram: 'Idram',
       secure: 'Վճարումը կատարվում է բանկի պաշտպանված էջում։ Քարտի տվյալները չեն պահվում կայքում։',
       paid: 'Վճարումը հաջողությամբ կատարված է',
       paidText: 'Շնորհակալություն։ Կանխավճարը հաստատված է։',
@@ -43,6 +50,10 @@ const copy = computed(() => {
       purpose: 'Payment details',
       amount: 'Amount due',
       pay: 'Pay by bank card',
+      payIdram: 'Pay with Idram',
+      method: 'Payment method',
+      card: 'Bank card',
+      idram: 'Idram',
       secure: 'Payment is completed on the bank’s secure page. Card details are not stored on this website.',
       paid: 'Payment completed successfully',
       paidText: 'Thank you. Your deposit has been confirmed.',
@@ -58,6 +69,10 @@ const copy = computed(() => {
     purpose: 'Назначение платежа',
     amount: 'Сумма к оплате',
     pay: 'Оплатить банковской картой',
+    payIdram: 'Оплатить через Idram',
+    method: 'Способ оплаты',
+    card: 'Банковская карта',
+    idram: 'Idram',
     secure: 'Оплата проходит на защищенной странице банка. Данные карты не сохраняются на сайте.',
     paid: 'Оплата прошла успешно',
     paidText: 'Спасибо! Ваша предоплата подтверждена.',
@@ -83,7 +98,20 @@ const startPayment = async () => {
   paying.value = true
   payError.value = ''
   try {
-    const response = await api.post<{ payment: { status: string, url: string } }>(`/payment-links/${encodeURIComponent(token.value)}/pay`)
+    const response = await api.post<{ payment: { status: string, url?: string, type?: string, action?: string, method?: string, fields?: Record<string, string> } }>(
+      `/payment-links/${encodeURIComponent(token.value)}/pay`,
+      { provider: paymentProvider.value },
+    )
+    if (response.payment?.type === 'form' && response.payment.action && response.payment.fields) {
+      idramPayment.value = {
+        action: response.payment.action,
+        method: response.payment.method || 'POST',
+        fields: response.payment.fields,
+      }
+      await nextTick()
+      idramFormRef.value?.submit()
+      return
+    }
     if (response.payment?.url) {
       await navigateTo(response.payment.url, { external: true })
       return
@@ -159,6 +187,32 @@ useHead({
 
         <p v-if="payError" class="rounded-xl bg-red-50 p-3 text-sm text-red-700">{{ payError }}</p>
 
+        <div class="space-y-2">
+          <p class="text-sm font-medium" :class="isTor ? 'text-stone-300' : 'text-[var(--muted)]'">{{ copy.method }}</p>
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              class="rounded-xl border px-3 py-3 text-sm font-semibold transition"
+              :class="paymentProvider === 'bank_card'
+                ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-amber-700 bg-amber-700 text-white')
+                : (isTor ? 'border-white/10 bg-white/[0.04] text-stone-100' : 'border-amber-200 bg-white')"
+              @click="paymentProvider = 'bank_card'"
+            >
+              {{ copy.card }}
+            </button>
+            <button
+              type="button"
+              class="rounded-xl border px-3 py-3 text-sm font-semibold transition"
+              :class="paymentProvider === 'idram'
+                ? (isTor ? 'border-[#d79a49] bg-[#d79a49] text-black' : 'border-amber-700 bg-amber-700 text-white')
+                : (isTor ? 'border-white/10 bg-white/[0.04] text-stone-100' : 'border-amber-200 bg-white')"
+              @click="paymentProvider = 'idram'"
+            >
+              {{ copy.idram }}
+            </button>
+          </div>
+        </div>
+
         <button
           type="button"
           class="w-full rounded-full px-6 py-4 text-base font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
@@ -166,8 +220,11 @@ useHead({
           :disabled="paying"
           @click="startPayment"
         >
-          {{ paying ? '…' : copy.pay }}
+          {{ paying ? '…' : (paymentProvider === 'idram' ? copy.payIdram : copy.pay) }}
         </button>
+        <form v-if="idramPayment" ref="idramFormRef" :action="idramPayment.action" :method="idramPayment.method" class="hidden">
+          <input v-for="(value, key) in idramPayment.fields" :key="key" type="hidden" :name="key" :value="String(value)">
+        </form>
         <p class="text-center text-xs leading-relaxed" :class="isTor ? 'text-stone-500' : 'text-[var(--muted)]'">{{ copy.secure }}</p>
       </div>
     </Card>
