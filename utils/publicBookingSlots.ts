@@ -23,7 +23,12 @@ export const publicBookingSlots = (
   // Use the appointment date, never today's date, in the seed: a date's
   // selection stays the same as it moves closer within the seven-day window.
   const seed = `${options.brand}:${options.masterId ?? 'any'}:${options.date}`
-  const limit = Math.min(3 + stableHash(seed) % 3, Math.ceil(slots.length / 2))
+  // Keep the hidden share within 20–40% where whole-slot rounding allows it.
+  // For small lists, prioritize never hiding more than 40%.
+  const maxHidden = Math.floor(slots.length * 0.4)
+  const minHidden = Math.min(Math.ceil(slots.length * 0.2), maxHidden)
+  const hiddenCount = minHidden + stableHash(seed) % (maxHidden - minHidden + 1)
+  const limit = slots.length - hiddenCount
   const ranked = slots.map(slot => ({
     slot,
     start: new Date(slot.start_at).getTime(),
