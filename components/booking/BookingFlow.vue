@@ -7,6 +7,7 @@ import type { Master } from '~/types/master'
 import type { Service } from '~/types/service'
 import type { Slot } from '~/types/slot'
 import type { User } from '~/types/user'
+import { publicBookingSlots } from '~/utils/publicBookingSlots'
 import Card from '~/components/base/Card.vue'
 import SkeletonBlock from '~/components/shared/SkeletonBlock.vue'
 import BookingCalendar from '~/components/booking/BookingCalendar.vue'
@@ -746,6 +747,10 @@ const fetchSlotsForLineNow = async (line: BookingLine) => {
 
   line.slotsLoading = true
   try {
+    // Resolve staff roles before deciding which slots to show after a refresh.
+    await auth.fetchMe()
+    if (abortController.signal.aborted) return
+
     const response = line.masterId
       ? await api.get<ApiItemResponse<Slot[]> | ApiListResponse<Slot> | any>('/slots', {
           service_ids: line.serviceIds,
@@ -767,12 +772,21 @@ const fetchSlotsForLineNow = async (line: BookingLine) => {
           ? response.data.data
           : []
 
-    line.slots = rawSlots
+    const futureSlots: Slot[] = rawSlots
       .map((item: any) => ({
         start_at: String(item?.start_at ?? item?.startAt ?? ''),
         end_at: String(item?.end_at ?? item?.endAt ?? ''),
       }))
       .filter((item: Slot) => Boolean(item.start_at) && new Date(item.start_at).getTime() > Date.now())
+
+    line.slots = canBookForClient.value
+      ? futureSlots
+      : publicBookingSlots(futureSlots, {
+          date: line.date,
+          today: todayYerevanDate(),
+          brand: brand.value,
+          masterId: line.masterId,
+        })
   }
   catch (error: any) {
     if (isAbortError(error)) return
